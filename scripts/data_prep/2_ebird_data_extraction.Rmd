@@ -1,0 +1,118 @@
+---
+title: "Extract required data from eBird"
+output: 
+  html_document:
+      citation_package: natbib
+    biblio-style: apsr
+references:
+  - id: eBird2023
+    title: eBird: a citizen-based bird observation network in the biological sciences.
+    author: Sullivan, B.L., C.L. Wood, M.J. Iliff, R.E. Bonney, D. Fink, and S. Kelling.
+    publisher: Biological Conservation 
+    year: 2009
+    DOI: 10.2905/42E8BE89-54FF-464E-BE7B-BF9E64DA5218
+  - id: Callaghan_2017
+    author: Callaghan, C.T., Lyons, M.B., Martin, J.M., Major, R.E. & Kingsford, R.T. 
+    title: Assessing the reliability of avian biodiversity measures of urban greenspaces using eBird citizen science
+    publisher:  Avian Conservation and Ecology
+    year: 2017
+---
+
+
+```{r}
+source('../env.R')
+```
+# Objectives
+Two objectives in this script:
+1. Find all the checklists meeting the @Callaghan_2017 criteria with in a city polygon
+2. Find all the Columbidae species that occur on those checklists.
+
+
+## Check eBird raw data
+eBird can be downloaded here:
+https://science.ebird.org/en/use-ebird-data/download-ebird-data-products
+
+```{r}
+EBIRD_RAW = '/Users/james/Dropbox/PhD/eBird/ebd_relNov-2023/ebd_relNov-2023.txt'
+Sys.setenv(EBIRD_RAW_FILE = EBIRD_RAW)
+```
+
+Read first 5 columns of raw ebird data
+```{bash}
+head -6 ${EBIRD_RAW_FILE}
+```
+
+# Find all eBird localities with valid checklists within our cities
+Read header of eBird raw file, and print with column index
+```{bash}
+let INDEX=1
+head -1 ${EBIRD_RAW_FILE} | sed 's/\t/\n/g' | while read column_header; do 
+    echo ${INDEX}: $column_header
+    let INDEX=${INDEX}+1
+done
+```
+
+Fetch all of the localities that contain checklists matching the filters defined by @Callaghan_2017, and store filtered data in cache file
+```{r}
+EBIRD_ALL_LOCATIONS_CACHE = '/tmp/ebird_all_locations.txt'
+Sys.setenv(EBIRD_ALL_LOCATIONS_OUTPUT_FILE = EBIRD_ALL_LOCATIONS_CACHE)
+```
+
+Here we collect the following eBird raw columns, and map them to awk parameters
+27 -> 1: LOCALITY ID
+29 -> 2: LATITUDE
+30 -> 3: LONGITUDE
+31 -> 4: OBSERVATION DATE
+35 -> 5: PROTOCOL TYPE
+38 -> 6: DURATION MINUTES
+39 -> 7: EFFORT DISTANCE KM
+42 -> 8: ALL SPECIES REPORTED
+
+and then filter such that
+"ALL SPECIES REPORTED" is true ("1")
+"DURATION MINUTES" > 5 and < 240
+"EFFORT DISTANCE KM" > 0 and < 10
+"PROTOCOL TYPE" IN (Stationary, Traveling, Area)
+"OBSERVATION DATE" >= 2013
+
+to collect a unique set of (LOCALITY ID, LATITUDE, LONGITUDE)
+
+```{bash}
+COLUMNS=27,29,30,31,35,38,39,42
+echo "locality_id,lat,long" > ${EBIRD_ALL_LOCATIONS_OUTPUT_FILE}
+cat ${EBIRD_RAW_FILE} | cut -f${COLUMNS} | awk -F"\t" -f 2_ebird_data_extraction_awk/is_valid_checklist.awk -f 2_ebird_data_extraction_awk/extract_all_locations.awk | awk '!a[$0]++' >> ${EBIRD_ALL_LOCATIONS_OUTPUT_FILE}
+```
+
+```{r}
+all_ebird_locations = read_csv(EBIRD_ALL_LOCATIONS_CACHE)
+head(all_ebird_locations)
+```
+
+# Find all checklists within each of our initial cities
+
+Read in our initial city vectors, we will join these to our checklists
+```{r}
+initial_city_selection = read_sf(filename(mkdir(GEO_DATA_OUTPUT_DIR, 'cities'), 'initial_selection.shp'))
+```
+
+
+Find all unique locations from our filtered eBird data.
+```{r}
+
+```
+
+Turn those locations into GEO points
+```{r}
+
+```
+
+Join the locations onto the city vectors, giving each location a city and discarding all other locations
+```{r}
+
+```
+
+
+
+
+
+# Find all Columbidae records

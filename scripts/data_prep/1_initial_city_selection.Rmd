@@ -1,0 +1,70 @@
+---
+title: "Initial City Selection"
+output: 
+  html_document:
+      citation_package: natbib
+    biblio-style: apsr
+references:
+  - id: GHS_SMOD_POPMT_GLOBE_R2019A
+    title: GHS settlement grid, updated and refined REGIO model 2014 in application to GHS-BUILT R2018A and GHS-POP R2019A, multitemporal (1975-1990-2000-2015), R2019A.
+    author: Pesaresi, Martino; Florczyk, Aneta; Schiavina, Marcello; Melchiorri, Michele; Maffenini, Luca 
+    organisation: European Commission
+    publisher: Joint Research Centre (JRC)
+    year: 2019
+    type: misc
+    DOI: 10.2905/42E8BE89-54FF-464E-BE7B-BF9E64DA5218
+---
+
+```{r}
+source('../env.R')
+```
+
+
+# Import GHSL - Global Human Settlement Layer (from European Commission)
+
+The Global Human Settlement Layer (GHSL) project produces global spatial information, evidence-based
+analytics, and knowledge describing the human presence on the planet. The GHSL relies on the design and
+implementation of spatial data processing technologies that allow automatic data analytics and information
+extraction from large amounts of heterogeneous geospatial data including global, fine-scale satellite image
+data streams, census data, and crowd sourced or volunteered geographic information sources. [@GHS_SMOD_POPMT_GLOBE_R2019A]
+
+Download and documentation for this data:
+https://ghsl.jrc.ec.europa.eu/ghs_smod2019.php
+
+```{r}
+GHSL_HUMAN_SETTLEMENT = '~/Dropbox/PhD/European Commission/Global Human Settlement/GHS_SMOD_POP2015_GLOBE_R2019A_54009_1K_labelHDC_V2_0/GHS_SMOD_POP2015_GLOBE_R2019A_54009_1K_labelHDC_V2_0.gpkg'
+```
+
+We filter cities for a minimum population from their 2015 population.
+```{r}
+MIN_CITY_POPULATION = 500000
+```
+
+```{r}
+human_settlement = read_sf(GHSL_HUMAN_SETTLEMENT)
+human_settlement
+```
+```{r}
+human_settlement_2mil = human_settlement[human_settlement$POP_2015 >= MIN_CITY_POPULATION, c('ID_HDC_G0', 'NAME_MAIN', 'POP_2015', 'BU_2015', 'geom')]
+names(human_settlement_2mil) = c('city_id', 'city_name', 'pop_2015', 'bu_2015', 'geom')
+```
+
+```{r}
+st_crs(human_settlement_2mil)
+```
+
+Number of cities initially selected
+```{r}
+nrow(human_settlement_2mil)
+```
+
+Location of those cities
+```{r}
+plot(human_settlement_2mil["pop_2015"])
+```
+
+## Store cities for use later.
+```{r}
+output = mkdir(GEO_DATA_OUTPUT_DIR, 'cities')
+write_sf(human_settlement_2mil, filename(output, 'initial_selection.shp'), driver="ESRI Shapefile", layer_options = "ENCODING=UTF-8")
+```
