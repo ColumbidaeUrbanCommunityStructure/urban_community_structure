@@ -1,18 +1,7 @@
 ---
 title: "Initial City Selection"
-output: 
-  html_document:
-      citation_package: natbib
-    biblio-style: apsr
-references:
-  - id: GHS_SMOD_POPMT_GLOBE_R2019A
-    title: GHS settlement grid, updated and refined REGIO model 2014 in application to GHS-BUILT R2018A and GHS-POP R2019A, multitemporal (1975-1990-2000-2015), R2019A.
-    author: Pesaresi, Martino; Florczyk, Aneta; Schiavina, Marcello; Melchiorri, Michele; Maffenini, Luca 
-    organisation: European Commission
-    publisher: Joint Research Centre (JRC)
-    year: 2019
-    type: misc
-    DOI: 10.2905/42E8BE89-54FF-464E-BE7B-BF9E64DA5218
+output: html_document
+bibliography: ../ref.bib  
 ---
 
 ```{r}
@@ -53,18 +42,26 @@ names(human_settlement_2mil) = c('city_id', 'city_name', 'pop_2015', 'bu_2015', 
 st_crs(human_settlement_2mil)
 ```
 
+```{r}
+target_crs = st_crs("EPSG:4326")
+human_settlement_2mil_wgs84 = st_transform(human_settlement_2mil, target_crs)
+```
+
+```{r}
+st_crs(human_settlement_2mil_wgs84)
+```
 Number of cities initially selected
 ```{r}
-nrow(human_settlement_2mil)
+nrow(human_settlement_2mil_wgs84)
 ```
 
 Location of those cities
 ```{r}
-plot(human_settlement_2mil["pop_2015"])
+plot(human_settlement_2mil_wgs84["pop_2015"])
 ```
 
 ## Store cities for use later.
 ```{r}
-output = mkdir(GEO_DATA_OUTPUT_DIR, 'cities')
-write_sf(human_settlement_2mil, filename(output, 'initial_selection.shp'), driver="ESRI Shapefile", layer_options = "ENCODING=UTF-8")
+output = mkdir(GEO_WORKING_OUTPUT_DIR, 'cities')
+write_sf(human_settlement_2mil_wgs84, filename(output, 'initial_selection.shp'), driver="ESRI Shapefile", layer_options = "ENCODING=UTF-8")
 ```

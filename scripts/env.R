@@ -1,6 +1,6 @@
 library(sf)
-library(auk)
 library(tidyverse)
+library(dplyr)
 
 filename = function(directory, filename) {
   paste(directory, filename, sep = '/')
@@ -12,6 +12,11 @@ mkdir = function(mainDir, subDir) {
 }
 
 TMP_DIR = '/tmp'
+
+WORKING_OUTPUT_DIR = mkdir('/Users/james/Projects', 'urban_community_structure_wrk')
+GEO_WORKING_OUTPUT_DIR = mkdir(WORKING_OUTPUT_DIR, 'geo')
+
+EBIRD_WORKING_OUTPUT_DIR = mkdir(WORKING_OUTPUT_DIR, 'ebird')
 
 DATA_OUTPUT_DIR = mkdir(mkdir('../../', 'data'), 'generated')
 GEO_DATA_OUTPUT_DIR = mkdir(DATA_OUTPUT_DIR, 'geo')
