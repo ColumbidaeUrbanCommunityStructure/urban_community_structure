@@ -13,8 +13,13 @@ Two objectives in this script:
 1. Find all the checklists meeting the @Callaghan_2017 criteria with in our initial city selection polygons
 2. Find all the Columbidae species that occur on those checklists.
 
+# Requirements
+Install sqllite locally.
+Download full eBird data and sampling data.
 
-## Check eBird raw data
+# eBird Sampling Data
+
+## Check eBird raw sampling data
 @eBird2023 data can be downloaded here:
 https://science.ebird.org/en/use-ebird-data/download-ebird-data-products
 
@@ -30,6 +35,13 @@ head -6 ${EBIRD_SAMPLE_FILE}
 
 # Find all eBird localities with valid checklists within our cities
 Our ultimate aim is to find all checklists within our cities that match the filters defined by @Callaghan_2017, and store filtered data in cache file.
+
+Our process for doing this is:
+1. Using eBird sampling data; find all complete checklists; that are travelling, area, or stationary; and created between the years 2013 to 2023; store these as our first pass.
+2. Extract all eBird unique localities from the first pass of checklists
+3. Join those localities to our initial city selection vector, and keep any location that is within an urban polygon. This creates a mapping of eBird locality to city.
+4. Store both the first pass of checklists and the locality to city mapping in sqlite.
+5. Extract all checklists from sqlite that are recorded at an urban locality applying the filters defined by @Callaghan_2017
 
 ## First pass to find valid checklists
 Read header of eBird sampling data file, and print with column index.
@@ -78,7 +90,7 @@ We use bash for streaming the file and then
 
 ```{bash}
 COLUMNS=13,15,16,17,20,21,24,25,28
-echo -e "locality_id\tlat\tlong\tdate\tchecklist_id\tprotocol\tduration\teffort_km\tcomplete" > ${EBIRD_CHECKLIST_FIRST_PASS_FILE} 
+echo -e "locality_id\tlat\tlong\tobs_date\tchecklist_id\tprotocol\tduration\teffort_km\tcomplete" > ${EBIRD_CHECKLIST_FIRST_PASS_FILE} 
 cat ${EBIRD_RAW_FILE} | cut -f${COLUMNS} | grep 1$ | grep -E "Traveling|Area|Stationary" | grep -E "\t20(1[3-9])|(2[0-3])-[0-1]" >> ${EBIRD_CHECKLIST_FIRST_PASS_FILE}
 ```
 
@@ -132,12 +144,7 @@ localities_in_cities[localities_in_cities$locality_id == 'L13024221',] # Bogota
 nrow(localities_in_cities)
 ```
 
-Store urban locality IDs for further filtering
-```{r}
-EBIRD_URBAN_LOCALITIES = filename(EBIRD_WORKING_OUTPUT_DIR, 'urban_localities.txt')
-write_csv(data.frame(locality_id = localities_in_cities$locality_id), EBIRD_URBAN_LOCALITIES)
-```
-
+Store urban locality to city mapping IDs in file.
 ```{r}
 EBIRD_LOCALITY_TO_CITY = filename(EBIRD_WORKING_OUTPUT_DIR, 'locality_to_city.txt')
 write_csv(data.frame(
@@ -147,42 +154,105 @@ write_csv(data.frame(
   ), EBIRD_LOCALITY_TO_CITY)
 ```
 
-## Final filter to get all urban checklists
+## Store data into SQLLite
+```{r}
+Sys.setenv(EBIRD_LOCALITY_TO_CITY_FILE = EBIRD_LOCALITY_TO_CITY)
+```
+
+```{r}
+CHECKLIST_DATABASE_FILE = filename(TMP_DIR, 'checklists.sqllite.db')
+Sys.setenv(CHECKLIST_DB = CHECKLIST_DATABASE_FILE)
+```
+
+```{bash}
+sqlite3 ${CHECKLIST_DB} "CREATE TABLE checklists (locality_id NVARCHAR(12), lat FLOAT, long FLOAT, obs_date DATE, checklist_id NVARCHAR(12), protocol NVARCHAR(12), duration INTEGER, effort_km INTEGER, complete TINYINT);"
+```
+
+```{bash}
+echo -e ".separator \\t\n.import ${EBIRD_CHECKLIST_FIRST_PASS_FILE} checklists" > /tmp/import_command.sqlite
+sqlite3 ${CHECKLIST_DB} < /tmp/import_command.sqlite
+```
+
+```{bash}
+sqlite3 ${CHECKLIST_DB} "CREATE TABLE locality_to_city (locality_id NVARCHAR(12), city_id INT, city_name NVARCHAR(100));"
+```
+
+```{bash}
+sqlite3 ${CHECKLIST_DB} ".import --csv ${EBIRD_LOCALITY_TO_CITY_FILE} locality_to_city"
+```
+
+## Export urban checklists from sqlite
 Finally we can filter out first pass of checklists to only urban checklists, and checklists satisfy all of the criteria of @Callaghan_2017.
 
 ```{r}
-EBIRD_URBAN_CHECKLISTS = filename(TMP_DIR, 'urban_checklists.txt')
-Sys.setenv(EBIRD_URBAN_CHECKLISTS_FILE = EBIRD_URBAN_CHECKLISTS)
-Sys.setenv(EBIRD_URBAN_LOCALITIES_FILE = EBIRD_URBAN_LOCALITIES)
+EBIRD_LOCALITY_TO_CITY = filename(EBIRD_DATA_OUTPUT_DIR, "urban_checklists.csv")
+Sys.setenv(EBIRD_URBAN_CHECKLISTS_FILE = EBIRD_LOCALITY_TO_CITY)
 ```
 
+Where we apply the filter such that:
+1. duration >= 5 AND duration <= 240
+2. effort_km = '' OR (effort_km >= 0 AND effort_km <= 10)
 ```{bash}
-head ${EBIRD_CHECKLIST_FIRST_PASS_FILE}
+echo -e ".mode csv\n.headers on\nSELECT checklist_id, locality_id, city_id, city_name, duration, obs_date FROM checklists JOIN locality_to_city USING (locality_id) WHERE duration >= 5 AND duration <= 240 AND (effort_km = '' OR (effort_km >= 0 AND effort_km <= 10))" > /tmp/export_command.sqlite
+sqlite3 ${CHECKLIST_DB} < /tmp/export_command.sqlite > ${EBIRD_URBAN_CHECKLISTS_FILE}
 ```
 
+# Find all Columbidae records
+Here we want to find all Columbidae records from eBird that are present on our extracted checklists.
+
+The process we follow to complete this is:
+1. 
+2.
+3.
+4.
+
+## Check eBird raw data
+@eBird2023 data can be downloaded here:
+https://science.ebird.org/en/use-ebird-data/download-ebird-data-products
+
+```{r}
+EBIRD_DATA_RAW = '/Users/james/Dropbox/PhD/eBird/ebd_relNov-2023/ebd_relNov-2023.txt'
+Sys.setenv(EBIRD_FILE = EBIRD_DATA_RAW)
+```
+
+Read first 5 columns of raw ebird sampling data
+```{bash}
+head -6 ${EBIRD_FILE}
+```
+
+## Extract a first pass of required observations
+Here we get all pigeon records on complete checklists of the required protocol within the years 2013 to 2023
+
+Read header of eBird sampling data file, and print with column index.
 ```{bash}
 let INDEX=1
-head -1 ${EBIRD_CHECKLIST_FIRST_PASS_FILE} | sed 's/\t/\n/g' | while read column_header; do 
+head -1 ${EBIRD_FILE} | sed 's/\t/\n/g' | while read column_header; do 
     echo ${INDEX}: $column_header
     let INDEX=${INDEX}+1
 done
 ```
 
-We map cut the following columns which map into our awk script:
-1: locality_id
-5: checklist_id
-7: duration
-8: effort_km
-
-We use bash for streaming the file and then
-1. cut for the columns we want
-2. grep for our urban localities
-3. awk for checking duration and effort_km
-4. store result
-
-```{bash}
-echo 'locality_id,checklist_id,duration' > ${EBIRD_URBAN_CHECKLISTS_FILE}
-cat ${EBIRD_CHECKLIST_FIRST_PASS_FILE} | cut -f1,5,7,8 | grep -F -f ${EBIRD_URBAN_LOCALITIES_FILE} | awk -F"\t" -f 2_ebird_data_extraction_awk/is_valid_checklist.awk -f 2_ebird_data_extraction_awk/extract_urban_checklists.awk  >> ${EBIRD_URBAN_CHECKLISTS_FILE}
+```{r}
+EBIRD_OBSERVATIONS_FIRST_PASS = filename(TMP_DIR, 'ebird_obs_first_pass_cache.txt')
+Sys.setenv(EBIRD_OBSERVATIONS_FIRST_PASS_FILE = EBIRD_OBSERVATIONS_FIRST_PASS)
 ```
 
-# Find all Columbidae records
+3: TAXONOMIC ORDER
+6: COMMON NAME
+7: SCIENTIFIC NAME
+11: OBSERVATION COUNT
+12: BREEDING CODE
+31: OBSERVATION DATE
+34: SAMPLING EVENT IDENTIFIER
+35: PROTOCOL TYPE
+41: NUMBER OBSERVERS
+42: ALL SPECIES REPORTED
+43: GROUP IDENTIFIER
+
+WIP
+```{bash}
+COLUMNS=
+echo -e "" > ${EBIRD_OBSERVATIONS_FIRST_PASS_FILE} 
+cat ${EBIRD_RAW_FILE} | cut -f${COLUMNS} | grep 1$ | grep -E "Traveling|Area|Stationary" | grep -E "\t20(1[3-9])|(2[0-3])-[0-1]" >> ${EBIRD_OBSERVATIONS_FIRST_PASS_FILE}
+```
+
