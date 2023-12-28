@@ -1,6 +1,6 @@
 ---
 title: "Initial City Selection"
-output: html_document
+output: html_notebook
 bibliography: ../ref.bib  
 ---
 

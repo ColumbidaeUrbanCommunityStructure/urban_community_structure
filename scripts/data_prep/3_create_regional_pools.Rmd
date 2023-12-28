@@ -1,0 +1,14 @@
+---
+title: "Create regional pools using BirdLife"
+output: html_notebook
+---
+
+```{r}
+source('../env.R')
+```
+
+
+
+```{r}
+
+```
