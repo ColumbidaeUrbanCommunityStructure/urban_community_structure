@@ -2,6 +2,7 @@ library(sf)
 library(tidyverse)
 library(dplyr)
 library(dbplyr)
+library(xlsx)
 
 filename = function(directory, filename) {
   paste(directory, filename, sep = '/')
@@ -18,6 +19,8 @@ WORKING_OUTPUT_DIR = mkdir('/Users/james/Projects', 'urban_community_structure_w
 GEO_WORKING_OUTPUT_DIR = mkdir(WORKING_OUTPUT_DIR, 'geo')
 
 EBIRD_WORKING_OUTPUT_DIR = mkdir(WORKING_OUTPUT_DIR, 'ebird')
+
+BIRDLIFE_WORKING_OUTPUT_DIR = mkdir(WORKING_OUTPUT_DIR, 'birdlife')
 
 DATA_OUTPUT_DIR = mkdir(mkdir('../../', 'data'), 'generated')
 GEO_DATA_OUTPUT_DIR = mkdir(DATA_OUTPUT_DIR, 'geo')

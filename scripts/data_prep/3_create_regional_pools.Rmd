@@ -1,14 +1,204 @@
 ---
 title: "Create regional pools using BirdLife"
 output: html_notebook
+bibliography: ../ref.bib 
 ---
 
 ```{r}
 source('../env.R')
 ```
 
+# Generate Worldwide Distributions for all Columbidae
 
+
+## Read in the Birdlife Distribution 
+Birdlife dataset @Birdlife2020.
+
+A download of the birdlife distributions can be requested from here:
+https://datazone.birdlife.org/species/requestdis
 
 ```{r}
-
+BIRDLIFE_DISTRIBUTIONS = '/Users/james/Dropbox/PhD/BirdLife/Distribution/BOTW 2/BOTW.gdb'
+birdlife = st_read(BIRDLIFE_DISTRIBUTIONS)
+head(birdlife)
 ```
+
+## Read in the Birdlife Taxonomy
+Load the birdlife taxonomy to find Columbidae species.
+
+The taxonomy can be downloaded here:
+http://datazone.birdlife.org/species/taxonomy
+
+```{r}
+BIRDLIFE_TAXONOMY = '/Users/james/Dropbox/PhD/BirdLife/Taxonomy/Handbook of the Birds of the World and BirdLife International Digital Checklist of the Birds of the World_Version_5.xlsx'
+birdlifeTaxonomyWb = loadWorkbook(BIRDLIFE_TAXONOMY)
+
+birdlifeTaxonomyWb_Sheets = getSheets(birdlifeTaxonomyWb)
+birdlifeTaxonomyWb_Sheets[["BirdLife_Checklist_v.5"]]
+```
+
+```{r}
+birdlifeTaxonomy_tmp = data.frame(readRows(birdlifeTaxonomyWb_Sheets[["BirdLife_Checklist_v.5"]], 3, 31223, 1, 9))
+names(birdlifeTaxonomy_tmp) <- birdlifeTaxonomy_tmp[1,]
+birdlifeTaxonomy <- birdlifeTaxonomy_tmp[-1,]
+
+birdlifeColumbidae = birdlifeTaxonomy[birdlifeTaxonomy$Order == 'COLUMBIFORMES',c('Scientific name')]
+birdlifeColumbidae
+```
+
+## Filter Birdlife Distributions to only Columbidae
+```{r}
+columbidaeDistribution = birdlife[birdlife$binomial %in% birdlifeColumbidae,]
+head(columbidaeDistribution)
+```
+```{r}
+COLUMBIDAE_WORLD_DISTRIBUTIONS = filename(BIRDLIFE_WORKING_OUTPUT_DIR, "columbidae_world.shp")
+write_sf(columbidaeDistribution, COLUMBIDAE_WORLD_DISTRIBUTIONS)
+```
+
+Free up memory by removing birdlife data from workspace
+```{r}
+rm(birdlife)
+rm(birdlifeTaxonomy)
+rm(birdlifeTaxonomy_tmp)
+rm(birdlifeTaxonomyWb)
+rm(birdlifeTaxonomyWb_Sheets)
+```
+
+```{r}
+st_crs(columbidaeDistribution)
+```
+
+# Create intersection of Columbidae Distributions with Urban Spaces
+Read in our initial city vectors, we will join these to our checklists
+```{r}
+initial_city_selection = read_sf(filename(mkdir(GEO_WORKING_OUTPUT_DIR, 'cities'), 'initial_selection.shp'))
+```
+
+```{r}
+st_crs(initial_city_selection)
+```
+```{r}
+sf::sf_use_s2(FALSE)
+
+urban_columbidae_distributions = st_join(initial_city_selection, columbidaeDistribution) 
+
+urban_columbidae_distributions
+```
+## Check birdlife distribution data
+
+Any extinct species?
+```{r}
+urban_columbidae_distributions[urban_columbidae_distributions$presence > 4, c('binomial', 'city_name', 'city_id')]
+```
+Possibly Extinct species
+```{r}
+urban_columbidae_distributions[urban_columbidae_distributions$presence == 4, c('binomial', 'city_name', 'city_id')]
+```
+
+## Map seasonal and origin to string values
+```{r}
+urban_columbidae_distributions$seasonal_desc = "Unknown Code"
+urban_columbidae_distributions$seasonal_desc[urban_columbidae_distributions$seasonal == "1"] = "Resident"
+urban_columbidae_distributions$seasonal_desc[urban_columbidae_distributions$seasonal == "2"] = "Breeding Season" 
+urban_columbidae_distributions$seasonal_desc[urban_columbidae_distributions$seasonal == "3"] = "Non-breeding Season" 
+urban_columbidae_distributions$seasonal_desc[urban_columbidae_distributions$seasonal == "4"] = "Passage" 
+urban_columbidae_distributions$seasonal_desc[urban_columbidae_distributions$seasonal == "5"] = "Seasonal occurence uncertain"
+```
+
+```{r}
+urban_columbidae_distributions$origin_desc = "Unknown Code"
+urban_columbidae_distributions$origin_desc[urban_columbidae_distributions$origin == "1"] = "Native"
+urban_columbidae_distributions$origin_desc[urban_columbidae_distributions$origin == "2"] = "Reintroduced" 
+urban_columbidae_distributions$origin_desc[urban_columbidae_distributions$origin == "3"] = "Introduced" 
+urban_columbidae_distributions$origin_desc[urban_columbidae_distributions$origin == "4"] = "Vagrant" 
+urban_columbidae_distributions$origin_desc[urban_columbidae_distributions$origin == "5"] = "Origin Uncertain"
+urban_columbidae_distributions$origin_desc[urban_columbidae_distributions$origin == "6"] = "Assisted Colonisation"
+```
+
+## Missing North American distribution of Streptopelia decaocto
+Birdlife is missing the recent invasion of Streptopelia decaocto into North America. 
+We supplement the data for Streptopelia decaocto with the range from eBird's Status and Trends dataset.
+
+This data can be downloaded here:
+https://science.ebird.org/en/status-and-trends/species/eucdov/downloads
+
+```{r}
+EBIRD_EUCDOV_RANGE = '/Users/james/Dropbox/PhD/BirdLife/eucdov_range_2022/eucdov_range_2022.gpkg'
+eucdov_range_vect = st_read(EBIRD_EUCDOV_RANGE)
+plot(eucdov_range_vect["scientific_name"])
+```
+
+```{r}
+st_crs(eucdov_range_vect)
+```
+
+```{r}
+sf::sf_use_s2(FALSE)
+
+existing_eucdov_cities = urban_columbidae_distributions$city_id[urban_columbidae_distributions$binomial == 'Streptopelia decaocto']
+
+eucdov_distribution = st_join(initial_city_selection, eucdov_range_vect) 
+
+eucdov_distribution[!is.na(eucdov_distribution$species_code) & !(eucdov_distribution$city_name %in% existing_eucdov_cities),]
+```
+```{r}
+missing_eucdov_cities = data.frame(
+    species_name = 'Streptopelia decaocto', 
+    city_id = eucdov_distribution$city_id[!is.na(eucdov_distribution$species_code) & !(eucdov_distribution$city_name %in% existing_eucdov_cities)],
+    city_name= eucdov_distribution$city_name[!is.na(eucdov_distribution$species_code) & !(eucdov_distribution$city_name %in% existing_eucdov_cities)],
+    origin = 'Introduced',
+    seasonal = 'Resident'
+)
+missing_eucdov_cities
+```
+
+## Store regional pool result
+```{r}
+
+birdlife_urban_distribution = rbind(
+  data.frame(
+    species_name = urban_columbidae_distributions$binomial, 
+    city_id = urban_columbidae_distributions$city_id,
+    city_name= urban_columbidae_distributions$city_name,
+    origin = urban_columbidae_distributions$origin_desc,
+    seasonal = urban_columbidae_distributions$seasonal_desc
+  ),
+  missing_eucdov_cities
+)
+```
+
+```{r}
+BIRDLIFE_URBAN_DISTRIBUTION = filename(BIRDLIFE_WORKING_OUTPUT_DIR, 'birdlife_urban_distributions.csv')
+write_csv(birdlife_urban_distribution, BIRDLIFE_URBAN_DISTRIBUTION)
+```
+
+## Examine result
+```{r}
+regional_pools = read_csv(BIRDLIFE_URBAN_DISTRIBUTION)
+```
+
+Species in Manchester's regional pool
+```{r}
+regional_pools %>% filter(city_name == 'Manchester') 
+```
+Species in Miami's regional pool
+```{r}
+regional_pools %>% filter(city_name == 'Miami') 
+```
+
+Cities with Common Woodpigeon in regional pool
+```{r}
+regional_pools %>% filter(species_name == 'Columba palumbus')
+```
+
+Cities with Collared Dove in regional pool
+```{r}
+regional_pools %>% filter(species_name == 'Streptopelia decaocto')
+```
+
+Regional pool sizes
+```{r}
+regional_pools %>% group_by(city_id, city_name) %>% summarise(pool_size = n()) %>% arrange(pool_size)
+```
+
