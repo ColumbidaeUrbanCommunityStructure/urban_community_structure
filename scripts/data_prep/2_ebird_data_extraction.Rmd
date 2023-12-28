@@ -1,5 +1,5 @@
 ---
-title: "Extract required data from eBird"
+title: "Extract required observation and sampling data from eBird"
 output:  html_document
 bibliography: ../ref.bib  
 ---
@@ -43,7 +43,7 @@ Our process for doing this is:
 4. Store both the first pass of checklists and the locality to city mapping in sqlite.
 5. Extract all checklists from sqlite that are recorded at an urban locality applying the filters defined by @Callaghan_2017
 
-## First pass to find valid checklists
+## Extract first pass to find valid checklists
 Read header of eBird sampling data file, and print with column index.
 ```{bash}
 let INDEX=1
@@ -154,6 +154,12 @@ write_csv(data.frame(
   ), EBIRD_LOCALITY_TO_CITY)
 ```
 
+Clean up by removing two large collections of all ebird observations
+```{r}
+rm(all_ebird_locations)
+rm(all_ebird_locations_sf)
+```
+
 ## Store data into SQLLite
 ```{r}
 Sys.setenv(EBIRD_LOCALITY_TO_CITY_FILE = EBIRD_LOCALITY_TO_CITY)
@@ -185,8 +191,8 @@ sqlite3 ${CHECKLIST_DB} ".import --csv ${EBIRD_LOCALITY_TO_CITY_FILE} locality_t
 Finally we can filter out first pass of checklists to only urban checklists, and checklists satisfy all of the criteria of @Callaghan_2017.
 
 ```{r}
-EBIRD_LOCALITY_TO_CITY = filename(EBIRD_WORKING_OUTPUT_DIR, "urban_checklists.csv")
-Sys.setenv(EBIRD_URBAN_CHECKLISTS_FILE = EBIRD_LOCALITY_TO_CITY)
+EBIRD_URBAN_CHECKLISTS = filename(EBIRD_WORKING_OUTPUT_DIR, "urban_checklists.csv")
+Sys.setenv(EBIRD_URBAN_CHECKLISTS_FILE = EBIRD_URBAN_CHECKLISTS)
 ```
 
 Where we apply the filter such that:
@@ -197,21 +203,67 @@ echo -e ".mode csv\n.headers on\nSELECT checklist_id, locality_id, city_id, city
 sqlite3 ${CHECKLIST_DB} < /tmp/export_command.sqlite > ${EBIRD_URBAN_CHECKLISTS_FILE}
 ```
 
+## Examine number of urban checklists per city
+```{r}
+urban_checklists = read_csv(EBIRD_URBAN_CHECKLISTS)
+head(urban_checklists)
+```
+```{r}
+urban_checklists %>% group_by(city_id, city_name) %>%
+  summarise(total_checklists = n(), total_effort = sum(duration)) %>%
+  arrange(total_checklists)
+```
+Cities from initial selection that have no qualifiying checklists
+```{r}
+initial_city_selection$city_name[!(initial_city_selection$city_id %in% urban_checklists$city_id)]
+```
+
 # Find all Columbidae records
 Here we want to find all Columbidae records from eBird that are present on our extracted checklists.
 
 The process we follow to complete this is:
-1. 
-2.
-3.
-4.
+1. A first pass extraction from the eBird raw observation data, extracting Columbidae records on complete checklists, recorded between 2013 and 2023.
+2. We then import these records, along with the urban checklists into a sqlite database.
+3. Extract all Columbidae records that occur on our urban checklists.
+
+## Find the required taxonomy from the eBird Clements taxonomy
+See here for links to download:
+https://science.ebird.org/en/use-ebird-data/the-ebird-taxonomy
+
+```{r}
+EBIRD_TAXONOMY = '/Users/james/Dropbox/PhD/eBird/taxonomy_2023/ebird_taxonomy_v2023.csv'
+taxonomy = read_csv(EBIRD_TAXONOMY)
+head(taxonomy)
+```
+Find the Columbiformes
+```{r}
+columbiformes_taxonomy_all = taxonomy[taxonomy$ORDER == 'Columbiformes', c('TAXON_ORDER', 'CATEGORY', 'SCI_NAME', 'PRIMARY_COM_NAME')]
+columbiformes_taxonomy_all
+```
+
+Filter further to include only full species, from the non-species list (below) we also want to keep:
+1875	form	    Columba livia (Wild type)
+```{r}
+columbiformes_taxonomy_all[!(columbiformes_taxonomy_all$CATEGORY %in% c('species', 'issf', 'domestic')),]
+```
+
+```{r}
+columbiformes_taxonomy = columbiformes_taxonomy_all[columbiformes_taxonomy_all$CATEGORY %in% c('species', 'issf', 'domestic') | columbiformes_taxonomy_all$TAXON_ORDER == 1875 & !is.na(columbiformes_taxonomy_all$TAXON_ORDER),]
+write_csv(columbiformes_taxonomy, filename(EBIRD_WORKING_OUTPUT_DIR, 'taxonomy.csv'))
+columbiformes_taxonomy
+```
+
+We can construct an initial filter for species by checking the TAXON_ORDER is between 1874 and 2855. We can use this to filter for observations from the eBird raw observations file.
+```{r}
+taxonomy[taxonomy$TAXON_ORDER >= 1874 & taxonomy$TAXON_ORDER <= 2855,c('ORDER', 'SCI_NAME', 'PRIMARY_COM_NAME')]
+```
 
 ## Check eBird raw data
 @eBird2023 data can be downloaded here:
 https://science.ebird.org/en/use-ebird-data/download-ebird-data-products
 
 ```{r}
-EBIRD_DATA_RAW = '/Users/james/Dropbox/PhD/eBird/ebd_relNov-2023/ebd_relNov-2023.txt'
+EBIRD_DATA_RAW = '/Users/james/Dropbox/PhD/eBird/ebd_relNov-2023/ebd_relNov-2023.sample.txt'
 Sys.setenv(EBIRD_FILE = EBIRD_DATA_RAW)
 ```
 
@@ -237,11 +289,8 @@ EBIRD_OBSERVATIONS_FIRST_PASS = filename(TMP_DIR, 'ebird_obs_first_pass_cache.tx
 Sys.setenv(EBIRD_OBSERVATIONS_FIRST_PASS_FILE = EBIRD_OBSERVATIONS_FIRST_PASS)
 ```
 
-3: TAXONOMIC ORDER
-6: COMMON NAME
-7: SCIENTIFIC NAME
+3:  TAXONOMIC ORDER
 11: OBSERVATION COUNT
-12: BREEDING CODE
 31: OBSERVATION DATE
 34: SAMPLING EVENT IDENTIFIER
 35: PROTOCOL TYPE
@@ -249,10 +298,21 @@ Sys.setenv(EBIRD_OBSERVATIONS_FIRST_PASS_FILE = EBIRD_OBSERVATIONS_FIRST_PASS)
 42: ALL SPECIES REPORTED
 43: GROUP IDENTIFIER
 
-WIP
-```{bash}
-COLUMNS=
-echo -e "" > ${EBIRD_OBSERVATIONS_FIRST_PASS_FILE} 
-cat ${EBIRD_RAW_FILE} | cut -f${COLUMNS} | grep 1$ | grep -E "Traveling|Area|Stationary" | grep -E "\t20(1[3-9])|(2[0-3])-[0-1]" >> ${EBIRD_OBSERVATIONS_FIRST_PASS_FILE}
-```
+Here we use bash and grep to create an initial pass of checklists by filtering for:
 
+1. TAXONOMIC ORDER is between 1874 and 2855 
+((187[4-9])|(18[5-9][0-9])|(19[0-9]{2})|(2[0-7][0-9][0-9])|(28[0-4][0-9])|(285[0-5]))
+
+2. OBSERVATION DATE is between 2013 and 2023
+((201[3-9])|(202[0-3]))-[0-1][0-9]-[0-9]{2}
+
+3. PROTOCOL TYPE is one of Traveling|Area|Stationary
+(Traveling|Area|Stationary)
+
+4. ALL SPECIES REPORTED is true
+
+```{bash}
+COLUMNS=3,11,31,34,35,41,42,43
+echo -e "taxon_id\tobs_count\tobs_date\tchecklist_id\tprotocol\tnumber_observers\tis_complete\tgroup_id" > ${EBIRD_OBSERVATIONS_FIRST_PASS_FILE} 
+cat ${EBIRD_FILE} | cut -f${COLUMNS} | grep -E "^((187[4-9])|(18[5-9][0-9])|(19[0-9]{2})|(2[0-7][0-9][0-9])|(28[0-4][0-9])|(285[0-5]))\t([0-9]+|X)\t((201[3-9])|(202[0-3]))-[0-1][0-9]-[0-9]{2}\tS[0-9]+\t(Traveling|Area|Stationary)\t[0-9]+\t1\t" >> ${EBIRD_OBSERVATIONS_FIRST_PASS_FILE} 
+```
