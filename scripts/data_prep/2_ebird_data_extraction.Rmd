@@ -167,7 +167,7 @@ write_csv(data.frame(
   ), EBIRD_LOCALITY_TO_CITY)
 ```
 
-Clean up by removing two large collections of all ebird observations
+Clean up by removing two large data frames of all ebird localities
 ```{r}
 rm(all_ebird_locations)
 rm(all_ebird_locations_sf)
@@ -239,7 +239,7 @@ EBIRD_URBAN_CHECKLISTS = filename(EBIRD_WORKING_OUTPUT_DIR, "urban_checklists.cs
 Sys.setenv(EBIRD_URBAN_CHECKLISTS_FILE = EBIRD_URBAN_CHECKLISTS)
 ```
 
-Where we apply the filter such that:
+Then we apply filters such that:
 
 1. duration >= 5 AND duration <= 240
 
