@@ -37,10 +37,15 @@ head -6 ${EBIRD_SAMPLE_FILE}
 Our ultimate aim is to find all checklists within our cities that match the filters defined by @Callaghan_2017, and store filtered data in cache file.
 
 Our process for doing this is:
+
 1. Using eBird sampling data; find all complete checklists; that are travelling, area, or stationary; and created between the years 2013 to 2023; store these as our first pass.
+
 2. Extract all eBird unique localities from the first pass of checklists
+
 3. Join those localities to our initial city selection vector, and keep any location that is within an urban polygon. This creates a mapping of eBird locality to city.
+
 4. Store both the first pass of checklists and the locality to city mapping in sqlite.
+
 5. Extract all checklists from sqlite that are recorded at an urban locality applying the filters defined by @Callaghan_2017
 
 ## Extract first pass to find valid checklists
@@ -65,29 +70,35 @@ echo ${EBIRD_CHECKLIST_FIRST_PASS_FILE}
 ```
 
 Here we cut for the following eBird raw columns
-13: LOCALITY ID
-15: LATITUDE
-16: LONGITUDE
-17: OBSERVATION DATE
-20: SAMPLING EVENT IDENTIFIER
-21: PROTOCOL TYPE
-24: DURATION MINUTES
-25: EFFORT DISTANCE KM
-28: ALL SPECIES REPORTED
-29: GROUP IDENTIFIER
+
+* 13: LOCALITY ID
+* 15: LATITUDE
+* 16: LONGITUDE
+* 17: OBSERVATION DATE
+* 20: SAMPLING EVENT IDENTIFIER
+* 21: PROTOCOL TYPE
+* 24: DURATION MINUTES
+* 25: EFFORT DISTANCE KM
+* 28: ALL SPECIES REPORTED
+* 29: GROUP IDENTIFIER
 
 and then filter such that
-"ALL SPECIES REPORTED" is true ("1")
-"PROTOCOL TYPE" IN (Stationary, Traveling, Area)
-"OBSERVATION DATE" >= 2013
+
+* "ALL SPECIES REPORTED" is true ("1")
+* "PROTOCOL TYPE" IN (Stationary, Traveling, Area)
+* "OBSERVATION DATE" >= 2013
   ((201[3-9])|(202[0-3]))-[0-1][0-9]-[0-9]{2}
 
 to collect a unique set of (LOCALITY ID, LATITUDE, LONGITUDE)
 
 We use bash for streaming the file and then
+
 1. `cut` the columns we want to use
+
 2. `grep` to find all complete checklists (line ending with 1)
+
 3. `grep` to check for required protocols
+
 4. `grep` to check for years 2013 -> 2023
 
 ```{bash}
@@ -229,8 +240,11 @@ Sys.setenv(EBIRD_URBAN_CHECKLISTS_FILE = EBIRD_URBAN_CHECKLISTS)
 ```
 
 Where we apply the filter such that:
+
 1. duration >= 5 AND duration <= 240
+
 2. effort_km = '' OR (effort_km >= 0 AND effort_km <= 10)
+
 ```{bash}
 echo -e ".mode csv\n.headers on\nSELECT checklist_id, locality_id, city_id, city_name, duration, obs_date FROM unique_checklists JOIN locality_to_city USING (locality_id) WHERE duration >= 5 AND duration <= 240 AND (effort_km = '' OR (effort_km >= 0 AND effort_km <= 10))" > /tmp/export_command.sqlite
 sqlite3 ${CHECKLIST_DB} < /tmp/export_command.sqlite > ${EBIRD_URBAN_CHECKLISTS_FILE}
@@ -257,9 +271,13 @@ initial_city_selection$city_name[!(initial_city_selection$city_id %in% urban_che
 Here we want to find all Columbidae records from eBird that are present on our extracted checklists.
 
 The process we follow to complete this is:
+
 1. A first pass extraction from the eBird raw observation data, extracting Columbidae records on complete checklists, recorded between 2013 and 2023.
+
 2. We then import these records, along with the urban checklists into a sqlite database.
+
 3. Extract all Columbidae records that occur on our urban checklists.
+
 
 ## Find the required taxonomy from the eBird Clements taxonomy
 See here for links to download:
@@ -277,7 +295,9 @@ columbiformes_taxonomy_all
 ```
 
 Filter further to include only full species, from the non-species list (below) we also want to keep:
-1875	form	    Columba livia (Wild type)
+
+```1875	form	    Columba livia (Wild type)```
+
 ```{r}
 columbiformes_taxonomy_all[!(columbiformes_taxonomy_all$CATEGORY %in% c('species', 'issf', 'domestic')),]
 ```
@@ -325,14 +345,14 @@ EBIRD_OBSERVATIONS_FIRST_PASS = filename(TMP_DIR, 'ebird_obs_first_pass_cache.tx
 Sys.setenv(EBIRD_OBSERVATIONS_FIRST_PASS_FILE = EBIRD_OBSERVATIONS_FIRST_PASS)
 ```
 
-3:  TAXONOMIC ORDER
-11: OBSERVATION COUNT
-31: OBSERVATION DATE
-34: SAMPLING EVENT IDENTIFIER
-35: PROTOCOL TYPE
-41: NUMBER OBSERVERS
-42: ALL SPECIES REPORTED
-43: GROUP IDENTIFIER
+* 3:  TAXONOMIC ORDER
+* 11: OBSERVATION COUNT
+* 31: OBSERVATION DATE
+* 34: SAMPLING EVENT IDENTIFIER
+* 35: PROTOCOL TYPE
+* 41: NUMBER OBSERVERS
+* 42: ALL SPECIES REPORTED
+* 43: GROUP IDENTIFIER
 
 Here we use bash and grep to create an initial pass of checklists by filtering for:
 
