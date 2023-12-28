@@ -255,7 +255,7 @@ sqlite3 ${CHECKLIST_DB} < /tmp/export_command.sqlite > ${EBIRD_URBAN_CHECKLISTS_
 urban_checklists = read_csv(EBIRD_URBAN_CHECKLISTS)
 head(urban_checklists)
 ```
-
+Effort per city
 ```{r}
 urban_checklists %>% group_by(city_id, city_name) %>%
   summarise(total_checklists = n(), total_effort = sum(duration)) %>%
@@ -288,6 +288,7 @@ EBIRD_TAXONOMY = '/Users/james/Dropbox/PhD/eBird/taxonomy_2023/ebird_taxonomy_v2
 taxonomy = read_csv(EBIRD_TAXONOMY)
 head(taxonomy)
 ```
+
 Find the Columbiformes
 ```{r}
 columbiformes_taxonomy_all = taxonomy[taxonomy$ORDER == 'Columbiformes', c('TAXON_ORDER', 'CATEGORY', 'SCI_NAME', 'PRIMARY_COM_NAME')]
@@ -319,7 +320,7 @@ taxonomy[taxonomy$TAXON_ORDER >= 1874 & taxonomy$TAXON_ORDER <= 2855,c('ORDER', 
 https://science.ebird.org/en/use-ebird-data/download-ebird-data-products
 
 ```{r}
-EBIRD_DATA_RAW = '/Users/james/Dropbox/PhD/eBird/ebd_relNov-2023/ebd_relNov-2023.sample.txt'
+EBIRD_DATA_RAW = '/Users/james/Dropbox/PhD/eBird/ebd_relNov-2023/ebd_relNov-2023.txt'
 Sys.setenv(EBIRD_FILE = EBIRD_DATA_RAW)
 ```
 
@@ -429,13 +430,14 @@ sqlite3 ${OBSERVATION_DB} < /tmp/export_command.sqlite > ${COLUMBIDAE_OBSERVATIO
 urban_pigeons = read_csv(COLUMBIDAE_OBSERVATIONS)
 head(urban_pigeons)
 ```
-
+Species in Manchester, UK
 ```{r}
 urban_pigeons %>% filter(city_name == 'Manchester') %>% 
   group_by(species_name) %>% 
   summarise(checklist_count = n())
 ```
 
+Cities with Woodpigeon
 ```{r}
 urban_pigeons %>% filter(species_name == 'Columba palumbus') %>% 
   group_by(city_name) %>% 
