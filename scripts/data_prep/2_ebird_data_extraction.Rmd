@@ -436,6 +436,12 @@ urban_pigeons %>% filter(city_name == 'Manchester') %>%
   group_by(species_name) %>% 
   summarise(checklist_count = n())
 ```
+Species in Nairobi, Kenya
+```{r}
+urban_pigeons %>% filter(city_name == 'Nairobi') %>% 
+  group_by(species_name) %>% 
+  summarise(checklist_count = n())
+```
 
 Cities with Woodpigeon
 ```{r}
@@ -445,3 +451,10 @@ urban_pigeons %>% filter(species_name == 'Columba palumbus') %>%
   arrange(checklist_count)
 ```
 
+Urban pool size
+```{r}
+urban_pigeons %>% 
+  group_by(city_name, city_id) %>% 
+  summarise(species_count = n_distinct(species_name)) %>%
+  arrange(species_count)
+```
