@@ -185,7 +185,7 @@ sqlite3 ${CHECKLIST_DB} ".import --csv ${EBIRD_LOCALITY_TO_CITY_FILE} locality_t
 Finally we can filter out first pass of checklists to only urban checklists, and checklists satisfy all of the criteria of @Callaghan_2017.
 
 ```{r}
-EBIRD_LOCALITY_TO_CITY = filename(EBIRD_DATA_OUTPUT_DIR, "urban_checklists.csv")
+EBIRD_LOCALITY_TO_CITY = filename(EBIRD_WORKING_OUTPUT_DIR, "urban_checklists.csv")
 Sys.setenv(EBIRD_URBAN_CHECKLISTS_FILE = EBIRD_LOCALITY_TO_CITY)
 ```
 
