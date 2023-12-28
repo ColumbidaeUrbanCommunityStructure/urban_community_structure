@@ -1,0 +1,9 @@
+---
+title: "Generate presence test data using eBird Status & Trends"
+output: html_notebook
+bibliography: ../ref.bib 
+---
+
+```{r}
+source('../env.R')
+```

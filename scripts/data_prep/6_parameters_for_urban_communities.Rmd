@@ -1,0 +1,11 @@
+---
+title: "Find parameters for building urban communities"
+output: html_notebook
+bibliography: ../ref.bib 
+---
+
+```{r}
+source('../env.R')
+```
+
+Find sample size, and percentage of checklists (or percentage of effort) for valid urban communities based on presence test data.

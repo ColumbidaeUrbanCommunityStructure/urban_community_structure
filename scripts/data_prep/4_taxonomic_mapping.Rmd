@@ -1,0 +1,9 @@
+---
+title: "Map Birdlife and eBird taxonomy to Jetz"
+output: html_notebook
+bibliography: ../ref.bib 
+---
+
+```{r}
+source('../env.R')
+```

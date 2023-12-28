@@ -1,0 +1,9 @@
+---
+title: "Trait generation"
+output: html_notebook
+bibliography: ../ref.bib 
+---
+
+```{r}
+source('../env.R')
+```
