@@ -565,5 +565,134 @@ Species missing in eBird
 ```{r}
 ebird_tax[!(ebird_tax$ebird_species_name %in% ebird_birdlife_taxonomy_mapping$ebird_species_name),]
 ```
+# Remove Extinct species
+```{r}
+ebird_birdlife_taxonomy_mapping = ebird_birdlife_taxonomy_mapping[!(ebird_birdlife_taxonomy_mapping$species_name %in% c(
+  'Ectopistes migratorius', 'Columba thiriouxi', 'Nesoenas cicur', 'Raphus cucullatus', 'Alectroenas nitidissimus', 'Nesoenas rodericanus', 'Microgoura meeki', 'Caloenas maculata', 'Pezophaps solitaria', 'Alectroenas payandeei', 'Ptilinopus mercierii', 'Alopecoenas ferrugineus', 'Alopecoenas salamonis', 'Columba jouyi', 'Columba versicolor'
+)),]
+```
 
-# Phylogentic tree using Open Tree of Life
+# Map to Jetz
+
+```{r}
+ebird_birdlife_taxonomy_mapping$jetz_species_name = str_replace(ebird_birdlife_taxonomy_mapping$species_name, " ", "_")
+```
+
+```{r}
+jetz_phylo_tree <- read.tree(PHYLO_TREE)
+```
+
+Species with incorrect jetz mapping
+```{r}
+ebird_birdlife_taxonomy_mapping[!(ebird_birdlife_taxonomy_mapping$jetz_species_name %in% jetz_phylo_tree$tip.label),]
+```
+
+Fix mapping
+```{r}
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Streptopelia dusumieri'] = 'Streptopelia_bitorquata'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Streptopelia xanthocycla'] = 'Streptopelia_decaocto'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Spilopelia chinensis'] = 'Stigmatopelia_chinensis'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Spilopelia senegalensis'] = 'Stigmatopelia_senegalensis'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Nesoenas picturatus'] = 'Nesoenas_picturata'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Macropygia macassariensis'] = 'Macropygia_magna'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Macropygia timorlaoensis'] = 'Macropygia_magna'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Turacoena sulaensis'] = 'Turacoena_manadensis'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Reinwardtoena reinwardti'] = 'Reinwardtoena_reinwardtsi'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Geotrygon purpurata'] = 'Geotrygon_saphirina'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Geotrygon leucometopia'] = 'Geotrygon_caniceps'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Leptotrygon veraguensis'] = 'Geotrygon_veraguensis'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Leptotila cassinii'] = 'Leptotila_cassini'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Zentrygon carrikeri'] = 'Geotrygon_lawrencii'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Zentrygon costaricensis'] = 'Geotrygon_costaricensis'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Zentrygon lawrencii'] = 'Geotrygon_lawrencii'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Zentrygon albifacies'] = 'Geotrygon_albifacies'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Zentrygon frenata'] = 'Geotrygon_frenata'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Zentrygon linearis'] = 'Geotrygon_linearis'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Zentrygon chiriquensis'] = 'Geotrygon_chiriquensis'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Zentrygon goldmani'] = 'Geotrygon_goldmani'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Paraclaravis mondetoura'] = 'Claravis_mondetoura'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Paraclaravis geoffroyi'] = 'Claravis_godefrida'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Goura sclaterii'] = 'Goura_scheepmakeri'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Chalcophaps longirostris'] = 'Chalcophaps_indica'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Treron phayrei'] = 'Treron_pompadora'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Treron affinis'] = 'Treron_pompadora'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Treron chloropterus'] = 'Treron_pompadora'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Treron axillaris'] = 'Treron_pompadora'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Treron aromaticus'] = 'Treron_pompadora'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Treron griveaudi'] = 'Treron_calvus'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Ducula oenothorax'] = 'Ducula_aenea'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Ducula neglecta'] = 'Ducula_perspicillata'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Ducula geelvinkiana'] = 'Ducula_myristicivora'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Ducula cuprea'] = 'Ducula_badia'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Alectroenas pulcherrimus'] = 'Alectroenas_pulcherrima'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Ptilinopus nainus'] = 'Ptilinopus_naina'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Ptilinopus alligator'] = 'Ptilinopus_cinctus'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Ptilinopus speciosus'] = 'Ptilinopus_solomonensis'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Ptilinopus ponapensis'] = 'Ptilinopus_porphyraceus'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Ptilinopus hernsheimi'] = 'Ptilinopus_porphyraceus'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Ptilinopus greyi'] = 'Ptilinopus_greyii'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Ptilinopus chrysogaster'] = 'Ptilinopus_purpuratus'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Hemiphaga chathamensis'] = 'Hemiphaga_novaeseelandiae'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Gymnophaps stalkeri'] = 'Gymnophaps_mada'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Megaloprepia magnifica'] = 'Ptilinopus_magnificus'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Megaloprepia formosa'] = 'Ptilinopus_bernsteinii'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Ramphiculus merrilli'] = 'Ptilinopus_merrilli'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Ramphiculus marchei'] = 'Ptilinopus_marchei'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Ramphiculus leclancheri'] = 'Ptilinopus_leclancheri'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Ramphiculus jambu'] = 'Ptilinopus_jambu'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Ramphiculus occipitalis'] = 'Ptilinopus_occipitalis'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Chrysoena victor'] = 'Ptilinopus_victor'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Chrysoena luteovirens'] = 'Ptilinopus_luteovirens'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Chrysoena viridis'] = 'Ptilinopus_viridis'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Spilopelia suratensis'] = 'Stigmatopelia_chinensis'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Patagioenas albipennis'] = 'Patagioenas_maculosa'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Patagioenas albilinea'] = 'Patagioenas_fasciata'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Alopecoenas hoedtii'] = 'Gallicolumba_hoedtii'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Alopecoenas jobiensis'] = 'Gallicolumba_jobiensis'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Alopecoenas kubaryi'] = 'Gallicolumba_kubaryi'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Alopecoenas xanthonurus'] = 'Gallicolumba_xanthonura'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Alopecoenas erythropterus'] = 'Gallicolumba_erythroptera'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Alopecoenas rubescens'] = 'Gallicolumba_rubescens'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Alopecoenas beccarii'] = 'Gallicolumba_beccarii'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Alopecoenas johannae'] = 'Gallicolumba_beccarii'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Alopecoenas canifrons'] = 'Gallicolumba_canifrons'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Alopecoenas sanctaecrucis'] = 'Gallicolumba_sanctaecrucis'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Alopecoenas stairi'] = 'Gallicolumba_stairi'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Otidiphaps aruensis'] = 'Otidiphaps_nobilis'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Otidiphaps cervicalis'] = 'Otidiphaps_nobilis'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Otidiphaps insularis'] = 'Otidiphaps_nobilis'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Phapitreron nigrorum'] = 'Phapitreron_leucotis'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Phapitreron brevirostris'] = 'Phapitreron_leucotis'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Phapitreron maculipectus'] = 'Phapitreron_amethystinus'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Phapitreron frontalis'] = 'Phapitreron_amethystinus'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Treron delalandii'] = 'Treron_calvus'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Treron permagnus'] = 'Treron_formosae'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Ducula obiensis'] = 'Ducula_basilica'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Ducula salvadorii'] = 'Ducula_pinon'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Ramphiculus epius'] = 'Ptilinopus_subgularis'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Ramphiculus subgularis'] = 'Ptilinopus_subgularis'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Ramphiculus mangoliensis'] = 'Ptilinopus_subgularis'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Ramphiculus fischeri'] = 'Ptilinopus_fischeri'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Ramphiculus meridionalis'] = 'Ptilinopus_fischeri'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Ptilinopus temminckii'] = 'Ptilinopus_superbus'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Ptilinopus gestroi'] = 'Ptilinopus_ornatus'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Ptilinopus fasciatus'] = 'Ptilinopus_porphyraceus'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Alopecoenas beccarii'] = 'Gallicolumba_beccarii'
+```
+
+Check all species now mapped
+```{r}
+ebird_birdlife_taxonomy_mapping[!ebird_birdlife_taxonomy_mapping$jetz_species_name %in% jetz_phylo_tree$tip.label,]
+```
+
+## Store Mapping file
+```{r}
+write_csv(ebird_birdlife_taxonomy_mapping, filename(TAXONOMY_OUTPUT_DIR, 'taxonomy_mapping.csv'))
+```
+
+## Prune Phylogeny and store
+```{r}
+selected_species <- ebird_birdlife_taxonomy_mapping$jetz_species_name
+pruned_tree <- ladderize(drop.tip(jetz_phylo_tree, setdiff(jetz_phylo_tree$tip.label, selected_species)))
+write.tree(pruned_tree, filename(TAXONOMY_OUTPUT_DIR, 'phylogeny.tre'))
+```

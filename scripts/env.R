@@ -4,7 +4,7 @@ library(dplyr)
 library(dbplyr)
 library(xlsx)
 library(stringr)
-
+library(phytools)
 
 filename = function(directory, filename) {
   paste(directory, filename, sep = '/')
@@ -29,3 +29,8 @@ GEO_DATA_OUTPUT_DIR = mkdir(DATA_OUTPUT_DIR, 'geo')
 
 EBIRD_DATA_OUTPUT_DIR = mkdir(DATA_OUTPUT_DIR, 'ebird')
 
+TAXONOMY_OUTPUT_DIR = mkdir(DATA_OUTPUT_DIR, 'taxonomy')
+
+PROVIDED_DATA = mkdir(mkdir('../..', 'data'), 'provided')
+
+PHYLO_TREE = filename(PROVIDED_DATA, 'phylogeny__stage2_hackett_mcc_no_neg.tre')

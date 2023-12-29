@@ -1,0 +1,439 @@
+species_name,birdlife_id,birdlife_common_name,ebird_id,ebird_common_name,ebird_species_name,jetz_species_name
+Columba livia,586,Rock Dove,1874,Rock Pigeon,Columba livia,Columba_livia
+Columba livia,586,Rock Dove,1875,Rock Pigeon (Wild type),Columba livia (Wild type),Columba_livia
+Columba livia,586,Rock Dove,1889,Rock Pigeon (Feral Pigeon),Columba livia (Feral Pigeon),Columba_livia
+Columba rupestris,587,Hill Pigeon,1890,Hill Pigeon,Columba rupestris,Columba_rupestris
+Columba leuconota,588,Snow Pigeon,1894,Snow Pigeon,Columba leuconota,Columba_leuconota
+Columba guinea,589,Speckled Pigeon,1897,Speckled Pigeon,Columba guinea,Columba_guinea
+Columba albitorques,590,White-collared Pigeon,1900,White-collared Pigeon,Columba albitorques,Columba_albitorques
+Columba oenas,591,Stock Dove,1901,Stock Dove,Columba oenas,Columba_oenas
+Columba eversmanni,592,Yellow-eyed Pigeon,1904,Yellow-eyed Pigeon,Columba eversmanni,Columba_eversmanni
+Columba oliviae,593,Somali Pigeon,1905,Somali Pigeon,Columba oliviae,Columba_oliviae
+Columba palumbus,594,Common Woodpigeon,1906,Common Wood-Pigeon,Columba palumbus,Columba_palumbus
+Columba palumbus,594,Common Woodpigeon,1907,Common Wood-Pigeon (White-necked),Columba palumbus [palumbus Group],Columba_palumbus
+Columba palumbus,594,Common Woodpigeon,1912,Common Wood-Pigeon (Cinnamon-necked),Columba palumbus casiotis,Columba_palumbus
+Columba trocaz,595,Madeira Laurel-pigeon,1913,Trocaz Pigeon,Columba trocaz,Columba_trocaz
+Columba bollii,596,Dark-tailed Laurel-pigeon,1914,Bolle's Pigeon,Columba bollii,Columba_bollii
+Columba junoniae,597,White-tailed Laurel-pigeon,1916,Laurel Pigeon,Columba junoniae,Columba_junoniae
+Columba unicincta,598,Afep Pigeon,1915,Afep Pigeon,Columba unicincta,Columba_unicincta
+Columba arquatrix,599,African Olive-pigeon,1917,Rameron Pigeon,Columba arquatrix,Columba_arquatrix
+Columba sjostedti,600,Cameroon Olive-pigeon,1918,Cameroon Pigeon,Columba sjostedti,Columba_sjostedti
+Columba thomensis,601,Sao Tome Olive-pigeon,1919,Maroon Pigeon,Columba thomensis,Columba_thomensis
+Columba pollenii,602,Comoro Olive-pigeon,1926,Comoro Pigeon,Columba pollenii,Columba_pollenii
+Columba hodgsonii,603,Speckled Woodpigeon,1927,Speckled Wood-Pigeon,Columba hodgsonii,Columba_hodgsonii
+Columba albinucha,604,White-naped Pigeon,1928,White-naped Pigeon,Columba albinucha,Columba_albinucha
+Columba pulchricollis,605,Ashy Woodpigeon,1929,Ashy Wood-Pigeon,Columba pulchricollis,Columba_pulchricollis
+Columba elphinstonii,606,Nilgiri Woodpigeon,1930,Nilgiri Wood-Pigeon,Columba elphinstonii,Columba_elphinstonii
+Columba torringtoniae,607,Sri Lanka Woodpigeon,1931,Sri Lanka Wood-Pigeon,Columba torringtoniae,Columba_torringtoniae
+Columba punicea,608,Pale-capped Pigeon,1932,Pale-capped Pigeon,Columba punicea,Columba_punicea
+Columba argentina,609,Silvery Pigeon,1933,Silvery Wood-Pigeon,Columba argentina,Columba_argentina
+Columba palumboides,610,Andaman Woodpigeon,1934,Andaman Wood-Pigeon,Columba palumboides,Columba_palumboides
+Columba janthina,611,Japanese Woodpigeon,1935,Black Wood-Pigeon,Columba janthina,Columba_janthina
+Columba vitiensis,614,Metallic Pigeon,1940,Metallic Pigeon,Columba vitiensis,Columba_vitiensis
+Columba vitiensis,614,Metallic Pigeon,1941,Metallic Pigeon (Metallic),Columba vitiensis [vitiensis Group],Columba_vitiensis
+Columba vitiensis,614,Metallic Pigeon,1949,Metallic Pigeon (Samoan),Columba vitiensis castaneiceps,Columba_vitiensis
+Columba leucomela,615,White-headed Pigeon,1950,White-headed Pigeon,Columba leucomela,Columba_leucomela
+Columba pallidiceps,616,Yellow-legged Pigeon,1951,Yellow-legged Pigeon,Columba pallidiceps,Columba_pallidiceps
+Columba delegorguei,617,Eastern Bronze-naped Pigeon,1920,Delegorgue's Pigeon,Columba delegorguei,Columba_delegorguei
+Columba delegorguei,617,Eastern Bronze-naped Pigeon,1921,Delegorgue's Pigeon (Northern),Columba delegorguei sharpei,Columba_delegorguei
+Columba delegorguei,617,Eastern Bronze-naped Pigeon,1922,Delegorgue's Pigeon (Southern),Columba delegorguei delegorguei,Columba_delegorguei
+Columba iriditorques,618,Western Bronze-naped Pigeon,1923,Bronze-naped Pigeon,Columba iriditorques,Columba_iriditorques
+Columba malherbii,619,Sao Tome Bronze-naped Pigeon,1924,Sao Tome Pigeon,Columba malherbii,Columba_malherbii
+Aplopelia larvata,621,Lemon Dove,1953,Lemon Dove,Aplopelia larvata,Aplopelia_larvata
+Aplopelia larvata,621,Lemon Dove,1954,Lemon Dove (Western),Aplopelia larvata inornata,Aplopelia_larvata
+Aplopelia larvata,621,Lemon Dove,1955,Lemon Dove (Principe),Aplopelia larvata principalis,Aplopelia_larvata
+Aplopelia larvata,621,Lemon Dove,1956,Lemon Dove (Sao Tome),Aplopelia larvata simplex,Aplopelia_larvata
+Aplopelia larvata,621,Lemon Dove,1957,Lemon Dove (Lemon),Aplopelia larvata larvata/bronzina,Aplopelia_larvata
+Streptopelia turtur,622,European Turtle-dove,2035,European Turtle-Dove,Streptopelia turtur,Streptopelia_turtur
+Streptopelia lugens,623,Dusky Turtle-dove,2040,Dusky Turtle-Dove,Streptopelia lugens,Streptopelia_lugens
+Streptopelia hypopyrrha,624,Adamawa Turtle-dove,2041,Adamawa Turtle-Dove,Streptopelia hypopyrrha,Streptopelia_hypopyrrha
+Streptopelia orientalis,625,Oriental Turtle-dove,2042,Oriental Turtle-Dove,Streptopelia orientalis,Streptopelia_orientalis
+Streptopelia dusumieri,626,Philippine Collared-dove,2050,Philippine Collared-Dove,Streptopelia dusumieri,Streptopelia_bitorquata
+Streptopelia bitorquata,627,Sunda Collared-dove,2049,Sunda Collared-Dove,Streptopelia bitorquata,Streptopelia_bitorquata
+Streptopelia decaocto,628,Eurasian Collared-dove,2051,Eurasian Collared-Dove,Streptopelia decaocto,Streptopelia_decaocto
+Streptopelia xanthocycla,629,Burmese Collared-dove,2054,Burmese Collared-Dove,Streptopelia xanthocycla,Streptopelia_decaocto
+Streptopelia roseogrisea,630,African Collared-dove,2056,African Collared-Dove,Streptopelia roseogrisea,Streptopelia_roseogrisea
+Streptopelia roseogrisea,630,African Collared-dove,2059,African Collared-Dove (Domestic type or Ringed Turtle-Dove),Streptopelia roseogrisea (Domestic type),Streptopelia_roseogrisea
+Streptopelia reichenowi,631,White-winged Collared-dove,2062,White-winged Collared-Dove,Streptopelia reichenowi,Streptopelia_reichenowi
+Streptopelia decipiens,632,Mourning Collared-dove,2063,Mourning Collared-Dove,Streptopelia decipiens,Streptopelia_decipiens
+Streptopelia semitorquata,633,Red-eyed Dove,2070,Red-eyed Dove,Streptopelia semitorquata,Streptopelia_semitorquata
+Streptopelia capicola,634,Ring-necked Dove,2071,Ring-necked Dove,Streptopelia capicola,Streptopelia_capicola
+Streptopelia vinacea,635,Vinaceous Dove,2078,Vinaceous Dove,Streptopelia vinacea,Streptopelia_vinacea
+Streptopelia tranquebarica,636,Red Turtle-dove,2079,Red Collared-Dove,Streptopelia tranquebarica,Streptopelia_tranquebarica
+Spilopelia chinensis,637,Eastern Spotted Dove,2084,Spotted Dove,Spilopelia chinensis,Stigmatopelia_chinensis
+Spilopelia chinensis,637,Eastern Spotted Dove,2085,Spotted Dove (Western),Spilopelia chinensis suratensis/ceylonensis,Stigmatopelia_chinensis
+Spilopelia chinensis,637,Eastern Spotted Dove,2088,Spotted Dove (Eastern),Spilopelia chinensis chinensis/tigrina,Stigmatopelia_chinensis
+Spilopelia senegalensis,639,Laughing Dove,2091,Laughing Dove,Spilopelia senegalensis,Stigmatopelia_senegalensis
+Nesoenas picturatus,640,Madagascar Turtle-dove,2024,Malagasy Turtle-Dove,Nesoenas picturatus,Nesoenas_picturata
+Nesoenas mayeri,641,Pink Pigeon,2030,Pink Pigeon,Nesoenas mayeri,Nesoenas_mayeri
+Macropygia unchall,645,Barred Cuckoo-dove,2098,Barred Cuckoo-Dove,Macropygia unchall,Macropygia_unchall
+Macropygia rufipennis,646,Andaman Cuckoo-dove,2130,Andaman Cuckoo-Dove,Macropygia rufipennis,Macropygia_rufipennis
+Macropygia emiliana,647,Ruddy Cuckoo-dove,2139,Ruddy Cuckoo-Dove,Macropygia emiliana,Macropygia_emiliana
+Macropygia tenuirostris,648,Philippine Cuckoo-dove,2133,Philippine Cuckoo-Dove,Macropygia tenuirostris,Macropygia_tenuirostris
+Macropygia macassariensis,649,Flores Sea Cuckoo-dove,2103,Flores Sea Cuckoo-Dove,Macropygia macassariensis,Macropygia_magna
+Macropygia magna,650,Timor Cuckoo-dove,2106,Timor Cuckoo-Dove,Macropygia magna,Macropygia_magna
+Macropygia timorlaoensis,651,Tanimbar Cuckoo-dove,2107,Tanimbar Cuckoo-Dove,Macropygia timorlaoensis,Macropygia_magna
+Macropygia amboinensis,652,Slender-billed Cuckoo-dove,2108,Amboyna Cuckoo-Dove,Macropygia amboinensis,Macropygia_amboinensis
+Macropygia phasianella,653,Brown Cuckoo-dove,2102,Brown Cuckoo-Dove,Macropygia phasianella,Macropygia_phasianella
+Macropygia ruficeps,654,Little Cuckoo-dove,2151,Little Cuckoo-Dove,Macropygia ruficeps,Macropygia_ruficeps
+Macropygia nigrirostris,655,Black-billed Cuckoo-dove,2147,Black-billed Cuckoo-Dove,Macropygia nigrirostris,Macropygia_nigrirostris
+Macropygia mackinlayi,656,Mackinlay's Cuckoo-dove,2148,Mackinlay's Cuckoo-Dove,Macropygia mackinlayi,Macropygia_mackinlayi
+Turacoena manadensis,657,White-faced Cuckoo-dove,2167,White-faced Cuckoo-Dove,Turacoena manadensis,Turacoena_manadensis
+Turacoena sulaensis,658,Sula Cuckoo-dove,2168,Sula Cuckoo-Dove,Turacoena sulaensis,Turacoena_manadensis
+Turacoena modesta,659,Black Cuckoo-dove,2169,Slaty Cuckoo-Dove,Turacoena modesta,Turacoena_modesta
+Reinwardtoena reinwardti,660,Great Cuckoo-dove,2161,Great Cuckoo-Dove,Reinwardtoena reinwardti,Reinwardtoena_reinwardtsi
+Reinwardtoena browni,661,Pied Cuckoo-dove,2165,Pied Cuckoo-Dove,Reinwardtoena browni,Reinwardtoena_browni
+Reinwardtoena crassirostris,662,Crested Cuckoo-dove,2166,Crested Cuckoo-Dove,Reinwardtoena crassirostris,Reinwardtoena_crassirostris
+Patagioenas leucocephala,664,White-crowned Pigeon,1976,White-crowned Pigeon,Patagioenas leucocephala,Patagioenas_leucocephala
+Patagioenas squamosa,665,Scaly-naped Pigeon,1968,Scaly-naped Pigeon,Patagioenas squamosa,Patagioenas_squamosa
+Patagioenas speciosa,666,Scaled Pigeon,1967,Scaled Pigeon,Patagioenas speciosa,Patagioenas_speciosa
+Patagioenas corensis,667,Bare-eyed Pigeon,1972,Bare-eyed Pigeon,Patagioenas corensis,Patagioenas_corensis
+Patagioenas picazuro,668,Picazuro Pigeon,1969,Picazuro Pigeon,Patagioenas picazuro,Patagioenas_picazuro
+Patagioenas maculosa,669,Spot-winged Pigeon,1973,Spot-winged Pigeon,Patagioenas maculosa,Patagioenas_maculosa
+Patagioenas maculosa,669,Spot-winged Pigeon,1974,Spot-winged Pigeon (albipennis),Patagioenas maculosa albipennis,Patagioenas_maculosa
+Patagioenas maculosa,669,Spot-winged Pigeon,1975,Spot-winged Pigeon (maculosa),Patagioenas maculosa maculosa,Patagioenas_maculosa
+Patagioenas fasciata,671,Northern Band-tailed Pigeon,1986,Band-tailed Pigeon,Patagioenas fasciata,Patagioenas_fasciata
+Patagioenas fasciata,671,Northern Band-tailed Pigeon,1987,Band-tailed Pigeon (Northern),Patagioenas fasciata [fasciata Group],Patagioenas_fasciata
+Patagioenas fasciata,671,Northern Band-tailed Pigeon,1991,Band-tailed Pigeon (Viosca's),Patagioenas fasciata vioscae,Patagioenas_fasciata
+Patagioenas fasciata,671,Northern Band-tailed Pigeon,1992,Band-tailed Pigeon (White-necked),Patagioenas fasciata [albilinea Group],Patagioenas_fasciata
+Patagioenas araucana,673,Chilean Pigeon,1997,Chilean Pigeon,Patagioenas araucana,Patagioenas_araucana
+Patagioenas caribaea,674,Ring-tailed Pigeon,1998,Ring-tailed Pigeon,Patagioenas caribaea,Patagioenas_caribaea
+Patagioenas cayennensis,675,Pale-vented Pigeon,1960,Pale-vented Pigeon,Patagioenas cayennensis,Patagioenas_cayennensis
+Patagioenas flavirostris,676,Red-billed Pigeon,1977,Red-billed Pigeon,Patagioenas flavirostris,Patagioenas_flavirostris
+Patagioenas oenops,677,Peruvian Pigeon,1999,Peruvian Pigeon,Patagioenas oenops,Patagioenas_oenops
+Patagioenas inornata,678,Plain Pigeon,1982,Plain Pigeon,Patagioenas inornata,Patagioenas_inornata
+Patagioenas plumbea,679,Plumbeous Pigeon,2000,Plumbeous Pigeon,Patagioenas plumbea,Patagioenas_plumbea
+Patagioenas subvinacea,680,Ruddy Pigeon,2007,Ruddy Pigeon,Patagioenas subvinacea,Patagioenas_subvinacea
+Patagioenas subvinacea,680,Ruddy Pigeon,2008,Ruddy Pigeon (Berlepsch's),Patagioenas subvinacea subvinacea/berlepschi,Patagioenas_subvinacea
+Patagioenas subvinacea,680,Ruddy Pigeon,2011,Ruddy Pigeon (Ruddy),Patagioenas subvinacea [purpureotincta Group],Patagioenas_subvinacea
+Patagioenas nigrirostris,681,Short-billed Pigeon,2019,Short-billed Pigeon,Patagioenas nigrirostris,Patagioenas_nigrirostris
+Patagioenas goodsoni,682,Dusky Pigeon,2021,Dusky Pigeon,Patagioenas goodsoni,Patagioenas_goodsoni
+Starnoenas cyanocephala,683,Blue-headed Quail-dove,2323,Blue-headed Quail-Dove,Starnoenas cyanocephala,Starnoenas_cyanocephala
+Geotrygon purpurata,684,Purple Quail-dove,2324,Purple Quail-Dove,Geotrygon purpurata,Geotrygon_saphirina
+Geotrygon saphirina,685,Sapphire Quail-dove,2325,Sapphire Quail-Dove,Geotrygon saphirina,Geotrygon_saphirina
+Geotrygon versicolor,686,Crested Quail-dove,2328,Crested Quail-Dove,Geotrygon versicolor,Geotrygon_versicolor
+Geotrygon caniceps,687,Grey-headed Quail-dove,2335,Gray-fronted Quail-Dove,Geotrygon caniceps,Geotrygon_caniceps
+Geotrygon leucometopia,688,White-fronted Quail-dove,2336,White-fronted Quail-Dove,Geotrygon leucometopia,Geotrygon_caniceps
+Geotrygon montana,689,Ruddy Quail-dove,2329,Ruddy Quail-Dove,Geotrygon montana,Geotrygon_montana
+Geotrygon montana,689,Ruddy Quail-dove,2330,Ruddy Quail-Dove (Ruddy),Geotrygon montana montana,Geotrygon_montana
+Geotrygon montana,689,Ruddy Quail-dove,2331,Ruddy Quail-Dove (Martinique),Geotrygon montana martinica,Geotrygon_montana
+Geotrygon violacea,690,Violaceous Quail-dove,2332,Violaceous Quail-Dove,Geotrygon violacea,Geotrygon_violacea
+Geotrygon chrysia,691,Key West Quail-dove,2337,Key West Quail-Dove,Geotrygon chrysia,Geotrygon_chrysia
+Geotrygon mystacea,692,Bridled Quail-dove,2338,Bridled Quail-Dove,Geotrygon mystacea,Geotrygon_mystacea
+Leptotrygon veraguensis,693,Olive-backed Quail-dove,2339,Olive-backed Quail-Dove,Leptotrygon veraguensis,Geotrygon_veraguensis
+Leptotila verreauxi,694,White-tipped Dove,2340,White-tipped Dove,Leptotila verreauxi,Leptotila_verreauxi
+Leptotila verreauxi,694,White-tipped Dove,2341,White-tipped Dove (White-tipped),Leptotila verreauxi [verreauxi Group],Leptotila_verreauxi
+Leptotila verreauxi,694,White-tipped Dove,2351,White-tipped Dove (decolor),Leptotila verreauxi decolor,Leptotila_verreauxi
+Leptotila verreauxi,694,White-tipped Dove,2352,White-tipped Dove (brasiliensis Group),Leptotila verreauxi [brasiliensis Group],Leptotila_verreauxi
+Leptotila jamaicensis,695,Caribbean Dove,2357,Caribbean Dove,Leptotila jamaicensis,Leptotila_jamaicensis
+Leptotila cassinii,696,Grey-chested Dove,2362,Gray-chested Dove,Leptotila cassinii,Leptotila_cassini
+Leptotila cassinii,696,Grey-chested Dove,2363,Gray-chested Dove (cerviniventris),Leptotila cassinii cerviniventris,Leptotila_cassini
+Leptotila cassinii,696,Grey-chested Dove,2364,Gray-chested Dove (rufinucha),Leptotila cassinii rufinucha,Leptotila_cassini
+Leptotila cassinii,696,Grey-chested Dove,2365,Gray-chested Dove (cassinii),Leptotila cassinii cassinii,Leptotila_cassini
+Leptotila conoveri,697,Tolima Dove,2366,Tolima Dove,Leptotila conoveri,Leptotila_conoveri
+Leptotila ochraceiventris,698,Ochre-bellied Dove,2367,Ochre-bellied Dove,Leptotila ochraceiventris,Leptotila_ochraceiventris
+Leptotila plumbeiceps,699,Grey-headed Dove,2368,Gray-headed Dove,Leptotila plumbeiceps,Leptotila_plumbeiceps
+Leptotila plumbeiceps,699,Grey-headed Dove,2369,Gray-headed Dove (Gray-headed),Leptotila plumbeiceps plumbeiceps/notia,Leptotila_plumbeiceps
+Leptotila plumbeiceps,699,Grey-headed Dove,2372,Gray-headed Dove (Brown-backed),Leptotila plumbeiceps battyi/malae,Leptotila_plumbeiceps
+Leptotila rufaxilla,701,Grey-fronted Dove,2375,Gray-fronted Dove,Leptotila rufaxilla,Leptotila_rufaxilla
+Leptotila wellsi,702,Grenada Dove,2382,Grenada Dove,Leptotila wellsi,Leptotila_wellsi
+Leptotila pallida,703,Pallid Dove,2383,Pallid Dove,Leptotila pallida,Leptotila_pallida
+Leptotila megalura,704,Yungas Dove,2384,Large-tailed Dove,Leptotila megalura,Leptotila_megalura
+Zentrygon carrikeri,705,Tuxtla Quail-dove,2386,Tuxtla Quail-Dove,Zentrygon carrikeri,Geotrygon_lawrencii
+Zentrygon costaricensis,706,Buff-fronted Quail-dove,2387,Buff-fronted Quail-Dove,Zentrygon costaricensis,Geotrygon_costaricensis
+Zentrygon lawrencii,707,Purplish-backed Quail-dove,2388,Purplish-backed Quail-Dove,Zentrygon lawrencii,Geotrygon_lawrencii
+Zentrygon albifacies,708,White-faced Quail-dove,2389,White-faced Quail-Dove,Zentrygon albifacies,Geotrygon_albifacies
+Zentrygon frenata,709,White-throated Quail-dove,2390,White-throated Quail-Dove,Zentrygon frenata,Geotrygon_frenata
+Zentrygon linearis,710,Lined Quail-dove,2395,Lined Quail-Dove,Zentrygon linearis,Geotrygon_linearis
+Zentrygon linearis,710,Lined Quail-dove,2396,Lined Quail-Dove (linearis),Zentrygon linearis linearis,Geotrygon_linearis
+Zentrygon linearis,710,Lined Quail-dove,2397,Lined Quail-Dove (trinitatis),Zentrygon linearis trinitatis,Geotrygon_linearis
+Zentrygon chiriquensis,711,Chiriqui Quail-dove,2398,Chiriqui Quail-Dove,Zentrygon chiriquensis,Geotrygon_chiriquensis
+Zentrygon goldmani,712,Russet-crowned Quail-dove,2399,Russet-crowned Quail-Dove,Zentrygon goldmani,Geotrygon_goldmani
+Zenaida asiatica,713,White-winged Dove,2404,White-winged Dove,Zenaida asiatica,Zenaida_asiatica
+Zenaida meloda,714,West Peruvian Dove,2403,West Peruvian Dove,Zenaida meloda,Zenaida_meloda
+Zenaida aurita,715,Zenaida Dove,2408,Zenaida Dove,Zenaida aurita,Zenaida_aurita
+Zenaida galapagoensis,716,Galapagos Dove,2412,Galapagos Dove,Zenaida galapagoensis,Zenaida_galapagoensis
+Zenaida auriculata,717,Eared Dove,2415,Eared Dove,Zenaida auriculata,Zenaida_auriculata
+Zenaida macroura,718,Mourning Dove,2427,Mourning Dove,Zenaida macroura,Zenaida_macroura
+Zenaida graysoni,719,Socorro Dove,2436,Socorro Dove,Zenaida graysoni,Zenaida_graysoni
+Columbina inca,720,Inca Dove,2261,Inca Dove,Columbina inca,Columbina_inca
+Columbina squammata,721,Scaled Dove,2295,Scaled Dove,Columbina squammata,Columbina_squammata
+Columbina passerina,722,Common Ground-dove,2262,Common Ground Dove,Columbina passerina,Columbina_passerina
+Columbina minuta,723,Plain-breasted Ground-dove,2281,Plain-breasted Ground Dove,Columbina minuta,Columbina_minuta
+Columbina buckleyi,724,Ecuadorian Ground-dove,2292,Ecuadorian Ground Dove,Columbina buckleyi,Columbina_buckleyi
+Columbina talpacoti,725,Ruddy Ground-dove,2286,Ruddy Ground Dove,Columbina talpacoti,Columbina_talpacoti
+Columbina picui,726,Picui Dove,2298,Picui Ground Dove,Columbina picui,Columbina_picui
+Columbina cruziana,727,Croaking Ground-dove,2301,Croaking Ground Dove,Columbina cruziana,Columbina_cruziana
+Columbina cyanopis,728,Blue-eyed Ground-dove,2302,Blue-eyed Ground Dove,Columbina cyanopis,Columbina_cyanopis
+Claravis pretiosa,729,Blue Ground-dove,2304,Blue Ground Dove,Claravis pretiosa,Claravis_pretiosa
+Paraclaravis mondetoura,730,Maroon-chested Ground-dove,2305,Maroon-chested Ground Dove,Paraclaravis mondetoura,Claravis_mondetoura
+Paraclaravis geoffroyi,731,Purple-winged Ground-dove,2312,Purple-winged Ground Dove,Paraclaravis geoffroyi,Claravis_godefrida
+Metriopelia ceciliae,732,Bare-faced Ground-dove,2313,Bare-faced Ground Dove,Metriopelia ceciliae,Metriopelia_ceciliae
+Metriopelia morenoi,733,Moreno's Ground-dove,2317,Bare-eyed Ground Dove,Metriopelia morenoi,Metriopelia_morenoi
+Metriopelia melanoptera,734,Black-winged Ground-dove,2318,Black-winged Ground Dove,Metriopelia melanoptera,Metriopelia_melanoptera
+Metriopelia aymara,735,Golden-spotted Ground-dove,2321,Golden-spotted Ground Dove,Metriopelia aymara,Metriopelia_aymara
+Uropelia campestris,736,Long-tailed Ground-dove,2322,Long-tailed Ground Dove,Uropelia campestris,Uropelia_campestris
+Henicophaps albifrons,737,New Guinea Bronzewing,2198,New Guinea Bronzewing,Henicophaps albifrons,Henicophaps_albifrons
+Henicophaps foersteri,738,New Britain Bronzewing,2201,New Britain Bronzewing,Henicophaps foersteri,Henicophaps_foersteri
+Gallicolumba luzonica,739,Luzon Bleeding-heart,2456,Luzon Bleeding-heart,Gallicolumba luzonica,Gallicolumba_luzonica
+Gallicolumba crinigera,740,Mindanao Bleeding-heart,2460,Mindanao Bleeding-heart,Gallicolumba crinigera,Gallicolumba_crinigera
+Gallicolumba platenae,741,Mindoro Bleeding-heart,2453,Mindoro Bleeding-heart,Gallicolumba platenae,Gallicolumba_platenae
+Gallicolumba keayi,742,Negros Bleeding-heart,2454,Negros Bleeding-heart,Gallicolumba keayi,Gallicolumba_keayi
+Gallicolumba menagei,743,Sulu Bleeding-heart,2455,Sulu Bleeding-heart,Gallicolumba menagei,Gallicolumba_menagei
+Gallicolumba tristigmata,744,Sulawesi Ground-dove,2443,Sulawesi Ground Dove,Gallicolumba tristigmata,Gallicolumba_tristigmata
+Gallicolumba rufigula,745,Cinnamon Ground-dove,2447,Cinnamon Ground Dove,Gallicolumba rufigula,Gallicolumba_rufigula
+Leucosarcia melanoleuca,758,Wonga Pigeon,2249,Wonga Pigeon,Leucosarcia melanoleuca,Leucosarcia_melanoleuca
+Petrophassa rufipennis,759,Chestnut-quilled Rock-pigeon,2245,Chestnut-quilled Rock-Pigeon,Petrophassa rufipennis,Petrophassa_rufipennis
+Petrophassa albipennis,760,White-quilled Rock-pigeon,2246,White-quilled Rock-Pigeon,Petrophassa albipennis,Petrophassa_albipennis
+Geophaps plumifera,761,Spinifex Pigeon,2234,Spinifex Pigeon,Geophaps plumifera,Geophaps_plumifera
+Geophaps plumifera,761,Spinifex Pigeon,2235,Spinifex Pigeon (Rufous-bellied),Geophaps plumifera ferruginea,Geophaps_plumifera
+Geophaps plumifera,761,Spinifex Pigeon,2236,Spinifex Pigeon (White-bellied),Geophaps plumifera plumifera/leucogaster,Geophaps_plumifera
+Geophaps scripta,762,Squatter Pigeon,2239,Squatter Pigeon,Geophaps scripta,Geophaps_scripta
+Geophaps smithii,763,Partridge Pigeon,2242,Partridge Pigeon,Geophaps smithii,Geophaps_smithii
+Phaps chalcoptera,764,Common Bronzewing,2225,Common Bronzewing,Phaps chalcoptera,Phaps_chalcoptera
+Phaps elegans,765,Brush Bronzewing,2226,Brush Bronzewing,Phaps elegans,Phaps_elegans
+Phaps histrionica,766,Flock Bronzewing,2230,Flock Bronzewing,Phaps histrionica,Phaps_histrionica
+Ocyphaps lophotes,767,Crested Pigeon,2231,Crested Pigeon,Ocyphaps lophotes,Ocyphaps_lophotes
+Geopelia cuneata,768,Diamond Dove,2250,Diamond Dove,Geopelia cuneata,Geopelia_cuneata
+Geopelia striata,769,Zebra Dove,2251,Zebra Dove,Geopelia striata,Geopelia_striata
+Geopelia placida,771,Peaceful Dove,2252,Peaceful Dove,Geopelia placida,Geopelia_placida
+Geopelia maugeus,772,Barred Dove,2256,Barred Dove,Geopelia maugeus,Geopelia_maugeus
+Geopelia humeralis,773,Bar-shouldered Dove,2257,Bar-shouldered Dove,Geopelia humeralis,Geopelia_humeralis
+Trugon terrestris,774,Thick-billed Ground-pigeon,2465,Thick-billed Ground-Pigeon,Trugon terrestris,Trugon_terrestris
+Otidiphaps nobilis,776,Green-naped Pheasant-pigeon,2469,Pheasant Pigeon,Otidiphaps nobilis,Otidiphaps_nobilis
+Otidiphaps nobilis,776,Green-naped Pheasant-pigeon,2470,Pheasant Pigeon (Green-naped),Otidiphaps nobilis nobilis,Otidiphaps_nobilis
+Otidiphaps nobilis,776,Green-naped Pheasant-pigeon,2471,Pheasant Pigeon (White-naped),Otidiphaps nobilis aruensis,Otidiphaps_nobilis
+Otidiphaps nobilis,776,Green-naped Pheasant-pigeon,2472,Pheasant Pigeon (Gray-naped),Otidiphaps nobilis cervicalis,Otidiphaps_nobilis
+Otidiphaps nobilis,776,Green-naped Pheasant-pigeon,2473,Pheasant Pigeon (Black-naped),Otidiphaps nobilis insularis,Otidiphaps_nobilis
+Goura cristata,780,Western Crowned-pigeon,2474,Western Crowned-Pigeon,Goura cristata,Goura_cristata
+Goura sclaterii,781,Sclater's Crowned-pigeon,2475,Sclater's Crowned-Pigeon,Goura sclaterii,Goura_scheepmakeri
+Goura scheepmakeri,782,Scheepmaker's Crowned-pigeon,2476,Scheepmaker's Crowned-Pigeon,Goura scheepmakeri,Goura_scheepmakeri
+Goura victoria,783,Victoria Crowned-pigeon,2477,Victoria Crowned-Pigeon,Goura victoria,Goura_victoria
+Caloenas nicobarica,784,Nicobar Pigeon,2437,Nicobar Pigeon,Caloenas nicobarica,Caloenas_nicobarica
+Didunculus strigirostris,788,Tooth-billed Pigeon,2481,Tooth-billed Pigeon,Didunculus strigirostris,Didunculus_strigirostris
+Chalcophaps indica,789,Grey-capped Emerald Dove,2181,Asian Emerald Dove,Chalcophaps indica,Chalcophaps_indica
+Chalcophaps longirostris,790,Brown-capped Emerald Dove,2188,Pacific Emerald Dove,Chalcophaps longirostris,Chalcophaps_indica
+Chalcophaps stephani,791,Stephan's Dove,2194,Stephan's Dove,Chalcophaps stephani,Chalcophaps_stephani
+Turtur chalcospilos,792,Emerald-spotted Wood-dove,2170,Emerald-spotted Wood-Dove,Turtur chalcospilos,Turtur_chalcospilos
+Turtur abyssinicus,793,Black-billed Wood-dove,2171,Black-billed Wood-Dove,Turtur abyssinicus,Turtur_abyssinicus
+Turtur afer,794,Blue-spotted Wood-dove,2172,Blue-spotted Wood-Dove,Turtur afer,Turtur_afer
+Turtur tympanistria,795,Tambourine Dove,2173,Tambourine Dove,Turtur tympanistria,Turtur_tympanistria
+Turtur brehmeri,796,Blue-headed Wood-dove,2174,Blue-headed Wood-Dove,Turtur brehmeri,Turtur_brehmeri
+Oena capensis,797,Namaqua Dove,2178,Namaqua Dove,Oena capensis,Oena_capensis
+Phapitreron leucotis,798,White-eared Brown-dove,2482,White-eared Brown-Dove,Phapitreron leucotis,Phapitreron_leucotis
+Phapitreron leucotis,798,White-eared Brown-dove,2483,White-eared Brown-Dove (White-eared),Phapitreron leucotis leucotis,Phapitreron_leucotis
+Phapitreron leucotis,798,White-eared Brown-dove,2484,White-eared Brown-Dove (Buff-eared),Phapitreron leucotis nigrorum,Phapitreron_leucotis
+Phapitreron leucotis,798,White-eared Brown-dove,2485,White-eared Brown-Dove (Short-billed),Phapitreron leucotis brevirostris/occipitalis,Phapitreron_leucotis
+Phapitreron amethystinus,801,Amethyst Brown-dove,2488,Amethyst Brown-Dove,Phapitreron amethystinus,Phapitreron_amethystinus
+Phapitreron amethystinus,801,Amethyst Brown-dove,2489,Amethyst Brown-Dove (Amethyst),Phapitreron amethystinus amethystinus/imeldae,Phapitreron_amethystinus
+Phapitreron amethystinus,801,Amethyst Brown-dove,2492,Amethyst Brown-Dove (Gray-breasted),Phapitreron amethystinus maculipectus,Phapitreron_amethystinus
+Phapitreron amethystinus,801,Amethyst Brown-dove,2493,Amethyst Brown-Dove (Cebu),Phapitreron amethystinus frontalis,Phapitreron_amethystinus
+Phapitreron brunneiceps,804,Dark-eared Brown-dove,2494,Mindanao Brown-Dove,Phapitreron brunneiceps,Phapitreron_brunneiceps
+Phapitreron cinereiceps,805,Tawitawi Brown-dove,2495,Tawitawi Brown-Dove,Phapitreron cinereiceps,Phapitreron_cinereiceps
+Treron fulvicollis,806,Cinnamon-headed Green-pigeon,2499,Cinnamon-headed Green-Pigeon,Treron fulvicollis,Treron_fulvicollis
+Treron olax,807,Little Green-pigeon,2497,Little Green-Pigeon,Treron olax,Treron_olax
+Treron vernans,808,Pink-necked Green-pigeon,2498,Pink-necked Green-Pigeon,Treron vernans,Treron_vernans
+Treron bicinctus,809,Orange-breasted Green-pigeon,2504,Orange-breasted Green-Pigeon,Treron bicinctus,Treron_bicinctus
+Treron phayrei,810,Ashy-headed Green-pigeon,2512,Ashy-headed Green-Pigeon,Treron phayrei,Treron_pompadora
+Treron affinis,811,Grey-fronted Green-pigeon,2510,Gray-fronted Green-Pigeon,Treron affinis,Treron_pompadora
+Treron pompadora,812,Sri Lanka Green-pigeon,2509,Sri Lanka Green-Pigeon,Treron pompadora,Treron_pompadora
+Treron chloropterus,813,Andaman Green-pigeon,2511,Andaman Green-Pigeon,Treron chloropterus,Treron_pompadora
+Treron axillaris,814,Philippine Green-pigeon,2515,Philippine Green-Pigeon,Treron axillaris,Treron_pompadora
+Treron aromaticus,815,Buru Green-pigeon,2520,Buru Green-Pigeon,Treron aromaticus,Treron_pompadora
+Treron curvirostra,816,Thick-billed Green-pigeon,2521,Thick-billed Green-Pigeon,Treron curvirostra,Treron_curvirostra
+Treron curvirostra,816,Thick-billed Green-pigeon,2522,Thick-billed Green-Pigeon (Thick-billed),Treron curvirostra curvirostra,Treron_curvirostra
+Treron curvirostra,816,Thick-billed Green-pigeon,2523,Thick-billed Green-Pigeon (Barusan),Treron curvirostra hypothapsinus,Treron_curvirostra
+Treron griseicauda,817,Grey-cheeked Green-pigeon,2524,Gray-cheeked Green-Pigeon,Treron griseicauda,Treron_griseicauda
+Treron teysmannii,818,Sumba Green-pigeon,2529,Sumba Green-Pigeon,Treron teysmannii,Treron_teysmannii
+Treron floris,819,Flores Green-pigeon,2530,Flores Green-Pigeon,Treron floris,Treron_floris
+Treron psittaceus,820,Timor Green-pigeon,2531,Timor Green-Pigeon,Treron psittaceus,Treron_psittaceus
+Treron capellei,821,Large Green-pigeon,2532,Large Green-Pigeon,Treron capellei,Treron_capellei
+Treron phoenicopterus,822,Yellow-footed Green-pigeon,2533,Yellow-footed Green-Pigeon,Treron phoenicopterus,Treron_phoenicopterus
+Treron waalia,823,Bruce's Green-pigeon,2539,Bruce's Green-Pigeon,Treron waalia,Treron_waalia
+Treron griveaudi,824,Comoro Green-pigeon,2540,Comoro Green-Pigeon,Treron griveaudi,Treron_calvus
+Treron australis,825,Madagascar Green-pigeon,2541,Madagascar Green-Pigeon,Treron australis,Treron_australis
+Treron calvus,826,African Green-pigeon,2553,African Green-Pigeon,Treron calvus,Treron_calvus
+Treron calvus,826,African Green-pigeon,2554,African Green-Pigeon (African),Treron calvus [calvus Group],Treron_calvus
+Treron calvus,826,African Green-pigeon,2568,African Green-Pigeon (Gray-breasted),Treron calvus delalandii/granti,Treron_calvus
+Treron pembaensis,828,Pemba Green-pigeon,2544,Pemba Green-Pigeon,Treron pembaensis,Treron_pembaensis
+Treron sanctithomae,829,Sao Tome Green-pigeon,2545,Sao Tome Green-Pigeon,Treron sanctithomae,Treron_sanctithomae
+Treron apicauda,830,Pin-tailed Green-pigeon,2549,Pin-tailed Green-Pigeon,Treron apicauda,Treron_apicauda
+Treron oxyurus,831,Sumatran Green-pigeon,2571,Sumatran Green-Pigeon,Treron oxyurus,Treron_oxyurus
+Treron seimundi,832,Yellow-vented Green-pigeon,2546,Yellow-vented Green-Pigeon,Treron seimundi,Treron_seimundi
+Treron sphenurus,833,Wedge-tailed Green-pigeon,2572,Wedge-tailed Green-Pigeon,Treron sphenurus,Treron_sphenurus
+Treron sieboldii,834,White-bellied Green-pigeon,2576,White-bellied Green-Pigeon,Treron sieboldii,Treron_sieboldii
+Treron formosae,836,Taiwan Green-pigeon,2580,Whistling Green-Pigeon,Treron formosae,Treron_formosae
+Treron formosae,836,Taiwan Green-pigeon,2581,Whistling Green-Pigeon (Ryukyu),Treron formosae permagnus/medioximus,Treron_formosae
+Treron formosae,836,Taiwan Green-pigeon,2584,Whistling Green-Pigeon (Taiwan),Treron formosae formosae/filipinus,Treron_formosae
+Ducula poliocephala,837,Pink-bellied Imperial-pigeon,2745,Pink-bellied Imperial-Pigeon,Ducula poliocephala,Ducula_poliocephala
+Ducula forsteni,838,White-bellied Imperial-pigeon,2746,White-bellied Imperial-Pigeon,Ducula forsteni,Ducula_forsteni
+Ducula mindorensis,839,Mindoro Imperial-pigeon,2747,Mindoro Imperial-Pigeon,Ducula mindorensis,Ducula_mindorensis
+Ducula radiata,840,Grey-headed Imperial-pigeon,2748,Gray-headed Imperial-Pigeon,Ducula radiata,Ducula_radiata
+Ducula carola,841,Spotted Imperial-pigeon,2749,Spotted Imperial-Pigeon,Ducula carola,Ducula_carola
+Ducula aenea,842,Green Imperial-pigeon,2753,Green Imperial-Pigeon,Ducula aenea,Ducula_aenea
+Ducula aenea,842,Green Imperial-pigeon,2754,Green Imperial-Pigeon (Green),Ducula aenea [aenea Group],Ducula_aenea
+Ducula aenea,842,Green Imperial-pigeon,2764,Green Imperial-Pigeon (Maroon-naped),Ducula aenea nuchalis,Ducula_aenea
+Ducula aenea,842,Green Imperial-pigeon,2765,Green Imperial-Pigeon (Rufous-naped),Ducula aenea paulina,Ducula_aenea
+Ducula oenothorax,843,Enggano Imperial-pigeon,2766,Enggano Imperial-Pigeon,Ducula oenothorax,Ducula_aenea
+Ducula perspicillata,844,Spectacled Imperial-pigeon,2768,Spectacled Imperial-Pigeon,Ducula perspicillata,Ducula_perspicillata
+Ducula neglecta,845,Seram Imperial-pigeon,2769,Seram Imperial-Pigeon,Ducula neglecta,Ducula_perspicillata
+Ducula concinna,846,Blue-tailed Imperial-pigeon,2770,Elegant Imperial-Pigeon,Ducula concinna,Ducula_concinna
+Ducula pacifica,847,Pacific Imperial-pigeon,2771,Pacific Imperial-Pigeon,Ducula pacifica,Ducula_pacifica
+Ducula oceanica,848,Micronesian Imperial-pigeon,2777,Micronesian Imperial-Pigeon,Ducula oceanica,Ducula_oceanica
+Ducula aurorae,849,Polynesian Imperial-pigeon,2783,Polynesian Imperial-Pigeon,Ducula aurorae,Ducula_aurorae
+Ducula galeata,850,Nukuhiva Imperial-pigeon,2786,Marquesas Imperial-Pigeon,Ducula galeata,Ducula_galeata
+Ducula rubricera,851,Red-knobbed Imperial-pigeon,2774,Red-knobbed Imperial-Pigeon,Ducula rubricera,Ducula_rubricera
+Ducula rubricera,851,Red-knobbed Imperial-pigeon,2775,Red-knobbed Imperial-Pigeon (Pink-necked),Ducula rubricera rubricera,Ducula_rubricera
+Ducula rubricera,851,Red-knobbed Imperial-pigeon,2776,Red-knobbed Imperial-Pigeon (Gray-necked),Ducula rubricera rufigula,Ducula_rubricera
+Ducula myristicivora,852,Spice Imperial-pigeon,2787,Spice Imperial-Pigeon,Ducula myristicivora,Ducula_myristicivora
+Ducula geelvinkiana,853,Geelvink Imperial-pigeon,2788,Geelvink Imperial-Pigeon,Ducula geelvinkiana,Ducula_myristicivora
+Ducula rufigaster,854,Purple-tailed Imperial-pigeon,2789,Purple-tailed Imperial-Pigeon,Ducula rufigaster,Ducula_rufigaster
+Ducula basilica,855,Cinnamon-bellied Imperial-pigeon,2792,Cinnamon-bellied Imperial-Pigeon,Ducula basilica,Ducula_basilica
+Ducula basilica,855,Cinnamon-bellied Imperial-pigeon,2793,Cinnamon-bellied Imperial-Pigeon (Gray-naped),Ducula basilica basilica,Ducula_basilica
+Ducula basilica,855,Cinnamon-bellied Imperial-pigeon,2794,Cinnamon-bellied Imperial-Pigeon (Golden-naped),Ducula basilica obiensis,Ducula_basilica
+Ducula finschii,857,Finsch's Imperial-pigeon,2795,Finsch's Imperial-Pigeon,Ducula finschii,Ducula_finschii
+Ducula chalconota,858,Shining Imperial-pigeon,2796,Rufescent Imperial-Pigeon,Ducula chalconota,Ducula_chalconota
+Ducula chalconota,858,Shining Imperial-pigeon,2797,Rufescent Imperial-Pigeon (Purple-rumped),Ducula chalconota chalconota,Ducula_chalconota
+Ducula chalconota,858,Shining Imperial-pigeon,2798,Rufescent Imperial-Pigeon (Green-rumped),Ducula chalconota smaragdina,Ducula_chalconota
+Ducula pistrinaria,859,Island Imperial-pigeon,2799,Island Imperial-Pigeon,Ducula pistrinaria,Ducula_pistrinaria
+Ducula rosacea,860,Pink-headed Imperial-pigeon,2804,Pink-headed Imperial-Pigeon,Ducula rosacea,Ducula_rosacea
+Ducula whartoni,861,Christmas Imperial-pigeon,2805,Christmas Island Imperial-Pigeon,Ducula whartoni,Ducula_whartoni
+Ducula pickeringii,862,Grey Imperial-pigeon,2806,Gray Imperial-Pigeon,Ducula pickeringii,Ducula_pickeringii
+Ducula latrans,863,Barking Imperial-pigeon,2810,Peale's Imperial-Pigeon,Ducula latrans,Ducula_latrans
+Ducula brenchleyi,864,Chestnut-bellied Imperial-pigeon,2811,Chestnut-bellied Imperial-Pigeon,Ducula brenchleyi,Ducula_brenchleyi
+Ducula bakeri,865,Vanuatu Imperial-pigeon,2812,Baker's Imperial-Pigeon,Ducula bakeri,Ducula_bakeri
+Ducula goliath,866,New Caledonian Imperial-pigeon,2813,New Caledonian Imperial-Pigeon,Ducula goliath,Ducula_goliath
+Ducula pinon,867,Pinon's Imperial-pigeon,2814,Pinon's Imperial-Pigeon,Ducula pinon,Ducula_pinon
+Ducula pinon,867,Pinon's Imperial-pigeon,2815,Pinon's Imperial-Pigeon (Gray-headed),Ducula pinon pinon/jobiensis,Ducula_pinon
+Ducula pinon,867,Pinon's Imperial-pigeon,2818,Pinon's Imperial-Pigeon (Pink-headed),Ducula pinon salvadorii,Ducula_pinon
+Ducula melanochroa,869,Bismarck Imperial-pigeon,2819,Bismarck Imperial-Pigeon,Ducula melanochroa,Ducula_melanochroa
+Ducula mullerii,870,Collared Imperial-pigeon,2820,Collared Imperial-Pigeon,Ducula mullerii,Ducula_mullerii
+Ducula zoeae,871,Zoe's Imperial-pigeon,2823,Zoe's Imperial-Pigeon,Ducula zoeae,Ducula_zoeae
+Ducula cuprea,872,Nilgiri Imperial-pigeon,2824,Malabar Imperial-Pigeon,Ducula cuprea,Ducula_badia
+Ducula badia,873,Mountain Imperial-pigeon,2825,Mountain Imperial-Pigeon,Ducula badia,Ducula_badia
+Ducula lacernulata,874,Dark-backed Imperial-pigeon,2829,Dark-backed Imperial-Pigeon,Ducula lacernulata,Ducula_lacernulata
+Ducula lacernulata,874,Dark-backed Imperial-pigeon,2830,Dark-backed Imperial-Pigeon (Gray-headed),Ducula lacernulata lacernulata,Ducula_lacernulata
+Ducula lacernulata,874,Dark-backed Imperial-pigeon,2831,Dark-backed Imperial-Pigeon (Pink-headed),Ducula lacernulata williami,Ducula_lacernulata
+Ducula lacernulata,874,Dark-backed Imperial-pigeon,2832,Dark-backed Imperial-Pigeon (Gray-crowned),Ducula lacernulata sasakensis,Ducula_lacernulata
+Ducula cineracea,875,Timor Imperial-pigeon,2833,Timor Imperial-Pigeon,Ducula cineracea,Ducula_cineracea
+Ducula bicolor,876,Pied Imperial-pigeon,2836,Pied Imperial-Pigeon,Ducula bicolor,Ducula_bicolor
+Ducula spilorrhoa,877,Torresian Imperial-pigeon,2840,Torresian Imperial-Pigeon,Ducula spilorrhoa,Ducula_spilorrhoa
+Ducula subflavescens,878,Yellowish Imperial-pigeon,2839,Yellowish Imperial-Pigeon,Ducula subflavescens,Ducula_subflavescens
+Ducula luctuosa,879,White Imperial-pigeon,2841,Silver-tipped Imperial-Pigeon,Ducula luctuosa,Ducula_luctuosa
+Alectroenas madagascariensis,894,Madagascar Blue-pigeon,2740,Madagascar Blue-Pigeon,Alectroenas madagascariensis,Alectroenas_madagascariensis
+Alectroenas sganzini,895,Comoro Blue-pigeon,2741,Comoro Blue-Pigeon,Alectroenas sganzini,Alectroenas_sganzini
+Alectroenas pulcherrimus,896,Seychelles Blue-pigeon,2744,Seychelles Blue-Pigeon,Alectroenas pulcherrimus,Alectroenas_pulcherrima
+Drepanoptila holosericea,897,Cloven-feathered Dove,2737,Cloven-feathered Dove,Drepanoptila holosericea,Drepanoptila_holosericea
+Ptilinopus nainus,901,Dwarf Fruit-dove,2728,Dwarf Fruit-Dove,Ptilinopus nainus,Ptilinopus_naina
+Ptilinopus arcanus,902,Negros Fruit-dove,2729,Negros Fruit-Dove,Ptilinopus arcanus,Ptilinopus_arcanus
+Ptilinopus melanospilus,903,Black-naped Fruit-dove,2722,Black-naped Fruit-Dove,Ptilinopus melanospilus,Ptilinopus_melanospilus
+Ptilinopus cinctus,904,Black-backed Fruit-dove,2588,Black-backed Fruit-Dove,Ptilinopus cinctus,Ptilinopus_cinctus
+Ptilinopus alligator,905,Grey-rumped Fruit-dove,2595,Black-banded Fruit-Dove,Ptilinopus alligator,Ptilinopus_cinctus
+Ptilinopus dohertyi,906,Red-naped Fruit-dove,2596,Red-naped Fruit-Dove,Ptilinopus dohertyi,Ptilinopus_dohertyi
+Ptilinopus porphyreus,907,Pink-headed Fruit-dove,2597,Pink-headed Fruit-Dove,Ptilinopus porphyreus,Ptilinopus_porphyreus
+Ptilinopus superbus,909,Eastern Superb Fruit-dove,2638,Superb Fruit-Dove,Ptilinopus superbus,Ptilinopus_superbus
+Ptilinopus superbus,909,Eastern Superb Fruit-dove,2639,Superb Fruit-Dove (Western),Ptilinopus superbus temminckii,Ptilinopus_superbus
+Ptilinopus superbus,909,Eastern Superb Fruit-dove,2640,Superb Fruit-Dove (Eastern),Ptilinopus superbus superbus,Ptilinopus_superbus
+Ptilinopus rivoli,910,White-bibbed Fruit-dove,2686,White-breasted Fruit-Dove,Ptilinopus rivoli,Ptilinopus_rivoli
+Ptilinopus rivoli,910,White-bibbed Fruit-dove,2687,White-breasted Fruit-Dove (Moluccan),Ptilinopus rivoli prasinorrhous,Ptilinopus_rivoli
+Ptilinopus rivoli,910,White-bibbed Fruit-dove,2688,White-breasted Fruit-Dove (Mountain),Ptilinopus rivoli bellus,Ptilinopus_rivoli
+Ptilinopus rivoli,910,White-bibbed Fruit-dove,2689,White-breasted Fruit-Dove (White-bibbed),Ptilinopus rivoli [rivoli Group],Ptilinopus_rivoli
+Ptilinopus speciosus,911,Geelvink Fruit-dove,2693,Geelvink Fruit-Dove,Ptilinopus speciosus,Ptilinopus_solomonensis
+Ptilinopus solomonensis,912,Yellow-banded Fruit-dove,2694,Yellow-bibbed Fruit-Dove,Ptilinopus solomonensis,Ptilinopus_solomonensis
+Ptilinopus tannensis,913,Tanna Fruit-dove,2635,Tanna Fruit-Dove,Ptilinopus tannensis,Ptilinopus_tannensis
+Ptilinopus hyogastrus,914,Grey-headed Fruit-dove,2720,Gray-headed Fruit-Dove,Ptilinopus hyogastrus,Ptilinopus_hyogastrus
+Ptilinopus granulifrons,915,Carunculated Fruit-dove,2721,Carunculated Fruit-Dove,Ptilinopus granulifrons,Ptilinopus_granulifrons
+Ptilinopus wallacii,916,Wallace's Fruit-dove,2637,Wallace's Fruit-Dove,Ptilinopus wallacii,Ptilinopus_wallacii
+Ptilinopus aurantiifrons,917,Orange-fronted Fruit-dove,2636,Orange-fronted Fruit-Dove,Ptilinopus aurantiifrons,Ptilinopus_aurantiifrons
+Ptilinopus ornatus,918,Western Ornate Fruit-dove,2632,Ornate Fruit-Dove,Ptilinopus ornatus,Ptilinopus_ornatus
+Ptilinopus ornatus,918,Western Ornate Fruit-dove,2633,Ornate Fruit-Dove (Western),Ptilinopus ornatus ornatus,Ptilinopus_ornatus
+Ptilinopus ornatus,918,Western Ornate Fruit-dove,2634,Ornate Fruit-Dove (Eastern),Ptilinopus ornatus gestroi,Ptilinopus_ornatus
+Ptilinopus perlatus,920,Pink-spotted Fruit-dove,2628,Pink-spotted Fruit-Dove,Ptilinopus perlatus,Ptilinopus_perlatus
+Ptilinopus iozonus,921,Orange-bellied Fruit-dove,2711,Orange-bellied Fruit-Dove,Ptilinopus iozonus,Ptilinopus_iozonus
+Ptilinopus insolitus,922,Knob-billed Fruit-dove,2717,Knob-billed Fruit-Dove,Ptilinopus insolitus,Ptilinopus_insolitus
+Ptilinopus viridis,923,Claret-breasted Fruit-dove,2703,Claret-breasted Fruit-Dove,Ptilinopus viridis,Ptilinopus_viridis
+Ptilinopus eugeniae,924,White-headed Fruit-dove,2710,White-headed Fruit-Dove,Ptilinopus eugeniae,Ptilinopus_eugeniae
+Ptilinopus pulchellus,925,Beautiful Fruit-dove,2682,Beautiful Fruit-Dove,Ptilinopus pulchellus,Ptilinopus_pulchellus
+Ptilinopus monacha,926,Blue-capped Fruit-dove,2685,Blue-capped Fruit-Dove,Ptilinopus monacha,Ptilinopus_monacha
+Ptilinopus coronulatus,927,Coroneted Fruit-dove,2676,Coroneted Fruit-Dove,Ptilinopus coronulatus,Ptilinopus_coronulatus
+Ptilinopus regina,928,Rose-crowned Fruit-dove,2654,Rose-crowned Fruit-Dove,Ptilinopus regina,Ptilinopus_regina
+Ptilinopus dupetithouarsii,930,White-capped Fruit-dove,2671,White-capped Fruit-Dove,Ptilinopus dupetithouarsii,Ptilinopus_dupetithouarsii
+Ptilinopus pelewensis,931,Palau Fruit-dove,2649,Palau Fruit-Dove,Ptilinopus pelewensis,Ptilinopus_pelewensis
+Ptilinopus richardsii,932,Silver-capped Fruit-dove,2660,Silver-capped Fruit-Dove,Ptilinopus richardsii,Ptilinopus_richardsii
+Ptilinopus roseicapilla,933,Mariana Fruit-dove,2653,Mariana Fruit-Dove,Ptilinopus roseicapilla,Ptilinopus_roseicapilla
+Ptilinopus ponapensis,934,Pohnpei Fruit-dove,2644,Purple-capped Fruit-Dove,Ptilinopus ponapensis,Ptilinopus_porphyraceus
+Ptilinopus hernsheimi,935,Kosrae Fruit-dove,2645,Kosrae Fruit-Dove,Ptilinopus hernsheimi,Ptilinopus_porphyraceus
+Ptilinopus greyi,936,Red-bellied Fruit-dove,2669,Red-bellied Fruit-Dove,Ptilinopus greyi,Ptilinopus_greyii
+Ptilinopus porphyraceus,937,Tongan Fruit-dove,2646,Crimson-crowned Fruit-Dove,Ptilinopus porphyraceus,Ptilinopus_porphyraceus
+Ptilinopus porphyraceus,937,Tongan Fruit-dove,2647,Crimson-crowned Fruit-Dove (Tongan),Ptilinopus porphyraceus porphyraceus,Ptilinopus_porphyraceus
+Ptilinopus porphyraceus,937,Tongan Fruit-dove,2648,Crimson-crowned Fruit-Dove (Samoan),Ptilinopus porphyraceus fasciatus,Ptilinopus_porphyraceus
+Ptilinopus perousii,939,Many-coloured Fruit-dove,2641,Many-colored Fruit-Dove,Ptilinopus perousii,Ptilinopus_perousii
+Ptilinopus huttoni,940,Rapa Fruit-dove,2670,Rapa Fruit-Dove,Ptilinopus huttoni,Ptilinopus_huttoni
+Ptilinopus insularis,941,Henderson Fruit-dove,2675,Henderson Island Fruit-Dove,Ptilinopus insularis,Ptilinopus_insularis
+Ptilinopus chalcurus,942,Makatea Fruit-dove,2667,Makatea Fruit-Dove,Ptilinopus chalcurus,Ptilinopus_chalcurus
+Ptilinopus coralensis,943,Atoll Fruit-dove,2668,Atoll Fruit-Dove,Ptilinopus coralensis,Ptilinopus_coralensis
+Ptilinopus chrysogaster,944,Raiatea Fruit-dove,2663,Raiatea Fruit-Dove,Ptilinopus chrysogaster,Ptilinopus_purpuratus
+Ptilinopus rarotongensis,945,Rarotonga Fruit-dove,2650,Cook Islands Fruit-Dove,Ptilinopus rarotongensis,Ptilinopus_rarotongensis
+Ptilinopus purpuratus,946,Grey-green Fruit-dove,2664,Gray-green Fruit-Dove,Ptilinopus purpuratus,Ptilinopus_purpuratus
+Hemiphaga novaeseelandiae,947,New Zealand Pigeon,2844,New Zealand Pigeon,Hemiphaga novaeseelandiae,Hemiphaga_novaeseelandiae
+Hemiphaga novaeseelandiae,947,New Zealand Pigeon,2845,New Zealand Pigeon (Norfolk I.),Hemiphaga novaeseelandiae spadicea,Hemiphaga_novaeseelandiae
+Hemiphaga novaeseelandiae,947,New Zealand Pigeon,2846,New Zealand Pigeon (New Zealand),Hemiphaga novaeseelandiae novaeseelandiae,Hemiphaga_novaeseelandiae
+Hemiphaga chathamensis,948,Chatham Pigeon,2847,Chatham Island Pigeon,Hemiphaga chathamensis,Hemiphaga_novaeseelandiae
+Cryptophaps poecilorrhoa,949,Sombre Pigeon,2848,Sombre Pigeon,Cryptophaps poecilorrhoa,Cryptophaps_poecilorrhoa
+Gymnophaps albertisii,950,Papuan Mountain-pigeon,2849,Papuan Mountain-Pigeon,Gymnophaps albertisii,Gymnophaps_albertisii
+Gymnophaps stalkeri,951,Seram Mountain-pigeon,2853,Seram Mountain-Pigeon,Gymnophaps stalkeri,Gymnophaps_mada
+Gymnophaps mada,952,Buru Mountain-pigeon,2852,Buru Mountain-Pigeon,Gymnophaps mada,Gymnophaps_mada
+Gymnophaps solomonensis,953,Pale Mountain-pigeon,2854,Pale Mountain-Pigeon,Gymnophaps solomonensis,Gymnophaps_solomonensis
+Lopholaimus antarcticus,954,Topknot Pigeon,2843,Topknot Pigeon,Lopholaimus antarcticus,Lopholaimus_antarcticus
+Megaloprepia magnifica,880,Wompoo Fruit-dove,2622,Wompoo Fruit-Dove,Ptilinopus magnificus,Ptilinopus_magnificus
+Megaloprepia formosa,881,Scarlet-breasted Fruit-dove,2619,Scarlet-breasted Fruit-Dove,Ptilinopus bernsteinii,Ptilinopus_bernsteinii
+Ramphiculus merrilli,882,Cream-bellied Fruit-dove,2602,Cream-breasted Fruit-Dove,Ptilinopus merrilli,Ptilinopus_merrilli
+Ramphiculus marchei,883,Flame-breasted Fruit-dove,2601,Flame-breasted Fruit-Dove,Ptilinopus marchei,Ptilinopus_marchei
+Ramphiculus leclancheri,884,Black-chinned Fruit-dove,2614,Black-chinned Fruit-Dove,Ptilinopus leclancheri,Ptilinopus_leclancheri
+Ramphiculus jambu,885,Jambu Fruit-dove,2610,Jambu Fruit-Dove,Ptilinopus jambu,Ptilinopus_jambu
+Ramphiculus occipitalis,891,Yellow-breasted Fruit-dove,2598,Yellow-breasted Fruit-Dove,Ptilinopus occipitalis,Ptilinopus_occipitalis
+Chrysoena victor,898,Orange Dove,2730,Orange Dove,Ptilinopus victor,Ptilinopus_victor
+Chrysoena luteovirens,899,Golden Dove,2733,Golden Dove,Ptilinopus luteovirens,Ptilinopus_luteovirens
+Chrysoena viridis,900,Whistling Dove,2734,Velvet Dove,Ptilinopus layardi,Ptilinopus_viridis
+Spilopelia suratensis,638,Western Spotted Dove,2084,Spotted Dove,Spilopelia chinensis,Stigmatopelia_chinensis
+Patagioenas albipennis,670,White-winged Pigeon,2084,Spotted Dove,Spilopelia chinensis,Patagioenas_maculosa
+Patagioenas albilinea,672,Southern Band-tailed Pigeon,1986,Band-tailed Pigeon,Patagioenas fasciata,Patagioenas_fasciata
+Alopecoenas hoedtii,746,Wetar Ground-dove,2202,Wetar Ground Dove,Pampusana hoedtii,Gallicolumba_hoedtii
+Alopecoenas hoedtii,746,Wetar Ground-dove,2202,Wetar Ground Dove,Pampusana hoedtii,Gallicolumba_hoedtii
+Alopecoenas jobiensis,747,White-breasted Ground-dove,2217,White-bibbed Ground Dove,Pampusana jobiensis,Gallicolumba_jobiensis
+Alopecoenas kubaryi,748,Caroline Ground-dove,2221,Caroline Islands Ground Dove,Pampusana kubaryi,Gallicolumba_kubaryi
+Alopecoenas xanthonurus,749,White-throated Ground-dove,2223,White-throated Ground Dove,Pampusana xanthonura,Gallicolumba_xanthonura
+Alopecoenas erythropterus,750,Polynesian Ground-dove,2222,Polynesian Ground Dove,Pampusana erythroptera,Gallicolumba_erythroptera
+Alopecoenas rubescens,751,Marquesas Ground-dove,2220,Marquesas Ground Dove,Pampusana rubescens,Gallicolumba_rubescens
+Alopecoenas beccarii,752,Western Bronze Ground-dove,2207,Bronze Ground Dove,Pampusana beccarii,Gallicolumba_beccarii
+Alopecoenas johannae,753,Eastern Bronze Ground-dove,2209,Bronze Ground Dove (Eastern),Pampusana beccarii [johannae Group],Gallicolumba_beccarii
+Alopecoenas canifrons,754,Palau Ground-dove,2216,Palau Ground Dove,Pampusana canifrons,Gallicolumba_canifrons
+Alopecoenas sanctaecrucis,755,Santa Cruz Ground-dove,2204,Santa Cruz Ground Dove,Pampusana sanctaecrucis,Gallicolumba_sanctaecrucis
+Alopecoenas stairi,756,Shy Ground-dove,2203,Shy Ground Dove,Pampusana stairi,Gallicolumba_stairi
+Otidiphaps aruensis,775,White-naped Pheasant-pigeon,2471,Pheasant Pigeon (White-naped),Otidiphaps nobilis aruensis,Otidiphaps_nobilis
+Otidiphaps cervicalis,777,Grey-naped Pheasant-pigeon,2472,Pheasant Pigeon (Gray-naped),Otidiphaps nobilis cervicalis,Otidiphaps_nobilis
+Otidiphaps insularis,778,Black-naped Pheasant-pigeon,2473,Pheasant Pigeon (Black-naped),Otidiphaps nobilis insularis,Otidiphaps_nobilis
+Phapitreron nigrorum,799,Buff-eared Brown-dove,2484,White-eared Brown-Dove (Buff-eared),Phapitreron leucotis nigrorum,Phapitreron_leucotis
+Phapitreron brevirostris,800,Short-billed Brown-dove,2485,White-eared Brown-Dove (Short-billed),Phapitreron leucotis brevirostris/occipitalis,Phapitreron_leucotis
+Phapitreron maculipectus,802,Grey-breasted Brown-dove,2492,Amethyst Brown-Dove (Gray-breasted),Phapitreron amethystinus maculipectus,Phapitreron_amethystinus
+Phapitreron frontalis,803,Cebu Brown-dove,2493,Amethyst Brown-Dove (Cebu),Phapitreron amethystinus frontalis,Phapitreron_amethystinus
+Treron delalandii,827,Grey-breasted Green-pigeon,2568,African Green-Pigeon (Gray-breasted),Treron calvus delalandii/granti,Treron_calvus
+Treron permagnus,835,Ryukyu Green-pigeon,2581,Whistling Green-Pigeon (Ryukyu),Treron formosae permagnus/medioximus,Treron_formosae
+Ducula obiensis,856,Rusty Imperial-pigeon,2794,Cinnamon-bellied Imperial-Pigeon (Golden-naped),Ducula basilica obiensis,Ducula_basilica
+Ducula salvadorii,868,Louisiade Imperial-pigeon,2818,Pinon's Imperial-Pigeon (Pink-headed),Ducula pinon salvadorii,Ducula_pinon
+Ramphiculus epius,886,Maroon-chinned Fruit-dove,2611,Maroon-chinned Fruit-Dove,Ptilinopus epius,Ptilinopus_subgularis
+Ramphiculus subgularis,887,Banggai Fruit-dove,2612,Banggai Fruit-Dove,Ptilinopus subgularis,Ptilinopus_subgularis
+Ramphiculus mangoliensis,888,Sula Fruit-dove,2613,Sula Fruit-Dove,Ptilinopus mangoliensis,Ptilinopus_subgularis
+Ramphiculus fischeri,889,Red-eared Fruit-dove,2605,Red-eared Fruit-Dove,Ptilinopus fischeri,Ptilinopus_fischeri
+Ramphiculus meridionalis,890,Lompobattang Fruit-dove,2609,Red-eared Fruit-Dove (Lompobattang),Ptilinopus fischeri meridionalis,Ptilinopus_fischeri
+Ptilinopus temminckii,908,Western Superb Fruit-dove,2639,Superb Fruit-Dove (Western),Ptilinopus superbus temminckii,Ptilinopus_superbus
+Ptilinopus gestroi,919,Eastern Ornate Fruit-dove,2634,Ornate Fruit-Dove (Eastern),Ptilinopus ornatus gestroi,Ptilinopus_ornatus
+Ptilinopus fasciatus,938,Samoan Fruit-dove,2648,Crimson-crowned Fruit-Dove (Samoan),Ptilinopus porphyraceus fasciatus,Ptilinopus_porphyraceus
+Macropygia amboinensis,652,Slender-billed Cuckoo-dove,2119,Sultan's Cuckoo-Dove,Macropygia doreya,Macropygia_amboinensis
+Macropygia amboinensis,652,Slender-billed Cuckoo-dove,2120,Sultan's Cuckoo-Dove (Sulawesi),Macropygia doreya [albicapilla Group],Macropygia_amboinensis
+Macropygia amboinensis,652,Slender-billed Cuckoo-dove,2125,Sultan's Cuckoo-Dove (Sultan's),Macropygia doreya [doreya Group],Macropygia_amboinensis
+Macropygia emiliana,647,Ruddy Cuckoo-dove,2142,Enggano Cuckoo-Dove,Macropygia cinnamomea,Macropygia_emiliana
+Macropygia emiliana,647,Ruddy Cuckoo-dove,2143,Barusan Cuckoo-Dove,Macropygia modiglianii,Macropygia_emiliana
+Alopecoenas beccarii,752,Western Bronze Ground-dove,2208,Bronze Ground Dove (Western),Pampusana beccarii beccarii,Gallicolumba_beccarii
+Ramphiculus fischeri,889,Red-eared Fruit-dove,2606,Red-eared Fruit-Dove (Red-eared),Ptilinopus fischeri fischeri/centralis,Ptilinopus_fischeri
+Ducula aenea,842,Green Imperial-pigeon,2767,Nicobar Imperial-Pigeon,Ducula nicobarica,Ducula_aenea
