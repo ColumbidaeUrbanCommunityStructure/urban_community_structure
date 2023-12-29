@@ -3,6 +3,8 @@ library(tidyverse)
 library(dplyr)
 library(dbplyr)
 library(xlsx)
+library(stringr)
+
 
 filename = function(directory, filename) {
   paste(directory, filename, sep = '/')
