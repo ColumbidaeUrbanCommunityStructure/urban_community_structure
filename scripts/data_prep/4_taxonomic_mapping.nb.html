@@ -1765,8 +1765,20 @@ Jetz</h1>
 <pre class="r"><code>source(&#39;../env.R&#39;)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<div id="compare-birdlife-and-ebird" class="section level1">
+<h1>Compare Birdlife and eBird</h1>
+<p>Read in Birdlife and eBird taxonomy</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYmlyZGxpZmVfdGF4ID0gcmVhZF9jc3YoZmlsZW5hbWUoQklSRExJRkVfV09SS0lOR19PVVRQVVRfRElSLCAndGF4b25vbXkuY3N2JykpXG5lYmlyZF90YXggPSByZWFkX2NzdihmaWxlbmFtZShFQklSRF9XT1JLSU5HX09VVFBVVF9ESVIsICd0YXhvbm9teS5jc3YnKSlcbmBgYCJ9 -->
+<pre class="r"><code>birdlife_tax = read_csv(filename(BIRDLIFE_WORKING_OUTPUT_DIR, &#39;taxonomy.csv&#39;))
+ebird_tax = read_csv(filename(EBIRD_WORKING_OUTPUT_DIR, &#39;taxonomy.csv&#39;))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+</div>
 
-<div id="rmd-source-code">LS0tCnRpdGxlOiAiTWFwIEJpcmRsaWZlIGFuZCBlQmlyZCB0YXhvbm9teSB0byBKZXR6IgpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sKYmlibGlvZ3JhcGh5OiAuLi9yZWYuYmliIAotLS0KCmBgYHtyfQpzb3VyY2UoJy4uL2Vudi5SJykKYGBg</div>
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiTWFwIEJpcmRsaWZlIGFuZCBlQmlyZCB0YXhvbm9teSB0byBKZXR6IgpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sKYmlibGlvZ3JhcGh5OiAuLi9yZWYuYmliIAotLS0KCmBgYHtyfQpzb3VyY2UoJy4uL2Vudi5SJykKYGBgCgojIENvbXBhcmUgQmlyZGxpZmUgYW5kIGVCaXJkCgpSZWFkIGluIEJpcmRsaWZlIGFuZCBlQmlyZCB0YXhvbm9teQpgYGB7cn0KYmlyZGxpZmVfdGF4ID0gcmVhZF9jc3YoZmlsZW5hbWUoQklSRExJRkVfV09SS0lOR19PVVRQVVRfRElSLCAndGF4b25vbXkuY3N2JykpCmViaXJkX3RheCA9IHJlYWRfY3N2KGZpbGVuYW1lKEVCSVJEX1dPUktJTkdfT1VUUFVUX0RJUiwgJ3RheG9ub215LmNzdicpKQpgYGA=</div>
 
 
 

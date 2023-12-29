@@ -7,3 +7,11 @@ bibliography: ../ref.bib
 ```{r}
 source('../env.R')
 ```
+
+# Compare Birdlife and eBird
+
+Read in Birdlife and eBird taxonomy
+```{r}
+birdlife_tax = read_csv(filename(BIRDLIFE_WORKING_OUTPUT_DIR, 'taxonomy.csv'))
+ebird_tax = read_csv(filename(EBIRD_WORKING_OUTPUT_DIR, 'taxonomy.csv'))
+```

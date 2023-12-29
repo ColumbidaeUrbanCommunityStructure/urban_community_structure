@@ -10,7 +10,6 @@ source('../env.R')
 
 # Generate Worldwide Distributions for all Columbidae
 
-
 ## Read in the Birdlife Distribution 
 Birdlife dataset @Birdlife2020.
 
@@ -38,12 +37,17 @@ birdlifeTaxonomyWb_Sheets[["BirdLife_Checklist_v.5"]]
 ```
 
 ```{r}
-birdlifeTaxonomy_tmp = data.frame(readRows(birdlifeTaxonomyWb_Sheets[["BirdLife_Checklist_v.5"]], 3, 31223, 1, 9))
+birdlifeTaxonomy_tmp = data.frame(readRows(birdlifeTaxonomyWb_Sheets[["BirdLife_Checklist_v.5"]], 3, 31223, 1, 15))
 names(birdlifeTaxonomy_tmp) <- birdlifeTaxonomy_tmp[1,]
 birdlifeTaxonomy <- birdlifeTaxonomy_tmp[-1,]
 
-birdlifeColumbidae = birdlifeTaxonomy[birdlifeTaxonomy$Order == 'COLUMBIFORMES',c('Scientific name')]
+birdlifeColumbidae = birdlifeTaxonomy[birdlifeTaxonomy$Order == 'COLUMBIFORMES',c('Seq.', 'Scientific name', 'Common name', 'Synonyms')]
 birdlifeColumbidae
+```
+
+Store taxonomy
+```{r}
+write_csv(birdlifeColumbidae, filename(BIRDLIFE_WORKING_OUTPUT_DIR, 'taxonomy.csv'))
 ```
 
 ## Filter Birdlife Distributions to only Columbidae
@@ -54,7 +58,9 @@ head(columbidaeDistribution)
 ```{r}
 COLUMBIDAE_WORLD_DISTRIBUTIONS = filename(BIRDLIFE_WORKING_OUTPUT_DIR, "columbidae_world.shp")
 write_sf(columbidaeDistribution, COLUMBIDAE_WORLD_DISTRIBUTIONS)
+columbidaeDistribution = read_sf(COLUMBIDAE_WORLD_DISTRIBUTIONS)
 ```
+
 
 Free up memory by removing birdlife data from workspace
 ```{r}
@@ -78,6 +84,7 @@ initial_city_selection = read_sf(filename(mkdir(GEO_WORKING_OUTPUT_DIR, 'cities'
 ```{r}
 st_crs(initial_city_selection)
 ```
+
 ```{r}
 sf::sf_use_s2(FALSE)
 
@@ -85,25 +92,32 @@ urban_columbidae_distributions = st_join(initial_city_selection, columbidaeDistr
 
 urban_columbidae_distributions
 ```
+
 ## Check birdlife distribution data
+
+Species with unkonwn presence?
+```{r}
+urban_columbidae_distributions[urban_columbidae_distributions$presenc > 5, c('binomil', 'city_name', 'city_id')]
+```
 
 Any extinct species?
 ```{r}
-urban_columbidae_distributions[urban_columbidae_distributions$presence > 4, c('binomial', 'city_name', 'city_id')]
+urban_columbidae_distributions[urban_columbidae_distributions$presenc == 5, c('binomil', 'city_name', 'city_id')]
 ```
+
 Possibly Extinct species
 ```{r}
-urban_columbidae_distributions[urban_columbidae_distributions$presence == 4, c('binomial', 'city_name', 'city_id')]
+urban_columbidae_distributions[urban_columbidae_distributions$presenc == 4, c('binomil', 'city_name', 'city_id')]
 ```
 
 ## Map seasonal and origin to string values
 ```{r}
 urban_columbidae_distributions$seasonal_desc = "Unknown Code"
-urban_columbidae_distributions$seasonal_desc[urban_columbidae_distributions$seasonal == "1"] = "Resident"
-urban_columbidae_distributions$seasonal_desc[urban_columbidae_distributions$seasonal == "2"] = "Breeding Season" 
-urban_columbidae_distributions$seasonal_desc[urban_columbidae_distributions$seasonal == "3"] = "Non-breeding Season" 
-urban_columbidae_distributions$seasonal_desc[urban_columbidae_distributions$seasonal == "4"] = "Passage" 
-urban_columbidae_distributions$seasonal_desc[urban_columbidae_distributions$seasonal == "5"] = "Seasonal occurence uncertain"
+urban_columbidae_distributions$seasonal_desc[urban_columbidae_distributions$seasonl == "1"] = "Resident"
+urban_columbidae_distributions$seasonal_desc[urban_columbidae_distributions$seasonl == "2"] = "Breeding Season" 
+urban_columbidae_distributions$seasonal_desc[urban_columbidae_distributions$seasonl == "3"] = "Non-breeding Season" 
+urban_columbidae_distributions$seasonal_desc[urban_columbidae_distributions$seasonl == "4"] = "Passage" 
+urban_columbidae_distributions$seasonal_desc[urban_columbidae_distributions$seasonl == "5"] = "Seasonal occurence uncertain"
 ```
 
 ```{r}
@@ -114,6 +128,16 @@ urban_columbidae_distributions$origin_desc[urban_columbidae_distributions$origin
 urban_columbidae_distributions$origin_desc[urban_columbidae_distributions$origin == "4"] = "Vagrant" 
 urban_columbidae_distributions$origin_desc[urban_columbidae_distributions$origin == "5"] = "Origin Uncertain"
 urban_columbidae_distributions$origin_desc[urban_columbidae_distributions$origin == "6"] = "Assisted Colonisation"
+```
+
+```{r}
+urban_columbidae_distributions$presence_desc = "Unknown Code"
+urban_columbidae_distributions$presence_desc[urban_columbidae_distributions$presenc == "1"] = "Extant"
+urban_columbidae_distributions$presence_desc[urban_columbidae_distributions$presenc == "2"] = "Probably Extant" 
+urban_columbidae_distributions$presence_desc[urban_columbidae_distributions$presenc == "3"] = "Possibly Extant" 
+urban_columbidae_distributions$presence_desc[urban_columbidae_distributions$presenc == "4"] = "Possibly Extinct" 
+urban_columbidae_distributions$presence_desc[urban_columbidae_distributions$presenc == "5"] = "Extinct"
+urban_columbidae_distributions$presence_desc[urban_columbidae_distributions$presenc == "6"] = "Presence Uncertain"
 ```
 
 ## Missing North American distribution of Streptopelia decaocto
@@ -142,27 +166,29 @@ eucdov_distribution = st_join(initial_city_selection, eucdov_range_vect)
 
 eucdov_distribution[!is.na(eucdov_distribution$species_code) & !(eucdov_distribution$city_name %in% existing_eucdov_cities),]
 ```
+
 ```{r}
 missing_eucdov_cities = data.frame(
     species_name = 'Streptopelia decaocto', 
     city_id = eucdov_distribution$city_id[!is.na(eucdov_distribution$species_code) & !(eucdov_distribution$city_name %in% existing_eucdov_cities)],
     city_name= eucdov_distribution$city_name[!is.na(eucdov_distribution$species_code) & !(eucdov_distribution$city_name %in% existing_eucdov_cities)],
     origin = 'Introduced',
-    seasonal = 'Resident'
+    seasonal = 'Resident',
+    presence = 'Extant'
 )
 missing_eucdov_cities
 ```
 
 ## Store regional pool result
 ```{r}
-
 birdlife_urban_distribution = rbind(
   data.frame(
-    species_name = urban_columbidae_distributions$binomial, 
+    species_name = urban_columbidae_distributions$binomil, 
     city_id = urban_columbidae_distributions$city_id,
     city_name= urban_columbidae_distributions$city_name,
     origin = urban_columbidae_distributions$origin_desc,
-    seasonal = urban_columbidae_distributions$seasonal_desc
+    seasonal = urban_columbidae_distributions$seasonal_desc,
+    presence = urban_columbidae_distributions$presence_desc
   ),
   missing_eucdov_cities
 )
@@ -182,6 +208,7 @@ Species in Manchester's regional pool
 ```{r}
 regional_pools %>% filter(city_name == 'Manchester') 
 ```
+
 Species in Miami's regional pool
 ```{r}
 regional_pools %>% filter(city_name == 'Miami') 
