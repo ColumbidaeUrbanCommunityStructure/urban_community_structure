@@ -5,6 +5,8 @@ library(dbplyr)
 library(xlsx)
 library(stringr)
 library(phytools)
+library(ebirdst)
+library(terra)
 
 filename = function(directory, filename) {
   paste(directory, filename, sep = '/')
@@ -23,6 +25,8 @@ GEO_WORKING_OUTPUT_DIR = mkdir(WORKING_OUTPUT_DIR, 'geo')
 EBIRD_WORKING_OUTPUT_DIR = mkdir(WORKING_OUTPUT_DIR, 'ebird')
 
 BIRDLIFE_WORKING_OUTPUT_DIR = mkdir(WORKING_OUTPUT_DIR, 'birdlife')
+
+KEYS_DIR = mkdir(WORKING_OUTPUT_DIR, 'auth')
 
 DATA_OUTPUT_DIR = mkdir(mkdir('../../', 'data'), 'generated')
 GEO_DATA_OUTPUT_DIR = mkdir(DATA_OUTPUT_DIR, 'geo')

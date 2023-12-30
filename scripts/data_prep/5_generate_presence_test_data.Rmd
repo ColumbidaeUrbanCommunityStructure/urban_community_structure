@@ -7,3 +7,271 @@ bibliography: ../ref.bib
 ```{r}
 source('../env.R')
 ```
+
+# Select species
+These are all the species currently available from the eBird Status and Trends data product @eBird2023.
+https://science.ebird.org/en/status-and-trends/species#columb2
+
+
+```{r}
+species_available = c("Streptopelia decaocto",
+"Streptopelia semitorquata",
+"Streptopelia capicola",
+"Streptopelia tranquebarica",
+"Spilopelia chinensis",
+"Macropygia phasianella",
+"Chalcophaps indica",
+"Ocyphaps lophotes",
+"Geopelia humeralis",
+"Columbina inca",
+"Columbina passerina",
+"Columbina minuta",
+"Columbina talpacoti",
+"Columbina buckleyi",
+"Columbina squammata",
+"Columbina picui",
+"Claravis pretiosa",
+"Geotrygon montana",
+"Leptotila verreauxi",
+"Leptotila jamaicensis",
+"Leptotila cassinii",
+"Leptotila plumbeiceps",
+"Zentrygon costaricensis",
+"Zentrygon lawrencii",
+"Zentrygon albifacies",
+"Zentrygon chiriquensis",
+"Zenaida meloda",
+"Zenaida asiatica",
+"Zenaida aurita",
+"Zenaida auriculata",
+"Zenaida macroura",
+"Treron affinis",
+"Treron phoenicopterus",
+"Treron sieboldii",
+"Treron formosae",
+"Ducula aenea",
+"Hemiphaga novaeseelandiae",
+"Columba livia",
+"Columba guinea",
+"Columba oenas",
+"Columba palumbus",
+"Patagioenas cayennensis",
+"Patagioenas speciosa",
+"Patagioenas squamosa",
+"Patagioenas picazuro",
+"Patagioenas corensis",
+"Patagioenas maculosa",
+"Patagioenas leucocephala",
+"Patagioenas flavirostris",
+"Patagioenas fasciata",
+"Patagioenas araucana",
+"Patagioenas subvinacea",
+"Patagioenas nigrirostris",
+"Streptopelia turtur",
+"Streptopelia orientalis")
+
+length(species_available)
+```
+
+Filter against library list, as not everything on website is availble in library
+```{r}
+species_available = ebirdst_runs$scientific_name[ebirdst_runs$scientific_name %in% species_available]
+species_available
+```
+
+## First check that is no knarly taxonomic mapping required for any of these species:
+```{r}
+taxonmomic_mapping = read_csv(filename(TAXONOMY_OUTPUT_DIR, 'taxonomy_mapping.csv'))
+```
+
+Species with 1 eBird taxa, and multiple Birdlife taxa will reuqire the ranges of the Birdlife taxa to be combined. 
+```{r}
+taxonmomic_mapping[taxonmomic_mapping$ebird_species_name %in% species_available,] %>%
+  group_by(ebird_species_name) %>% 
+  summarise(number_of_birdlife_species = n(), birdlife_species_names = paste(species_name, collapse = ",")) %>%
+  filter(number_of_birdlife_species > 1)
+```
+
+* *Patagioenas fasciata*, will need the range of Patagioenas fasciata and Patagioenas albilinea combined.
+
+* *Spilopelia chinensis*, will need the range of Spilopelia chinensis, Spilopelia suratensis, and Patagioenas albipennis combined.
+
+Check whether we need to map eBird species names to Birdlife
+```{r}
+taxonmomic_mapping[taxonmomic_mapping$ebird_species_name %in% species_available,] %>%
+  filter(ebird_species_name != species_name) 
+```
+
+Species with 1 Birdlife taxa, and multiple eBird taxa will, would mean that we would have cities with no records but potentially have presence test data. We should avoid these species.
+```{r}
+taxonmomic_mapping[taxonmomic_mapping$ebird_species_name %in% species_available,] %>%
+  group_by(species_name) %>% 
+  summarise(number_of_ebird_species = n(), ebird_species_names = paste(ebird_species_name, collapse = ",")) %>%
+  filter(number_of_ebird_species > 1)
+```
+
+```{r}
+test_species = species_available
+```
+
+# Create regional pool data 
+```{r}
+regional_pool_data_input = read_csv(filename(BIRDLIFE_WORKING_OUTPUT_DIR, 'birdlife_urban_distributions.csv'))
+```
+
+Join ranges up 
+```{r}
+regional_pool_data_input$species_name[regional_pool_data_input$species_name %in% c('Spilopelia suratensis', 'Patagioenas albipennis')] = 'Spilopelia chinensis'
+regional_pool_data_input$species_name[regional_pool_data_input$species_name %in% c('Patagioenas albilinea')] = 'Patagioenas fasciata'
+
+regional_pool_data = regional_pool_data_input %>% group_by(species_name, city_id, city_name) %>% summarise() %>% filter(species_name %in% test_species)
+regional_pool_data
+```
+
+# Download Status and Trends data
+```{r}
+key = read_file(filename(KEYS_DIR, 'ebirdst.txt'))
+set_ebirdst_access_key(key)
+ebirdst_data_dir()
+```
+
+```{r}
+for (species in test_species) {
+  print(paste('fetching', species))
+  ebirdst_download_status(
+    species = species,
+    download_abundance = TRUE,
+    download_occurrence = FALSE,
+    download_count = FALSE,
+    download_ranges = FALSE,
+    download_regional = FALSE,
+    download_pis = FALSE,
+    download_ppms = FALSE,
+    download_all = FALSE
+  )
+}
+```
+
+## Calculate abundance for each city
+Read in our initial city vectors, we will join these to our checklists
+```{r}
+initial_city_selection = vect(filename(mkdir(GEO_WORKING_OUTPUT_DIR, 'cities'), 'initial_selection.shp'))
+initial_city_selection[847]
+```
+
+```{r}
+city_data = data.frame(initial_city_selection)
+city_data$ID = as.double(rownames(city_data))
+city_data
+```
+
+```{r}
+abundance_data = data.frame()
+
+for (species in test_species) {
+  abd <- load_raster(species, resolution = "3km", product = "abundance", period = "seasonal")
+  abd_wgs84 = project(abd, initial_city_selection)
+  city_abundance = terra::extract(abd_wgs84, initial_city_selection)
+  
+  if ("resident" %in% colnames(city_abundance)) {
+     result = city_abundance %>% group_by(ID) %>% summarise(
+       breeding = NA, 
+       nonbreeding = NA, 
+       resident = mean(resident), 
+       species = species
+     )
+     abundance_data = rbind(abundance_data, inner_join(result, city_data[,c('ID', 'city_id', 'city_name')]))
+  } else {
+    result = city_abundance %>% group_by(ID) %>% summarise(
+      breeding = mean(breeding), 
+      nonbreeding = mean(nonbreeding), 
+      resident = NA, 
+      species = species
+    ) 
+    abundance_data = rbind(abundance_data, inner_join(result, city_data[,c('ID', 'city_id', 'city_name')]))
+  }
+}
+
+abundance_data[abundance_data$city_name == 'Manchester',]
+```
+```{r}
+write_csv(abundance_data, filename(EBIRD_WORKING_OUTPUT_DIR, 'ebird_trends_abundance_test_data.csv'))
+abundance_data = read_csv(filename(EBIRD_WORKING_OUTPUT_DIR, 'ebird_trends_abundance_test_data.csv'))
+```
+
+```{r}
+abundance_data$max_abundance = apply(abundance_data[,c('breeding', 'nonbreeding', 'resident')], 1, max, na.rm = T)
+abundance_data
+```
+
+# Create city to pigeon data
+
+Get number of checklists and total effort in each city
+```{r}
+urban_checklists = read_csv(filename(EBIRD_WORKING_OUTPUT_DIR, 'urban_checklists.csv'))
+
+urban_summary = urban_checklists %>% group_by(city_id, city_name) %>% summarise(total_city_checklists = n(), total_city_effort = sum(duration))
+
+urban_summary
+```
+
+
+For each of our test species, find the number of checklists and total effort in each city
+```{r}
+urban_columbidae_records = read_csv(filename(EBIRD_WORKING_OUTPUT_DIR, 'urban_columbidae.csv'))
+
+urban_columbidae_records_with_checklist_data = left_join(urban_columbidae_records, urban_checklists)
+
+urban_columbidae_summary = urban_columbidae_records_with_checklist_data %>% 
+  filter(species_name %in% test_species) %>%
+  group_by(city_id, city_name, species_name) %>% 
+  summarise(total_presence_checklists = n(), total_presence_effort = sum(duration)) %>%
+  arrange(city_id, species_name)
+
+urban_columbidae_summary
+```
+
+Join the total city data to each pigeon record
+```{r}
+urban_columbidae_records = left_join(urban_columbidae_summary, urban_summary)
+head(urban_columbidae_records)
+```
+
+We also want records for each city that could have that pigeon (e.g. in regional pool range) but has no eBird records
+```{r}
+urban_columbidae_absence_records_part1 = left_join(regional_pool_data, urban_summary)
+
+urban_columbidae_absence_records_part1$total_presence_checklists = 0
+urban_columbidae_absence_records_part1$total_presence_effort = 0
+
+urban_columbidae_absence_records = urban_columbidae_absence_records_part1[!is.na(urban_columbidae_absence_records_part1$total_city_checklists),]
+urban_columbidae_absence_records
+```
+
+```{r}
+all_columbidae_around_cities = rbind(urban_columbidae_records, urban_columbidae_absence_records) %>%
+  group_by(city_id, city_name, species_name, total_city_checklists, total_city_effort) %>%
+  summarise(total_presence_checklists = sum(total_presence_checklists), total_presence_effort = sum(total_presence_effort)) %>%
+  arrange(city_id, species_name)
+
+all_columbidae_around_cities$checklist_ratio = all_columbidae_around_cities$total_presence_checklists / all_columbidae_around_cities$total_city_checklists
+all_columbidae_around_cities$effort_ratio = all_columbidae_around_cities$total_presence_effort / all_columbidae_around_cities$total_city_effort
+
+all_columbidae_around_cities
+```
+
+Finally join our our test data result to show predicted abundance
+```{r}
+columbidae = left_join(all_columbidae_around_cities, abundance_data, by = c('species_name' = 'species', 'city_id' = 'city_id'))
+columbidae
+```
+
+# Plot to see Expected test abundance vs checklists
+```{r}
+ggplot(columbidae[columbidae$species_name == 'Columba palumbus',], aes(x = log(total_city_checklists), y = checklist_ratio, color = max_abundance)) + geom_jitter()
+```
+
+# Plot to see Expected test abundance vs effort
+```{r}
+ggplot(columbidae, aes(x = log(total_city_checklists), y = effort_ratio, color = max_abundance)) + geom_jitter()
+```
