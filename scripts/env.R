@@ -8,6 +8,8 @@ library(phytools)
 library(ebirdst)
 library(terra)
 
+options(scipen=99999)
+
 filename = function(directory, filename) {
   paste(directory, filename, sep = '/')
 }

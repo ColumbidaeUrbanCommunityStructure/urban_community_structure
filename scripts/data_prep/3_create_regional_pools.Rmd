@@ -140,7 +140,13 @@ urban_columbidae_distributions$presence_desc[urban_columbidae_distributions$pres
 urban_columbidae_distributions$presence_desc[urban_columbidae_distributions$presenc == "6"] = "Presence Uncertain"
 ```
 
-## Missing North American distribution of Streptopelia decaocto
+```{r}
+cache_urban_columbidae_distributions = filename(BIRDLIFE_WORKING_OUTPUT_DIR, 'urban_distributions_birdlife_only.csv')
+write_csv(urban_columbidae_distributions, cache_urban_columbidae_distributions)
+urban_columbidae_distributions = read_csv(cache_urban_columbidae_distributions)
+```
+
+## Missing North American distribution of Streptopelia decaocto and Columba Livia
 Birdlife is missing the recent invasion of Streptopelia decaocto into North America. 
 We supplement the data for Streptopelia decaocto with the range from eBird's Status and Trends dataset.
 
@@ -148,7 +154,7 @@ This data can be downloaded here:
 https://science.ebird.org/en/status-and-trends/species/eucdov/downloads
 
 ```{r}
-EBIRD_EUCDOV_RANGE = '/Users/james/Dropbox/PhD/BirdLife/eucdov_range_2022/eucdov_range_2022.gpkg'
+EBIRD_EUCDOV_RANGE = '/Users/james/Dropbox/PhD/eBird/eucdov_range_2022/eucdov_range_2022.gpkg'
 eucdov_range_vect = st_read(EBIRD_EUCDOV_RANGE)
 plot(eucdov_range_vect["scientific_name"])
 ```
@@ -160,18 +166,18 @@ st_crs(eucdov_range_vect)
 ```{r}
 sf::sf_use_s2(FALSE)
 
-existing_eucdov_cities = urban_columbidae_distributions$city_id[urban_columbidae_distributions$binomial == 'Streptopelia decaocto']
+existing_eucdov_cities = urban_columbidae_distributions$city_id[urban_columbidae_distributions$binomil == 'Streptopelia decaocto']
 
 eucdov_distribution = st_join(initial_city_selection, eucdov_range_vect) 
 
-eucdov_distribution[!is.na(eucdov_distribution$species_code) & !(eucdov_distribution$city_name %in% existing_eucdov_cities),]
+eucdov_distribution[!is.na(eucdov_distribution$species_code) & !(eucdov_distribution$city_id %in% existing_eucdov_cities),]
 ```
 
 ```{r}
 missing_eucdov_cities = data.frame(
     species_name = 'Streptopelia decaocto', 
-    city_id = eucdov_distribution$city_id[!is.na(eucdov_distribution$species_code) & !(eucdov_distribution$city_name %in% existing_eucdov_cities)],
-    city_name= eucdov_distribution$city_name[!is.na(eucdov_distribution$species_code) & !(eucdov_distribution$city_name %in% existing_eucdov_cities)],
+    city_id = eucdov_distribution$city_id[!is.na(eucdov_distribution$species_code) & !(eucdov_distribution$city_id %in% existing_eucdov_cities)],
+    city_name= eucdov_distribution$city_name[!is.na(eucdov_distribution$species_code) & !(eucdov_distribution$city_id %in% existing_eucdov_cities)],
     origin = 'Introduced',
     seasonal = 'Resident',
     presence = 'Extant'
@@ -179,9 +185,64 @@ missing_eucdov_cities = data.frame(
 missing_eucdov_cities
 ```
 
+```{r}
+EBIRD_ROCPIG_RANGE = '/Users/james/Dropbox/PhD/eBird/rocpig_range_2022/rocpig_range_2022.gpkg'
+rocpig_range_vect = st_read(EBIRD_ROCPIG_RANGE)
+plot(rocpig_range_vect["scientific_name"])
+```
+```{r}
+sf::sf_use_s2(FALSE)
+
+existing_rocpig_cities = urban_columbidae_distributions$city_id[urban_columbidae_distributions$binomil == 'Columba livia']
+
+rocpig_distribution = st_join(initial_city_selection, rocpig_range_vect) 
+
+rocpig_distribution[!is.na(rocpig_distribution$species_code) & !(rocpig_distribution$city_id %in% existing_rocpig_cities),]
+```
+
+```{r}
+missing_rocpig_cities = data.frame(
+    species_name = 'Columba livia', 
+    city_id = rocpig_distribution$city_id[!is.na(rocpig_distribution$species_code) & !(rocpig_distribution$city_id %in% existing_rocpig_cities)],
+    city_name= rocpig_distribution$city_name[!is.na(rocpig_distribution$species_code) & !(rocpig_distribution$city_id %in% existing_rocpig_cities)],
+    origin = 'Introduced',
+    seasonal = 'Resident',
+    presence = 'Extant'
+)
+missing_rocpig_cities
+```
+
+```{r}
+EBIRD_SPODOV_RANGE = '/Users/james/Dropbox/PhD/eBird/spodov_range_2022/spodov_range_2022.gpkg'
+spodov_range_vect = st_read(EBIRD_SPODOV_RANGE)
+plot(spodov_range_vect["scientific_name"])
+```
+
+```{r}
+sf::sf_use_s2(FALSE)
+
+existing_spodov_cities = urban_columbidae_distributions$city_id[urban_columbidae_distributions$binomil %in% c('Spilopelia chinensis','Spilopelia suratensis','Patagioenas albipennis')]
+
+spodov_distribution = st_join(initial_city_selection, spodov_range_vect) 
+
+spodov_distribution[!is.na(spodov_distribution$species_code) & !(spodov_distribution$city_id %in% existing_spodov_cities),]
+```
+
+```{r}
+missing_spodov_cities = data.frame(
+    species_name = 'Spilopelia chinensis', 
+    city_id = spodov_distribution$city_id[!is.na(spodov_distribution$species_code) & !(spodov_distribution$city_id %in% existing_spodov_cities)],
+    city_name= spodov_distribution$city_name[!is.na(spodov_distribution$species_code) & !(spodov_distribution$city_id %in% existing_spodov_cities)],
+    origin = 'Introduced',
+    seasonal = 'Resident',
+    presence = 'Extant'
+)
+missing_spodov_cities
+```
+
 ## Store regional pool result
 ```{r}
-birdlife_urban_distribution = rbind(
+urban_distribution = rbind(
   data.frame(
     species_name = urban_columbidae_distributions$binomil, 
     city_id = urban_columbidae_distributions$city_id,
@@ -190,42 +251,42 @@ birdlife_urban_distribution = rbind(
     seasonal = urban_columbidae_distributions$seasonal_desc,
     presence = urban_columbidae_distributions$presence_desc
   ),
-  missing_eucdov_cities
+ rbind(missing_eucdov_cities, rbind(missing_rocpig_cities, missing_spodov_cities))
 )
 ```
 
 ```{r}
-BIRDLIFE_URBAN_DISTRIBUTION = filename(BIRDLIFE_WORKING_OUTPUT_DIR, 'birdlife_urban_distributions.csv')
-write_csv(birdlife_urban_distribution, BIRDLIFE_URBAN_DISTRIBUTION)
+BIRDLIFE_URBAN_DISTRIBUTION = filename(BIRDLIFE_WORKING_OUTPUT_DIR, 'urban_distributions.csv')
+write_csv(urban_distribution, BIRDLIFE_URBAN_DISTRIBUTION)
 ```
 
 ## Examine result
 ```{r}
-regional_pools = read_csv(BIRDLIFE_URBAN_DISTRIBUTION)
+urban_distribution = read_csv(BIRDLIFE_URBAN_DISTRIBUTION)
 ```
 
 Species in Manchester's regional pool
 ```{r}
-regional_pools %>% filter(city_name == 'Manchester') 
+urban_distribution %>% filter(city_name == 'Manchester') 
 ```
 
 Species in Miami's regional pool
 ```{r}
-regional_pools %>% filter(city_name == 'Miami') 
+urban_distribution %>% filter(city_name == 'Miami') 
 ```
 
 Cities with Common Woodpigeon in regional pool
 ```{r}
-regional_pools %>% filter(species_name == 'Columba palumbus')
+urban_distribution %>% filter(species_name == 'Columba palumbus')
 ```
 
 Cities with Collared Dove in regional pool
 ```{r}
-regional_pools %>% filter(species_name == 'Streptopelia decaocto')
+urban_distribution %>% filter(species_name == 'Streptopelia decaocto')
 ```
 
 Regional pool sizes
 ```{r}
-regional_pools %>% group_by(city_id, city_name) %>% summarise(pool_size = n()) %>% arrange(pool_size)
+urban_distribution %>% group_by(city_id, city_name) %>% summarise(pool_size = n()) %>% arrange(pool_size)
 ```
 
