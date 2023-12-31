@@ -162,7 +162,7 @@ for (species in test_species) {
 }
 ```
 
-## Create abundance data for each species in each city
+## Create abundance data
 Read in our initial city vectors, we will join these to our checklists
 ```{r}
 initial_city_selection = vect(filename(mkdir(GEO_WORKING_OUTPUT_DIR, 'cities'), 'initial_selection.shp'))
@@ -245,6 +245,7 @@ ebird_raw = read_csv(filename(EBIRD_WORKING_OUTPUT_DIR, 'urban_columbidae.csv'))
 head(ebird_raw)
 ```
 
+Join eBird data to taxonomy, and then ensure species only appear on each checklists. e.g. deduplicate any species that had duplicates created by taxonomy mapping.
 ```{r}
 urban_columbidae_raw_ebird_records = 
   left_join(ebird_raw, taxonmomic_mapping, by = c('species_name' = 'ebird_species_name')) %>%
@@ -258,7 +259,9 @@ urban_columbidae_raw_ebird_records =
 
 urban_columbidae_raw_ebird_records[urban_columbidae_raw_ebird_records$city_name %in% inspection_cities, ]
 ```
-
+Now calculate the total number of checklists each species appears on, and then total effort of those checklists.
+This gives a single row for each species in each city.
+Then join the data onto the regional pool data, and the urban summary data.
 ```{r}
 urban_ebird_columbidae_city_summary = urban_columbidae_records_with_checklist_data %>% 
   group_by(city_id, city_name, species_name) %>% 
@@ -268,13 +271,13 @@ urban_ebird_columbidae_city_summary = urban_columbidae_records_with_checklist_da
   arrange(city_id, species_name)
 ```
 
-
+NA for seasonal indicates that the species is on an eBird checklist for the city, but not in the birdlife regional pool.
 ```{r}
 urban_ebird_columbidae_city_summary[urban_ebird_columbidae_city_summary$city_name %in% inspection_cities,]
 ```
 
-
-We also want records for each city that could have that pigeon (e.g. in regional pool range) but has no eBird records
+We also want records for each city that could have that pigeon (e.g. in regional pool range) but has no eBird records.
+Create absence records for all species in the birdlife regional pool data for all cities.
 ```{r}
 urban_columbidae_absence_records_part1 = left_join(regional_pool_data, urban_summary)
 
@@ -286,6 +289,8 @@ urban_columbidae_absence_records = urban_columbidae_absence_records_part1[!is.na
 urban_columbidae_absence_records[urban_columbidae_absence_records$city_name %in% inspection_cities,]
 ```
 
+Append the absence and presence data together, and then deduplicate to ensure only one species per city.
+Then calculate the percentage of all checklists, and the percentage of total effort in a city for each species.
 ```{r}
 urban_columbidae_presence_and_absence = rbind(urban_ebird_columbidae_city_summary, urban_columbidae_absence_records) %>%
   group_by(city_id, city_name, species_name, total_city_checklists, total_city_effort, seasonal) %>%
@@ -298,6 +303,7 @@ urban_columbidae_presence_and_absence$percentage_effort = urban_columbidae_prese
 urban_columbidae_presence_and_absence[urban_columbidae_presence_and_absence$city_name %in% inspection_cities,]
 ```
 
+# Join all data together
 Finally join our our test data result to show predicted abundance, remove any NA abundance as there is insufficent data in these places for a prediction.
 ```{r}
 columbidae = left_join(urban_columbidae_presence_and_absence, abundance_data, by = c('species_name' = 'species', 'city_id' = 'city_id', 'city_name' = 'city_name'))
