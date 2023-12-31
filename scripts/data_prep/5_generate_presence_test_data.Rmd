@@ -323,8 +323,34 @@ ggplot(columbidae[columbidae$species_name == 'Columba palumbus',], aes(y = perce
   aesthetics = "colour",
 )
 ```
+```{r}
+ggplot(columbidae, aes(y = percentage_checklists, x = breeding, color = log(total_city_checklists))) + geom_jitter() + geom_jitter() + scale_colour_gradient2(
+  low = "red",
+  mid = "yellow",
+  high = "darkgreen",
+  midpoint = log(100),
+  space = "Lab",
+  na.value = "grey50",
+  guide = "colourbar",
+  aesthetics = "colour",
+)
+```
+
+```{r}
+ggplot(columbidae, aes(y = percentage_checklists, x = resident, color = log(total_city_checklists))) + geom_jitter() + geom_jitter() + scale_colour_gradient2(
+  low = "red",
+  mid = "yellow",
+  high = "darkgreen",
+  midpoint = log(100),
+  space = "Lab",
+  na.value = "grey50",
+  guide = "colourbar",
+  aesthetics = "colour",
+)
+```
 
 
+# Plot our species pools for each inspection city
 ```{r}
 plot_city_species = function(city_id) {
   city_name = urban_summary$city_name[urban_summary$city_id == city_id]
