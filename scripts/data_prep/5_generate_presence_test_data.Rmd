@@ -79,7 +79,7 @@ species_available = ebirdst_runs$scientific_name[ebirdst_runs$scientific_name %i
 species_available
 ```
 
-## First check that is no knarly taxonomic mapping required for any of these species:
+## First check taxonomic mapping required for any of these species:
 ```{r}
 taxonmomic_mapping = read_csv(filename(TAXONOMY_OUTPUT_DIR, 'taxonomy_mapping.csv'))
 ```
@@ -114,24 +114,28 @@ taxonmomic_mapping[taxonmomic_mapping$ebird_species_name %in% species_available,
 test_species = species_available
 ```
 
-# Create regional pool data 
+# Create regional pool data
+```{r}
+inspection_cities = c('Manchester', 'Bogota', 'Los Angeles', 'Jakarta', 'Nairobi')
+```
+
 ```{r}
 regional_pool_data_input = read_csv(filename(BIRDLIFE_WORKING_OUTPUT_DIR, 'urban_distributions.csv'))
-```
-```{r}
-taxonmomic_mapping[taxonmomic_mapping$ebird_species_name == 'Spilopelia chinensis',]
+regional_pool_data_input$seasonal = factor(regional_pool_data_input$seasonal, levels = c('Resident', 'Breeding Season', 'Non-breeding Season', 'Passage', ordered = T))
+regional_pool_data_input[regional_pool_data_input$city_name %in% inspection_cities,] 
 ```
 
 ```{r}
-taxonmomic_mapping[taxonmomic_mapping$ebird_species_name == 'Patagioenas fasciata',]
+regional_pool_data = regional_pool_data_input %>% 
+  filter(species_name %in% species_available) %>%
+  arrange(seasonal) %>%
+  group_by(city_id, city_name, species_name) %>%
+  summarise(seasonal = first(seasonal)) %>%
+  arrange(city_id, species_name)
 ```
-Join ranges up 
-```{r}
-regional_pool_data_input$species_name[regional_pool_data_input$species_name %in% c('Spilopelia suratensis', 'Patagioenas albipennis')] = 'Spilopelia chinensis'
-regional_pool_data_input$species_name[regional_pool_data_input$species_name %in% c('Patagioenas albilinea')] = 'Patagioenas fasciata'
 
-regional_pool_data = regional_pool_data_input %>% group_by(species_name, city_id, city_name) %>% summarise() %>% filter(species_name %in% test_species)
-regional_pool_data[regional_pool_data$city_name == 'Medellín',]
+```{r}
+regional_pool_data[regional_pool_data$city_name %in% inspection_cities,]
 ```
 
 # Download Status and Trends data
@@ -158,7 +162,7 @@ for (species in test_species) {
 }
 ```
 
-## Calculate abundance for each city
+## Create abundance data for each species in each city
 Read in our initial city vectors, we will join these to our checklists
 ```{r}
 initial_city_selection = vect(filename(mkdir(GEO_WORKING_OUTPUT_DIR, 'cities'), 'initial_selection.shp'))
@@ -196,86 +200,79 @@ for (species in test_species) {
     abundance_data = rbind(abundance_data, inner_join(result, city_data[,c('ID', 'city_id', 'city_name')]))
   }
 }
-
-abundance_data[abundance_data$city_name == 'Manchester',]
 ```
+
 
 ```{r}
 write_csv(abundance_data, filename(EBIRD_WORKING_OUTPUT_DIR, 'ebird_trends_abundance_test_data.csv'))
 abundance_data = read_csv(filename(EBIRD_WORKING_OUTPUT_DIR, 'ebird_trends_abundance_test_data.csv'))
 ```
 
-```{r}
-abundance_data$max_abundance = apply(abundance_data[,c('breeding', 'nonbreeding', 'resident')], 1, max, na.rm = T)
-abundance_data$max_abundance[abundance_data$max_abundance == -Inf] = NA
-abundance_data[abundance_data$city_name == 'Manchester',]
-```
-```{r}
-abundance_data[abundance_data$city_name == 'Medellín',]
-```
-
 Filter to regional pools
 ```{r}
 abundance_data_regional = left_join(regional_pool_data, abundance_data, by = c('city_id' = 'city_id', 'city_name' = 'city_name', 'species_name' = 'species'))
-abundance_data_regional[abundance_data_regional$city_name == 'Manchester',]
+abundance_data_regional = abundance_data_regional %>% arrange(city_id) %>% select(city_id, city_name, species_name, seasonal, breeding, nonbreeding, resident)
 ```
 
 ```{r}
-abundance_data_regional[abundance_data_regional$city_name == 'Medellín',]
+abundance_data_regional[abundance_data_regional$city_name %in% inspection_cities,]
 ```
 
 Are any species now missing that are abundant?
 ```{r}
 city_id_species_pairs_present = paste(abundance_data_regional$species_name, abundance_data_regional$city_id, sep = '::')
 abundance_data %>% 
-  filter(max_abundance > 0) %>% 
+  filter(breeding > 0 | nonbreeding > 0 | resident > 0) %>% 
   group_by(city_id, species) %>% 
-  filter(!(paste(species, city_id, sep = '::') %in% city_id_species_pairs_present))
+  filter(!(paste(species, city_id, sep = '::') %in% city_id_species_pairs_present)) %>%
+  select(city_id, city_name, species, breeding, nonbreeding, resident)
 ```
 
-# Create city to pigeon data
-
+# Create urban summary data
 Get number of checklists and total effort in each city
 ```{r}
 urban_checklists = read_csv(filename(EBIRD_WORKING_OUTPUT_DIR, 'urban_checklists.csv'))
 
 urban_summary = urban_checklists %>% group_by(city_id, city_name) %>% summarise(total_city_checklists = n(), total_city_effort = sum(duration))
 
-urban_summary
+urban_summary[urban_summary$city_name %in% inspection_cities,]
 ```
 
-
+# Create urban pools
 For each of our test species, find the number of checklists and total effort in each city
 ```{r}
-urban_columbidae_records_raw = read_csv(filename(EBIRD_WORKING_OUTPUT_DIR, 'urban_columbidae.csv'))
-urban_columbidae_records_raw[urban_columbidae_records_raw$city_name == 'Manchester',]
+ebird_raw = read_csv(filename(EBIRD_WORKING_OUTPUT_DIR, 'urban_columbidae.csv'))
+head(ebird_raw)
 ```
 
 ```{r}
-urban_columbidae_records_with_checklist_data = left_join(urban_columbidae_records_raw, taxonmomic_mapping, by = c('species_name' = 'ebird_species_name'))
-urban_columbidae_records_with_checklist_data[urban_columbidae_records_with_checklist_data$city_name == 'Manchester', ]
+urban_columbidae_raw_ebird_records = 
+  left_join(ebird_raw, taxonmomic_mapping, by = c('species_name' = 'ebird_species_name')) %>%
+  filter(species_name.y %in% species_available) %>%
+  group_by(checklist_id, city_id, city_name, species_name.y) %>%
+  summarise(
+    duration = max(duration)
+  ) %>%
+  rename(species_name = species_name.y) %>%
+  arrange(city_name)
+
+urban_columbidae_raw_ebird_records[urban_columbidae_raw_ebird_records$city_name %in% inspection_cities, ]
 ```
 
 ```{r}
-urban_columbidae_summary = urban_columbidae_records_with_checklist_data %>% 
-  filter(species_name.y %in% test_species) %>%
-  group_by(city_id, city_name, species_name.y) %>% 
+urban_ebird_columbidae_city_summary = urban_columbidae_records_with_checklist_data %>% 
+  group_by(city_id, city_name, species_name) %>% 
   summarise(total_presence_checklists = n(), total_presence_effort = sum(duration)) %>%
-  arrange(city_id, species_name.y)
-
-names(urban_columbidae_summary) = c('city_id', 'city_name', 'species_name', 'total_presence_checklists', 'total_presence_effort')
-urban_columbidae_summary[urban_columbidae_summary$city_name == 'Manchester',]
+  left_join(regional_pool_data, by = c('city_id' = 'city_id', 'city_name' = 'city_name', 'species_name' = 'species_name')) %>%
+  left_join(urban_summary, by = c('city_id' = 'city_id', 'city_name' = 'city_name')) %>%
+  arrange(city_id, species_name)
 ```
 
-Join the total city data to each pigeon record
-```{r}
-urban_columbidae_records = left_join(urban_columbidae_summary, urban_summary)
-head(urban_columbidae_records)
-```
 
 ```{r}
-urban_columbidae_records[urban_columbidae_records$city_name == 'Manchester',]
+urban_ebird_columbidae_city_summary[urban_ebird_columbidae_city_summary$city_name %in% inspection_cities,]
 ```
+
 
 We also want records for each city that could have that pigeon (e.g. in regional pool range) but has no eBird records
 ```{r}
@@ -285,32 +282,31 @@ urban_columbidae_absence_records_part1$total_presence_checklists = 0
 urban_columbidae_absence_records_part1$total_presence_effort = 0
 
 urban_columbidae_absence_records = urban_columbidae_absence_records_part1[!is.na(urban_columbidae_absence_records_part1$total_city_checklists),]
-urban_columbidae_absence_records
+
+urban_columbidae_absence_records[urban_columbidae_absence_records$city_name %in% inspection_cities,]
 ```
 
 ```{r}
-all_columbidae_around_cities = rbind(urban_columbidae_records, urban_columbidae_absence_records) %>%
-  group_by(city_id, city_name, species_name, total_city_checklists, total_city_effort) %>%
-  summarise(total_presence_checklists = sum(total_presence_checklists), total_presence_effort = sum(total_presence_effort)) %>%
+urban_columbidae_presence_and_absence = rbind(urban_ebird_columbidae_city_summary, urban_columbidae_absence_records) %>%
+  group_by(city_id, city_name, species_name, total_city_checklists, total_city_effort, seasonal) %>%
+  summarise(total_presence_checklists = max(total_presence_checklists), total_presence_effort = max(total_presence_effort)) %>%
   arrange(city_id, species_name)
 
-all_columbidae_around_cities$checklist_ratio = all_columbidae_around_cities$total_presence_checklists / all_columbidae_around_cities$total_city_checklists
-all_columbidae_around_cities$effort_ratio = all_columbidae_around_cities$total_presence_effort / all_columbidae_around_cities$total_city_effort
+urban_columbidae_presence_and_absence$percentage_checklists = urban_columbidae_presence_and_absence$total_presence_checklists * 100 / urban_columbidae_presence_and_absence$total_city_checklists
+urban_columbidae_presence_and_absence$percentage_effort = urban_columbidae_presence_and_absence$total_presence_effort * 100 / urban_columbidae_presence_and_absence$total_city_effort
 
-all_columbidae_around_cities
+urban_columbidae_presence_and_absence[urban_columbidae_presence_and_absence$city_name %in% inspection_cities,]
 ```
 
 Finally join our our test data result to show predicted abundance, remove any NA abundance as there is insufficent data in these places for a prediction.
 ```{r}
-columbidae = left_join(all_columbidae_around_cities, abundance_data, by = c('species_name' = 'species', 'city_id' = 'city_id', 'city_name' = 'city_name'))
-columbidae = columbidae[!is.na(columbidae$max_abundance),c('city_id', 'city_name', 'species_name', 'total_city_checklists', 'total_presence_checklists', 'checklist_ratio', 'max_abundance')]
-columbidae$expected_present = columbidae$max_abundance > 0.1
-columbidae
+columbidae = left_join(urban_columbidae_presence_and_absence, abundance_data, by = c('species_name' = 'species', 'city_id' = 'city_id', 'city_name' = 'city_name'))
+columbidae[columbidae$city_name %in% inspection_cities,]
 ```
 
 # Plot to see Expected test abundance vs checklists
 ```{r}
-ggplot(columbidae[columbidae$species_name == 'Columba palumbus',], aes(y = checklist_ratio, x = max_abundance, color = log(total_city_checklists))) + geom_jitter() + geom_jitter() + scale_colour_gradient2(
+ggplot(columbidae[columbidae$species_name == 'Columba palumbus',], aes(y = percentage_checklists, x = breeding, color = log(total_city_checklists))) + geom_jitter() + geom_jitter() + scale_colour_gradient2(
   low = "red",
   mid = "yellow",
   high = "darkgreen",
@@ -322,6 +318,44 @@ ggplot(columbidae[columbidae$species_name == 'Columba palumbus',], aes(y = check
 )
 ```
 
+
+```{r}
+plot_city_species = function(city_id) {
+  city_name = urban_summary$city_name[urban_summary$city_id == city_id]
+  total_checklists = urban_summary$total_city_checklists[urban_checklists$city_id == city_id]
+  
+  ggplot(columbidae[columbidae$city_id == city_id,], aes(x = species_name, y = percentage_checklists, fill = seasonal)) + 
+    geom_bar(stat = "identity") + 
+    geom_text(aes(label = paste('breeding', round(breeding, 1), '\nresident', round(resident, 1)))) + 
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + 
+    xlab('Species name') + ylab('% of Checklist present') + 
+    facet_wrap(~city_id) + 
+    geom_hline(yintercept=5, linetype='dotted', col = 'red') +
+    labs(title = paste(city_name, total_checklists))
+}
+```
+
+```{r}
+plot_city_species(14)
+```
+
+```{r}
+plot_city_species(624)
+```
+
+```{r}
+plot_city_species(1786)
+```
+
+```{r}
+plot_city_species(4830)
+```
+
+```{r}
+plot_city_species(11920)
+```
+
+# Select sample size: Min number of checklists
 n = ((Z * Z) * p * (1−p)) / (E * E)
 
 (e.g., 99% corresponds to Z≈2.576Z≈2.576).
@@ -334,61 +368,3 @@ E is the margin of error (half the width of the confidence interval).
 ```{r}
 (2.576^2 * 0.95 * 0.05) / 0.01^2
 ```
-
-```{r}
-urban_summary[urban_summary$total_city_checklists > 3152,]
-```
-
-```{r}
-plot_city_species = function(city_id) {
-  city_name = urban_summary$city_name[urban_summary$city_id == city_id]
-  total_checklists = urban_summary$total_city_checklists[urban_checklists$city_id == city_id]
-  
-  ggplot(columbidae[columbidae$city_id == city_id,], aes(x = species_name, y = checklist_ratio * 100, fill = expected_present)) + 
-    geom_bar(stat = "identity") + 
-    geom_text(aes(label = round(max_abundance, 2))) + 
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + 
-    xlab('Species name') + ylab('% of Checklist present') + 
-    facet_wrap(~city_id) + 
-    geom_hline(yintercept=5, linetype='dotted', col = 'red') +
-    labs(title = paste(city_name, total_checklists))
-}
-```
-
-```{r}
-plot_city_species(1)
-```
-
-```{r}
-plot_city_species(10)
-```
-
-```{r}
-plot_city_species(14)
-```
-
-```{r}
-plot_city_species(21)
-```
-
-```{r}
-plot_city_species(155)
-```
-
-```{r}
-plot_city_species(7932)
-```
-
-```{r}
-plot_city_species(4328)
-```
-
-```{r}
-plot_city_species(1919)
-```
-
-```{r}
-plot_city_species(1308)
-```
-
-
