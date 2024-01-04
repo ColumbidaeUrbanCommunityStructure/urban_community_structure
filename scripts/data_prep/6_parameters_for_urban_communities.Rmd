@@ -266,6 +266,7 @@ plot(linear_model)
 ```
 ```{r}
 trimmed_data = columbidae[!is.na(columbidae$max_abundance) & sqrt(columbidae$max_abundance) < 5,]
+seeds = c(123, 456, 678, 10, 11, 345, 32, 11, 54, 90, 9999, 1234, 5678, 2323, 9011, 532, 111, 678, 6501, 3)
 
 # min_city_checklists is the minimum number of cities a checklist must have to be included.
 # get_model is a function that takes a dataframe subset of `columbidae`, and returns the result of `lm`
@@ -275,7 +276,7 @@ get_mean_test_error = function(min_city_checklists, get_model, get_expected) {
   
   result = data.frame()
   
-  for(seed in c(123, 456, 678, 10, 11, 345, 32, 11, 54, 90, 9999, 1234, 5678, 2323, 9011, 532, 111, 678, 6501, 3)) {
+  for(seed in seeds) {
     set.seed(seed)
     train = sample(1:nrow(data), nrow(data)/2)
     test=(-train)
@@ -328,17 +329,54 @@ ggplot(result, aes(x = min_city_checklist, y = mean_test_error)) + geom_line()
 
 Third test predicting the presence.
 ```{r}
+trimmed_data$nonzero_abundance = trimmed_data$max_abundance > 0
+```
+
+```{r}
+trimmed_data$total_city_checklists_bin = cut(trimmed_data$total_city_checklists, breaks = 25, labels = F)
+trimmed_data$total_city_checklists_bin = as.factor(trimmed_data$total_city_checklists_bin)
+ggplot(trimmed_data, aes(x = total_city_checklists_bin, y = percentage_checklists)) + geom_boxplot() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + facet_wrap(~ nonzero_abundance)
+```
+
+```{r}
+get_true_false_test_results = function(min_city_checklists) {
+  data = trimmed_data[trimmed_data$total_city_checklists >= min_city_checklists,]
+  
+  result = data.frame()
+  coeeffs = c()
+  
+  for(seed in seeds) {
+    train = sample(1:nrow(data), nrow(data) / 2)
+    test=(-train)
+    
+    model = glm(nonzero_abundance ~ percentage_checklists, "binomial", data[train,])
+    prediction = predict(model, data[test,], type = "response")
+    
+    result = rbind(result, data.frame(actual = data$nonzero_abundance[test], predicted = prediction))
+    coeeffs = append(coeeffs, model$coefficients['percentage_checklists'])
+  }
+
+  data.frame(
+    mean_false_probability = mean(result$predicted[!result$actual]),
+    mean_true_probablility = mean(result$predicted[result$actual]),
+    percentage_checklists_cutoff = mean(coeeffs),
+    min_city_checklists = min_city_checklists
+  )
+}
+```
+
+
+```{r}
 result = data.frame()
 
 for (min_city_checklist in min_city_checklists) {
-  result = rbind(result, data.frame(
-    min_city_checklist = min_city_checklist,
-    mean_test_error = get_mean_test_error(
-      min_city_checklist, 
-      function(training_data) {glm((max_abundance > 0) ~ percentage_checklists, binomial, training_data)},
-      function(test_data) {test_data$max_abundance > 0})
-  ))
+  result = rbind(result, get_true_false_test_results(min_city_checklist))
 }
 
-ggplot(result, aes(x = min_city_checklist, y = mean_test_error)) + geom_line()
+ggplot(result, aes(x = min_city_checklists, y = mean_false_probability)) + geom_line()
+```
+
+
+```{r}
+result[result$min_city_checklists %in% c(500, 1000, 1500, 2000),]
 ```
