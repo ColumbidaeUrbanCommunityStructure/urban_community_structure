@@ -50,7 +50,8 @@ regional_pool_data[regional_pool_data$city_name %in% inspection_cities,]
 # Filter abundance data to regional pools
 ```{r}
 abundance_data_regional = left_join(regional_pool_data, abundance_data, by = c('city_id' = 'city_id', 'city_name' = 'city_name', 'species_name' = 'species'))
-abundance_data_regional = abundance_data_regional %>% arrange(city_id) %>% select(city_id, city_name, species_name, seasonal, breeding, nonbreeding, resident)
+abundance_data_regional = abundance_data_regional %>% arrange(city_id) %>% 
+  select(city_id, city_name, species_name, seasonal, mean_nonbreeding, median_nonbreeding, sd_nonbreeding, mean_breeding, median_breeding, sd_breeding, mean_resident, median_resident, sd_resident)
 ```
 
 ```{r}
@@ -61,10 +62,10 @@ Are any species now missing that are abundant?
 ```{r}
 city_id_species_pairs_present = paste(abundance_data_regional$species_name, abundance_data_regional$city_id, sep = '::')
 abundance_data %>% 
-  filter(breeding > 0 | nonbreeding > 0 | resident > 0) %>% 
+  filter(mean_breeding > 0 | mean_nonbreeding > 0 | mean_resident > 0) %>% 
   group_by(city_id, species) %>% 
   filter(!(paste(species, city_id, sep = '::') %in% city_id_species_pairs_present)) %>%
-  select(city_id, city_name, species, breeding, nonbreeding, resident)
+  select(city_id, city_name, species, mean_breeding, mean_nonbreeding, mean_resident)
 ```
 
 # Create urban summary data
@@ -158,7 +159,7 @@ plot_city_species = function(city_id) {
   
   ggplot(columbidae[columbidae$city_id == city_id,], aes(x = species_name, y = percentage_checklists, fill = seasonal)) + 
     geom_bar(stat = "identity") + 
-    geom_text(aes(label = paste('breeding', round(breeding, 1), '\nresident', round(resident, 1)))) + 
+    geom_text(aes(label = paste('breeding', round(mean_breeding, 1), '\nresident', round(mean_resident, 1)))) + 
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + 
     xlab('Species name') + ylab('% of Checklist present') + 
     facet_wrap(~city_id) + 
@@ -190,7 +191,7 @@ plot_city_species(11920)
 
 # Attempt to predict abundance from percentage of checklists present
 ```{r}
-ggplot(columbidae[columbidae$species_name == 'Columba palumbus',], aes(y = percentage_checklists, x = breeding, color = log(total_city_checklists))) + geom_jitter() + geom_jitter() + scale_colour_gradient2(
+ggplot(columbidae[columbidae$species_name == 'Columba palumbus',], aes(y = percentage_checklists, x = mean_breeding, color = log(total_city_checklists))) + geom_jitter() + geom_jitter() + scale_colour_gradient2(
   low = "red",
   mid = "yellow",
   high = "darkgreen",
@@ -202,7 +203,7 @@ ggplot(columbidae[columbidae$species_name == 'Columba palumbus',], aes(y = perce
 )
 ```
 ```{r}
-ggplot(columbidae, aes(y = percentage_checklists, x = sqrt(breeding), color = log(total_city_checklists))) + geom_jitter() + geom_jitter() + scale_colour_gradient2(
+ggplot(columbidae, aes(y = percentage_checklists, x = sqrt(mean_breeding), color = log(total_city_checklists))) + geom_jitter() + geom_jitter() + scale_colour_gradient2(
   low = "red",
   mid = "yellow",
   high = "darkgreen",
@@ -215,11 +216,11 @@ ggplot(columbidae, aes(y = percentage_checklists, x = sqrt(breeding), color = lo
 ```
 Outliers
 ```{r}
-columbidae[!is.na(columbidae$breeding) & sqrt(columbidae$breeding) > 3.5,]
+columbidae[!is.na(columbidae$mean_breeding) & sqrt(columbidae$mean_breeding) > 3.5,]
 ```
 
 ```{r}
-ggplot(columbidae, aes(y = percentage_checklists, x = sqrt(resident), color = log(total_city_checklists))) + geom_jitter() + geom_jitter() + scale_colour_gradient2(
+ggplot(columbidae, aes(y = percentage_checklists, x = sqrt(mean_resident), color = log(total_city_checklists))) + geom_jitter() + geom_jitter() + scale_colour_gradient2(
   low = "red",
   mid = "yellow",
   high = "darkgreen",
@@ -232,17 +233,17 @@ ggplot(columbidae, aes(y = percentage_checklists, x = sqrt(resident), color = lo
 ```
 Outliers
 ```{r}
-columbidae[!is.na(columbidae$resident) & sqrt(columbidae$resident) > 5,]
+columbidae[!is.na(columbidae$mean_resident) & sqrt(columbidae$mean_resident) > 5,]
 ```
 
 Try mapping max abundance
 ```{r}
-columbidae$max_abundance = apply(columbidae[,c('breeding', 'nonbreeding', 'resident')], 1, max, na.rm = T)
-columbidae$max_abundance[columbidae$max_abundance == -Inf] = NA
+columbidae$max_mean_abundance = apply(columbidae[,c('mean_breeding', 'mean_nonbreeding', 'mean_resident')], 1, max, na.rm = T)
+columbidae$max_mean_abundance[columbidae$max_mean_abundance == -Inf] = NA
 ```
 
 ```{r}
-ggplot(columbidae[!is.na(columbidae$max_abundance) & sqrt(columbidae$max_abundance) < 5,], aes(y = percentage_checklists, x = sqrt(max_abundance), color = log(total_city_checklists))) + geom_jitter() + geom_jitter() + scale_colour_gradient2(
+ggplot(columbidae[!is.na(columbidae$max_mean_abundance) & sqrt(columbidae$max_mean_abundance) < 5,], aes(y = percentage_checklists, x = sqrt(max_mean_abundance), color = log(total_city_checklists))) + geom_jitter() + geom_jitter() + scale_colour_gradient2(
   low = "red",
   mid = "yellow",
   high = "darkgreen",
@@ -254,18 +255,11 @@ ggplot(columbidae[!is.na(columbidae$max_abundance) & sqrt(columbidae$max_abundan
 ) + geom_smooth()
 ```
 ```{r}
-linear_model = lm(percentage_checklists ~ sqrt(max_abundance), columbidae[!is.na(columbidae$max_abundance) & sqrt(columbidae$max_abundance) < 5,])
-summary(linear_model)
-plot(linear_model)
+trimmed_data = columbidae[!is.na(columbidae$max_mean_abundance) & sqrt(columbidae$max_mean_abundance) < 5,]
 ```
 
+## Test predicting abundance directly.
 ```{r}
-linear_model = lm(percentage_checklists ~ max_abundance, columbidae[!is.na(columbidae$max_abundance) & sqrt(columbidae$max_abundance) < 5,])
-summary(linear_model)
-plot(linear_model)
-```
-```{r}
-trimmed_data = columbidae[!is.na(columbidae$max_abundance) & sqrt(columbidae$max_abundance) < 5,]
 seeds = c(123, 456, 678, 10, 11, 345, 32, 11, 54, 90, 9999, 1234, 5678, 2323, 9011, 532, 111, 678, 6501, 3)
 
 # min_city_checklists is the minimum number of cities a checklist must have to be included.
@@ -284,7 +278,7 @@ get_mean_test_error = function(min_city_checklists, get_model, get_expected) {
     model = get_model(data[train,])
     prediction = predict(model, data[test,])
     
-    result = rbind(result, data.frame(prediction = prediction, actual = data$max_abundance[test]))
+    result = rbind(result, data.frame(prediction = prediction, actual = get_expected(data[test,])))
   }
 
   sum((result$prediction - result$actual)^2) / nrow(result)
@@ -293,7 +287,7 @@ get_mean_test_error = function(min_city_checklists, get_model, get_expected) {
 min_city_checklists = seq(0, 5000, by=10)
 ```
 
-First test predicting abundance directly.
+Predict abundance directly
 ```{r}
 result = data.frame()
 
@@ -302,15 +296,15 @@ for (min_city_checklist in min_city_checklists) {
     min_city_checklist = min_city_checklist,
     mean_test_error = get_mean_test_error(
       min_city_checklist, 
-      function(training_data) {lm(max_abundance ~ percentage_checklists, training_data)},
-      function(test_data) {test_data$max_abundance})
+      function(training_data) {lm(max_mean_abundance ~ percentage_checklists, training_data)},
+      function(test_data) {test_data$max_mean_abundance})
   ))
 }
 
 ggplot(result, aes(x = min_city_checklist, y = mean_test_error)) + geom_line()
 ```
 
-Second test predicting the sqrt of abundance.
+Predict square root of abundance
 ```{r}
 result = data.frame()
 
@@ -319,17 +313,17 @@ for (min_city_checklist in min_city_checklists) {
     min_city_checklist = min_city_checklist,
     mean_test_error = get_mean_test_error(
       min_city_checklist, 
-      function(training_data) {lm(sqrt(max_abundance) ~ percentage_checklists, training_data)},
-      function(test_data) {sqrt(test_data$max_abundance)})
+      function(training_data) {lm(sqrt(max_mean_abundance) ~ percentage_checklists, training_data)},
+      function(test_data) {sqrt(test_data$max_mean_abundance)})
   ))
 }
 
 ggplot(result, aes(x = min_city_checklist, y = mean_test_error)) + geom_line()
 ```
 
-Third test predicting the presence.
+## Test predicting the presence.
 ```{r}
-trimmed_data$nonzero_abundance = trimmed_data$max_abundance > 0
+trimmed_data$nonzero_abundance = trimmed_data$max_mean_abundance > 0
 ```
 
 ```{r}
@@ -337,6 +331,7 @@ trimmed_data$total_city_checklists_bin = cut(trimmed_data$total_city_checklists,
 trimmed_data$total_city_checklists_bin = as.factor(trimmed_data$total_city_checklists_bin)
 ggplot(trimmed_data, aes(x = total_city_checklists_bin, y = percentage_checklists)) + geom_boxplot() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + facet_wrap(~ nonzero_abundance)
 ```
+
 
 ```{r}
 get_true_false_test_results = function(min_city_checklists) {
