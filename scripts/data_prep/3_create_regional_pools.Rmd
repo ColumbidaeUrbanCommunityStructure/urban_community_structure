@@ -355,14 +355,17 @@ https://datacatalog.worldbank.org/search/dataset/0038272/World-Bank-Official-Bou
 
 ```{r}
 COUNTRY_BOUNDARIES = '/Users/james/Dropbox/PhD/WorldBank_countries_Admin0_10m/WB_countries_Admin0_10m.shp'
-world_map = st_read(COUNTRY_BOUNDARIES)
+world_map = st_simplify(st_read(COUNTRY_BOUNDARIES), dTolerance = 0.02)
 ```
 ### Collared Dove
 Existing range from Birdlife
 ```{r}
+sf::sf_use_s2(FALSE)
+coldov_vect = st_simplify(columbidaeDistribution[columbidaeDistribution$SCI_NAME == 'Streptopelia decaocto', c('PRESENCE')], dTolerance = 0.02)
+
 ggplot() +  
   geom_sf(data = world_map, aes(geometry = geometry)) +
-  geom_sf(data = columbidaeDistribution[columbidaeDistribution$SCI_NAME == 'Streptopelia decaocto', c('PRESENCE')], aes(geometry = geometry), fill = "red")
+  geom_sf(data = coldov_vect, aes(geometry = geometry), fill = "red")
 ```
 
 Range from eBird
@@ -372,19 +375,14 @@ eucdov_range_vect = st_read(EBIRD_EUCDOV_RANGE)
 
 ggplot() +  
   geom_sf(data = world_map, aes(geometry = geometry)) +
-  geom_sf(data = eucdov_range_vect["scientific_name"], aes(geometry = geometry), fill = "red")
-```
-
-
-```{r}
-st_crs(eucdov_range_vect)
+  geom_sf(data = eucdov_range_vect["scientific_name"], aes(geometry = geom), fill = "red")
 ```
 
 Extract cities from eBird range
 ```{r}
 sf::sf_use_s2(FALSE)
 
-existing_eucdov_cities = urban_columbidae_distributions$city_id[urban_columbidae_distributions$binomil == 'Streptopelia decaocto']
+existing_eucdov_cities = urban_columbidae_distributions$city_id[urban_columbidae_distributions$SCI_NAME == 'Streptopelia decaocto']
 
 eucdov_distribution = st_join(initial_city_selection, eucdov_range_vect) 
 
@@ -407,9 +405,12 @@ missing_eucdov_cities
 ### Rock dove
 Existing range from Birdlife
 ```{r}
+sf::sf_use_s2(FALSE)
+rocdov_vect = st_simplify(columbidaeDistribution[columbidaeDistribution$SCI_NAME == 'Columba livia', c('PRESENCE')], dTolerance = 0.02)
+
 ggplot() +  
   geom_sf(data = world_map, aes(geometry = geometry)) +
-  geom_sf(data = columbidaeDistribution[columbidaeDistribution$SCI_NAME == 'Columba livia', c('PRESENCE')], aes(geometry = geometry), fill = "red")
+  geom_sf(data = rocdov_vect, aes(geometry = geometry), fill = "red")
 ```
 
 Range from eBird
@@ -418,7 +419,7 @@ EBIRD_ROCPIG_RANGE = '/Users/james/Dropbox/PhD/eBird/rocpig_range_2022/rocpig_ra
 rocpig_range_vect = st_read(EBIRD_ROCPIG_RANGE)
 ggplot() +  
   geom_sf(data = world_map, aes(geometry = geometry)) +
-  geom_sf(data = rocpig_range_vect["scientific_name"], aes(geometry = geometry), fill = "red")
+  geom_sf(data = rocpig_range_vect["scientific_name"], aes(geometry = geom), fill = "red")
 ```
 
 ```{r}
@@ -443,12 +444,15 @@ missing_rocpig_cities = data.frame(
 missing_rocpig_cities
 ```
 
-### Spotted dove
+## Add Spotted dove's expanded range into China
 Existing range from Birdlife
 ```{r}
+sf::sf_use_s2(FALSE)
+spodov_vect = st_simplify(columbidaeDistribution[columbidaeDistribution$SCI_NAME %in% c('Spilopelia chinensis','Spilopelia suratensis','Patagioenas albipennis'), c('SCI_NAME')], dTolerance = 0.02)
+
 ggplot() +  
   geom_sf(data = world_map, aes(geometry = geometry)) +
-  geom_sf(data = columbidaeDistribution[columbidaeDistribution$SCI_NAME %in% c('Spilopelia chinensis','Spilopelia suratensis','Patagioenas albipennis'), c('PRESENCE')], aes(geometry = geometry, fill = SCI_NAME))
+  geom_sf(data = spodov_vect, aes(geometry = geometry, fill = SCI_NAME))
 ```
 
 Range from eBird
@@ -457,7 +461,7 @@ EBIRD_SPODOV_RANGE = '/Users/james/Dropbox/PhD/eBird/spodov_range_2022/spodov_ra
 spodov_range_vect = st_read(EBIRD_SPODOV_RANGE)
 ggplot() +  
   geom_sf(data = world_map, aes(geometry = geometry)) +
-  geom_sf(data = spodov_range_vect["scientific_name"], aes(geometry = geometry), fill = "red")
+  geom_sf(data = spodov_range_vect["scientific_name"], aes(geometry = geom), fill = "red")
 ```
 
 ```{r}
@@ -486,7 +490,7 @@ missing_spodov_cities
 ```{r}
 urban_distribution = rbind(
   data.frame(
-    species_name = urban_columbidae_distributions$binomil, 
+    species_name = urban_columbidae_distributions$SCI_NAME, 
     city_id = urban_columbidae_distributions$city_id,
     city_name= urban_columbidae_distributions$city_name,
     origin = urban_columbidae_distributions$origin_desc,
