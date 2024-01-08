@@ -17,7 +17,7 @@ A download of the birdlife distributions can be requested from here:
 https://datazone.birdlife.org/species/requestdis
 
 ```{r}
-BIRDLIFE_DISTRIBUTIONS = '/Users/james/Dropbox/PhD/BirdLife/Distribution/BOTW 2/BOTW.gdb'
+BIRDLIFE_DISTRIBUTIONS = '/Users/james/Dropbox/PhD/BirdLife/Distribution/SppDataRequest_columbidae/SppDataRequest.shp'
 birdlife = st_read(BIRDLIFE_DISTRIBUTIONS)
 head(birdlife)
 ```
@@ -26,38 +26,234 @@ head(birdlife)
 Load the birdlife taxonomy to find Columbidae species.
 
 The taxonomy can be downloaded here:
-http://datazone.birdlife.org/species/taxonomy
+https://datazone.birdlife.org/species/taxonomy
 
 ```{r}
-BIRDLIFE_TAXONOMY = '/Users/james/Dropbox/PhD/BirdLife/Taxonomy/Handbook of the Birds of the World and BirdLife International Digital Checklist of the Birds of the World_Version_5.xlsx'
-birdlifeTaxonomyWb = loadWorkbook(BIRDLIFE_TAXONOMY)
-
-birdlifeTaxonomyWb_Sheets = getSheets(birdlifeTaxonomyWb)
-birdlifeTaxonomyWb_Sheets[["BirdLife_Checklist_v.5"]]
+st_crs(birdlife)
 ```
 
 ```{r}
-birdlifeTaxonomy_tmp = data.frame(readRows(birdlifeTaxonomyWb_Sheets[["BirdLife_Checklist_v.5"]], 3, 31223, 1, 15))
-names(birdlifeTaxonomy_tmp) <- birdlifeTaxonomy_tmp[1,]
-birdlifeTaxonomy <- birdlifeTaxonomy_tmp[-1,]
+BIRDLIFE_TAXONOMY = '/Users/james/Dropbox/PhD/BirdLife/Taxonomy/Handbook of the Birds of the World and BirdLife International Digital Checklist of the Birds of the World_Version_8.xlsx'
+birdlifeTaxonomyWb = read_excel(BIRDLIFE_TAXONOMY)
+birdlifeTaxonomyWb
+```
 
-birdlifeColumbidae = birdlifeTaxonomy[birdlifeTaxonomy$Order == 'COLUMBIFORMES',c('Seq.', 'Scientific name', 'Common name', 'Synonyms')]
+```{r}
+names(birdlifeTaxonomyWb) <- birdlifeTaxonomyWb[2,]
+birdlifeTaxonomy <- birdlifeTaxonomyWb[-2,]
+birdlifeTaxonomy
+```
+
+```{r}
+birdlifeColumbidae = birdlifeTaxonomy[!is.na(birdlifeTaxonomy$Order) & birdlifeTaxonomy$Order == 'COLUMBIFORMES', c('SISRecID', 'Scientific name', 'Common name', 'Synonyms')]
+names(birdlifeColumbidae) = c('birdlife_id', 'species_name', 'common_name', 'synonyms')
 birdlifeColumbidae
 ```
 
-Store taxonomy
+Check to see if we have any missing distributions
 ```{r}
-write_csv(birdlifeColumbidae, filename(BIRDLIFE_WORKING_OUTPUT_DIR, 'taxonomy.csv'))
+birdlifeColumbidae[!(birdlifeColumbidae$species_name %in% birdlife$SCI_NAME),]
+```
+
+Most of those species are extinct. The species not extinct are:
+* Nesoenas picturata	(?)
+* Geotrygon lawrencii (previously considered conspecific of Zentrygon carrikeri) - not a species recognised by birdlife http://datazone.birdlife.org/species/factsheet/22729899
+* Gallicolumba beccarii	- not a species recognised by birdlife http://datazone.birdlife.org/species/factsheet/22691066
+* Geophaps ferruginea - not a species recognised by birdlife http://datazone.birdlife.org/species/factsheet/22725184 - lumped in with G. plumifera
+* Ducula constans - not a species recognised by birdlife http://datazone.birdlife.org/species/factsheet/ducula-constans
+* Ducula salvadorii	 - not a species recognised by birdlife http://datazone.birdlife.org/species/factsheet/45448199 - previously lumped as D. pinon
+* Ptilinopus subgularis	 - not a species recognised by birdlife http://datazone.birdlife.org/species/factsheet/22691351
+* Ramphiculus meridionalis - not a species recognised by birdlife http://datazone.birdlife.org/species/factsheet/22728045 - previously placed in the genus Ptilinopus and lumped as P. fischeri
+* Stigmatopelia chinensis - not a species recognised by birdlife http://datazone.birdlife.org/species/factsheet/stigmatopelia-chinensis
+
+Extinct species:
+* Caloenas maculata	
+* Nesoenas rostrata	
+* Gallicolumba norfolciensis
+
+### Missing Nesoenas picturata
+```{r}
+birdlifeColumbidae[birdlifeColumbidae$species_name == 'Nesoenas picturata',]
+```
+
+```{r}
+birdlife[birdlife$SCI_NAME == 'Nesoenas picturatus',]
+```
+```{r}
+birdlifeColumbidae[birdlifeColumbidae$birdlife_id == '22690364',]
+```
+Already present, update synonyms
+```{r}
+birdlifeColumbidae$synonyms[birdlifeColumbidae$birdlife_id == '22690364'] = 'Columba picturata; Streptopelia picturata,Nesoenas picturata'
+```
+
+
+### Missing Geotrygon lawrencii
+Previously considered conspecific of Zentrygon carrikeri
+
+http://datazone.birdlife.org/species/factsheet/22729899
+
+```{r}
+birdlifeColumbidae[birdlifeColumbidae$species_name == 'Geotrygon lawrencii',]
+```
+
+```{r}
+birdlife[birdlife$SCI_NAME == 'Zentrygon carrikeri',]
+```
+```{r}
+birdlifeColumbidae[birdlifeColumbidae$birdlife_id == '22690901',]
+```
+Already present, update synonyms
+```{r}
+birdlifeColumbidae$synonyms[birdlifeColumbidae$birdlife_id == '22690901'] = 'Geotrygon carrikeri,Geotrygon lawrencii'
+```
+
+### Missing Gallicolumba beccarii
+http://datazone.birdlife.org/species/factsheet/22691066
+
+```{r}
+birdlifeColumbidae[birdlifeColumbidae$species_name == 'Gallicolumba beccarii',]
+```
+
+```{r}
+birdlife[birdlife$SCI_NAME == 'Pampusana beccarii',]
+```
+```{r}
+birdlifeColumbidae[birdlifeColumbidae$birdlife_id == '60444792',]
+```
+Already present, update synonyms
+```{r}
+birdlifeColumbidae$synonyms[birdlifeColumbidae$birdlife_id == '60444792'] = 'Gallicolumba beccarii'
+```
+
+
+### Missing Geophaps ferruginea
+http://datazone.birdlife.org/species/factsheet/22725184 - lumped in with G. plumifera
+
+```{r}
+birdlifeColumbidae[birdlifeColumbidae$species_name == 'Geophaps ferruginea',]
+```
+
+```{r}
+birdlife[birdlife$SCI_NAME == 'Geophaps plumifera',]
+```
+```{r}
+birdlifeColumbidae[birdlifeColumbidae$birdlife_id == '22690682',]
+```
+Already present, update synonyms
+```{r}
+birdlifeColumbidae$synonyms[birdlifeColumbidae$birdlife_id == '22690682'] = 'Geophaps ferruginea'
+```
+
+### Missing Ducula constans
+http://datazone.birdlife.org/species/factsheet/ducula-constans
+
+```{r}
+birdlifeColumbidae[birdlifeColumbidae$species_name == 'Ducula constans',]
+```
+
+```{r}
+birdlife[birdlife$SCI_NAME == 'Ducula spilorrhoa',]
+```
+
+```{r}
+birdlifeColumbidae[birdlifeColumbidae$birdlife_id == '22733554',]
+```
+Already present, update synonyms
+```{r}
+birdlifeColumbidae$synonyms[birdlifeColumbidae$birdlife_id == '22733554'] = 'Ducula constans'
+```
+
+### Missing Ducula salvadorii
+http://datazone.birdlife.org/species/factsheet/45448199 - previously lumped as D. pinon
+
+```{r}
+birdlifeColumbidae[birdlifeColumbidae$species_name == 'Ducula salvadorii',]
+```
+
+```{r}
+birdlife[birdlife$SCI_NAME == 'Ducula pinon',]
+```
+
+```{r}
+birdlifeColumbidae[birdlifeColumbidae$birdlife_id == '22691760',]
+```
+
+Already present, update synonyms
+```{r}
+birdlifeColumbidae$synonyms[birdlifeColumbidae$birdlife_id == '22691760'] = 'Ducula salvadorii'
+```
+
+### Missing Ptilinopus subgularis
+http://datazone.birdlife.org/species/factsheet/22691351
+
+```{r}
+birdlifeColumbidae[birdlifeColumbidae$species_name == 'Ptilinopus subgularis',]
+```
+
+```{r}
+birdlife[birdlife$SCI_NAME == 'Ramphiculus subgularis',]
+```
+
+```{r}
+birdlifeColumbidae[birdlifeColumbidae$birdlife_id == '22728146',]
+```
+Already present, update synonyms
+```{r}
+birdlifeColumbidae$synonyms[birdlifeColumbidae$birdlife_id == '22728146'] = 'Ptilinopus subgularis'
+```
+
+### Missing Ramphiculus meridionalis
+http://datazone.birdlife.org/species/factsheet/22728045 - previously placed in the genus Ptilinopus and lumped as P. fischeri
+
+```{r}
+birdlifeColumbidae[birdlifeColumbidae$species_name == 'Ramphiculus meridionalis',]
+```
+
+```{r}
+birdlife[birdlife$SCI_NAME == 'Ramphiculus fischeri',]
+```
+```{r}
+birdlifeColumbidae[birdlifeColumbidae$birdlife_id == '22691332',]
+```
+Already present, update synonyms
+```{r}
+birdlifeColumbidae$synonyms[birdlifeColumbidae$birdlife_id == '22691332'] = 'Ramphiculus meridionalis'
+```
+
+### Missing Stigmatopelia chinensis
+```{r}
+birdlifeColumbidae[birdlifeColumbidae$species_name == 'Stigmatopelia chinensis',]
+```
+
+```{r}
+birdlife[birdlife$SCI_NAME == 'Spilopelia chinensis',]
+```
+
+```{r}
+birdlifeColumbidae[birdlifeColumbidae$birdlife_id == '60482887',]
+```
+Already present, update synonyms
+```{r}
+birdlifeColumbidae$synonyms[birdlifeColumbidae$birdlife_id == '60482887'] = 'Streptopelia chinensis,Stigmatopelia chinensis'
+```
+
+## Store Birdlife taxonomy
+```{r}
+write_csv(birdlifeColumbidae[birdlifeColumbidae$species_name %in% birdlife$SCI_NAME,], filename(BIRDLIFE_WORKING_OUTPUT_DIR, 'taxonomy.csv'))
+birdlifeColumbidae = read_csv(filename(BIRDLIFE_WORKING_OUTPUT_DIR, 'taxonomy.csv'))
+head(birdlifeColumbidae)
 ```
 
 ## Filter Birdlife Distributions to only Columbidae
+Do we have any distributions not in our taxonomy?
 ```{r}
-columbidaeDistribution = birdlife[birdlife$binomial %in% birdlifeColumbidae,]
-head(columbidaeDistribution)
+birdlife[!(birdlife$SCI_NAME %in% birdlifeColumbidae$species_name),]
 ```
+
 ```{r}
 COLUMBIDAE_WORLD_DISTRIBUTIONS = filename(BIRDLIFE_WORKING_OUTPUT_DIR, "columbidae_world.shp")
-write_sf(columbidaeDistribution, COLUMBIDAE_WORLD_DISTRIBUTIONS)
+write_sf(birdlife, COLUMBIDAE_WORLD_DISTRIBUTIONS)
 columbidaeDistribution = read_sf(COLUMBIDAE_WORLD_DISTRIBUTIONS)
 ```
 
@@ -95,49 +291,50 @@ urban_columbidae_distributions
 
 ## Check birdlife distribution data
 
-Species with unkonwn presence?
+Species with unknown presence?
 ```{r}
-urban_columbidae_distributions[urban_columbidae_distributions$presenc > 5, c('binomil', 'city_name', 'city_id')]
+urban_columbidae_distributions[urban_columbidae_distributions$PRESENCE > 5, c('SCI_NAME', 'city_name', 'city_id')]
 ```
+
 
 Any extinct species?
 ```{r}
-urban_columbidae_distributions[urban_columbidae_distributions$presenc == 5, c('binomil', 'city_name', 'city_id')]
+urban_columbidae_distributions[urban_columbidae_distributions$PRESENCE == 5, c('SCI_NAME', 'city_name', 'city_id')]
 ```
 
 Possibly Extinct species
 ```{r}
-urban_columbidae_distributions[urban_columbidae_distributions$presenc == 4, c('binomil', 'city_name', 'city_id')]
+urban_columbidae_distributions[urban_columbidae_distributions$PRESENCE == 4, c('SCI_NAME', 'city_name', 'city_id')]
 ```
 
 ## Map seasonal and origin to string values
 ```{r}
 urban_columbidae_distributions$seasonal_desc = "Unknown Code"
-urban_columbidae_distributions$seasonal_desc[urban_columbidae_distributions$seasonl == "1"] = "Resident"
-urban_columbidae_distributions$seasonal_desc[urban_columbidae_distributions$seasonl == "2"] = "Breeding Season" 
-urban_columbidae_distributions$seasonal_desc[urban_columbidae_distributions$seasonl == "3"] = "Non-breeding Season" 
-urban_columbidae_distributions$seasonal_desc[urban_columbidae_distributions$seasonl == "4"] = "Passage" 
-urban_columbidae_distributions$seasonal_desc[urban_columbidae_distributions$seasonl == "5"] = "Seasonal occurence uncertain"
+urban_columbidae_distributions$seasonal_desc[urban_columbidae_distributions$SEASONAL == "1"] = "Resident"
+urban_columbidae_distributions$seasonal_desc[urban_columbidae_distributions$SEASONAL == "2"] = "Breeding Season" 
+urban_columbidae_distributions$seasonal_desc[urban_columbidae_distributions$SEASONAL == "3"] = "Non-breeding Season" 
+urban_columbidae_distributions$seasonal_desc[urban_columbidae_distributions$SEASONAL == "4"] = "Passage" 
+urban_columbidae_distributions$seasonal_desc[urban_columbidae_distributions$SEASONAL == "5"] = "Seasonal occurence uncertain"
 ```
 
 ```{r}
 urban_columbidae_distributions$origin_desc = "Unknown Code"
-urban_columbidae_distributions$origin_desc[urban_columbidae_distributions$origin == "1"] = "Native"
-urban_columbidae_distributions$origin_desc[urban_columbidae_distributions$origin == "2"] = "Reintroduced" 
-urban_columbidae_distributions$origin_desc[urban_columbidae_distributions$origin == "3"] = "Introduced" 
-urban_columbidae_distributions$origin_desc[urban_columbidae_distributions$origin == "4"] = "Vagrant" 
-urban_columbidae_distributions$origin_desc[urban_columbidae_distributions$origin == "5"] = "Origin Uncertain"
-urban_columbidae_distributions$origin_desc[urban_columbidae_distributions$origin == "6"] = "Assisted Colonisation"
+urban_columbidae_distributions$origin_desc[urban_columbidae_distributions$ORIGIN == "1"] = "Native"
+urban_columbidae_distributions$origin_desc[urban_columbidae_distributions$ORIGIN == "2"] = "Reintroduced" 
+urban_columbidae_distributions$origin_desc[urban_columbidae_distributions$ORIGIN == "3"] = "Introduced" 
+urban_columbidae_distributions$origin_desc[urban_columbidae_distributions$ORIGIN == "4"] = "Vagrant" 
+urban_columbidae_distributions$origin_desc[urban_columbidae_distributions$ORIGIN == "5"] = "Origin Uncertain"
+urban_columbidae_distributions$origin_desc[urban_columbidae_distributions$ORIGIN == "6"] = "Assisted Colonisation"
 ```
 
 ```{r}
 urban_columbidae_distributions$presence_desc = "Unknown Code"
-urban_columbidae_distributions$presence_desc[urban_columbidae_distributions$presenc == "1"] = "Extant"
-urban_columbidae_distributions$presence_desc[urban_columbidae_distributions$presenc == "2"] = "Probably Extant" 
-urban_columbidae_distributions$presence_desc[urban_columbidae_distributions$presenc == "3"] = "Possibly Extant" 
-urban_columbidae_distributions$presence_desc[urban_columbidae_distributions$presenc == "4"] = "Possibly Extinct" 
-urban_columbidae_distributions$presence_desc[urban_columbidae_distributions$presenc == "5"] = "Extinct"
-urban_columbidae_distributions$presence_desc[urban_columbidae_distributions$presenc == "6"] = "Presence Uncertain"
+urban_columbidae_distributions$presence_desc[urban_columbidae_distributions$PRESENCE == "1"] = "Extant"
+urban_columbidae_distributions$presence_desc[urban_columbidae_distributions$PRESENCE == "2"] = "Probably Extant" 
+urban_columbidae_distributions$presence_desc[urban_columbidae_distributions$PRESENCE == "3"] = "Possibly Extant" 
+urban_columbidae_distributions$presence_desc[urban_columbidae_distributions$PRESENCE == "4"] = "Possibly Extinct" 
+urban_columbidae_distributions$presence_desc[urban_columbidae_distributions$PRESENCE == "5"] = "Extinct"
+urban_columbidae_distributions$presence_desc[urban_columbidae_distributions$PRESENCE == "6"] = "Presence Uncertain"
 ```
 
 ```{r}
@@ -153,16 +350,37 @@ We supplement the data for Streptopelia decaocto with the range from eBird's Sta
 This data can be downloaded here:
 https://science.ebird.org/en/status-and-trends/species/eucdov/downloads
 
+The country boundandaries can be downloaded from the world bank here:
+https://datacatalog.worldbank.org/search/dataset/0038272/World-Bank-Official-Boundaries
+
+```{r}
+COUNTRY_BOUNDARIES = '/Users/james/Dropbox/PhD/WorldBank_countries_Admin0_10m/WB_countries_Admin0_10m.shp'
+world_map = st_read(COUNTRY_BOUNDARIES)
+```
+### Collared Dove
+Existing range from Birdlife
+```{r}
+ggplot() +  
+  geom_sf(data = world_map, aes(geometry = geometry)) +
+  geom_sf(data = columbidaeDistribution[columbidaeDistribution$SCI_NAME == 'Streptopelia decaocto', c('PRESENCE')], aes(geometry = geometry), fill = "red")
+```
+
+Range from eBird
 ```{r}
 EBIRD_EUCDOV_RANGE = '/Users/james/Dropbox/PhD/eBird/eucdov_range_2022/eucdov_range_2022.gpkg'
 eucdov_range_vect = st_read(EBIRD_EUCDOV_RANGE)
-plot(eucdov_range_vect["scientific_name"])
+
+ggplot() +  
+  geom_sf(data = world_map, aes(geometry = geometry)) +
+  geom_sf(data = eucdov_range_vect["scientific_name"], aes(geometry = geometry), fill = "red")
 ```
+
 
 ```{r}
 st_crs(eucdov_range_vect)
 ```
 
+Extract cities from eBird range
 ```{r}
 sf::sf_use_s2(FALSE)
 
@@ -172,6 +390,7 @@ eucdov_distribution = st_join(initial_city_selection, eucdov_range_vect)
 
 eucdov_distribution[!is.na(eucdov_distribution$species_code) & !(eucdov_distribution$city_id %in% existing_eucdov_cities),]
 ```
+
 
 ```{r}
 missing_eucdov_cities = data.frame(
@@ -185,15 +404,27 @@ missing_eucdov_cities = data.frame(
 missing_eucdov_cities
 ```
 
+### Rock dove
+Existing range from Birdlife
+```{r}
+ggplot() +  
+  geom_sf(data = world_map, aes(geometry = geometry)) +
+  geom_sf(data = columbidaeDistribution[columbidaeDistribution$SCI_NAME == 'Columba livia', c('PRESENCE')], aes(geometry = geometry), fill = "red")
+```
+
+Range from eBird
 ```{r}
 EBIRD_ROCPIG_RANGE = '/Users/james/Dropbox/PhD/eBird/rocpig_range_2022/rocpig_range_2022.gpkg'
 rocpig_range_vect = st_read(EBIRD_ROCPIG_RANGE)
-plot(rocpig_range_vect["scientific_name"])
+ggplot() +  
+  geom_sf(data = world_map, aes(geometry = geometry)) +
+  geom_sf(data = rocpig_range_vect["scientific_name"], aes(geometry = geometry), fill = "red")
 ```
+
 ```{r}
 sf::sf_use_s2(FALSE)
 
-existing_rocpig_cities = urban_columbidae_distributions$city_id[urban_columbidae_distributions$binomil == 'Columba livia']
+existing_rocpig_cities = urban_columbidae_distributions$city_id[urban_columbidae_distributions$SCI_NAME == 'Columba livia']
 
 rocpig_distribution = st_join(initial_city_selection, rocpig_range_vect) 
 
@@ -212,16 +443,27 @@ missing_rocpig_cities = data.frame(
 missing_rocpig_cities
 ```
 
+### Spotted dove
+Existing range from Birdlife
+```{r}
+ggplot() +  
+  geom_sf(data = world_map, aes(geometry = geometry)) +
+  geom_sf(data = columbidaeDistribution[columbidaeDistribution$SCI_NAME %in% c('Spilopelia chinensis','Spilopelia suratensis','Patagioenas albipennis'), c('PRESENCE')], aes(geometry = geometry, fill = SCI_NAME))
+```
+
+Range from eBird
 ```{r}
 EBIRD_SPODOV_RANGE = '/Users/james/Dropbox/PhD/eBird/spodov_range_2022/spodov_range_2022.gpkg'
 spodov_range_vect = st_read(EBIRD_SPODOV_RANGE)
-plot(spodov_range_vect["scientific_name"])
+ggplot() +  
+  geom_sf(data = world_map, aes(geometry = geometry)) +
+  geom_sf(data = spodov_range_vect["scientific_name"], aes(geometry = geometry), fill = "red")
 ```
 
 ```{r}
 sf::sf_use_s2(FALSE)
 
-existing_spodov_cities = urban_columbidae_distributions$city_id[urban_columbidae_distributions$binomil %in% c('Spilopelia chinensis','Spilopelia suratensis','Patagioenas albipennis')]
+existing_spodov_cities = urban_columbidae_distributions$city_id[urban_columbidae_distributions$SCI_NAME %in% c('Spilopelia chinensis','Spilopelia suratensis','Patagioenas albipennis')]
 
 spodov_distribution = st_join(initial_city_selection, spodov_range_vect) 
 
