@@ -571,6 +571,27 @@ Check all species now mapped
 ebird_birdlife_taxonomy_mapping[!ebird_birdlife_taxonomy_mapping$jetz_species_name %in% jetz_phylo_tree$tip.label,]
 ```
 
+## Clean up Birdlife species
+Check that all the species with NA as their birdlife common name, have a mapping already
+```{r}
+birdlife_species_with_na_common_name = ebird_birdlife_taxonomy_mapping[is.na(ebird_birdlife_taxonomy_mapping$birdlife_common_name),]
+nrow(birdlife_species_with_common_name)
+```
+
+```{r}
+birdlife_species_with_common_name = ebird_birdlife_taxonomy_mapping[!is.na(ebird_birdlife_taxonomy_mapping$birdlife_common_name),]
+
+birdlife_species_with_na_common_name[!(birdlife_species_with_na_common_name$species_name %in% birdlife_species_with_common_name$species_name),]
+```
+
+```{r}
+birdlife_species_with_na_common_name[!(birdlife_species_with_na_common_name$ebird_species_name %in% birdlife_species_with_common_name$ebird_species_name),]
+```
+
+```{r}
+ebird_birdlife_taxonomy_mapping = ebird_birdlife_taxonomy_mapping[!is.na(ebird_birdlife_taxonomy_mapping$birdlife_common_name),]
+```
+
 ## Store Mapping file
 ```{r}
 write_csv(ebird_birdlife_taxonomy_mapping, filename(TAXONOMY_OUTPUT_DIR, 'taxonomy_mapping.csv'))
