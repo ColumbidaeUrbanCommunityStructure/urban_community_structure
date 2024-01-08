@@ -23,12 +23,12 @@ head(birdlife_tax)
 Read in eBird
 ```{r}
 ebird_tax = read_csv(filename(EBIRD_WORKING_OUTPUT_DIR, 'taxonomy.csv'))
-names(ebird_tax) = c('ebird_id', 'ebird_category', 'ebird_species_name', 'ebird_common_name')
+names(ebird_tax) = c('ebird_id', 'ebird_category', 'ebird_species_fullname', 'ebird_common_name')
 head(ebird_tax)
 ```
 First create the root species name for all ebird records
 ```{r}
-ebird_tax$species_name = word(ebird_tax$ebird_species_name, 1, 2, sep = ' ')
+ebird_tax$species_name = word(ebird_tax$ebird_species_fullname, 1, 2, sep = ' ')
 head(ebird_tax)
 ```
 
@@ -42,59 +42,73 @@ Species in Birdlife but not eBird
 birdlife_tax[!(birdlife_tax$species_name %in% ebird_tax$species_name),]
 ```
 
-Trying using Birdlife alternative name for renaming species
+Expand birdlife alternative names
 ```{r}
-birdlife_species_name_not_in_ebird = birdlife_tax[!(birdlife_tax$species_name %in% ebird_tax$species_name),]
-birdlife_species_name_not_in_ebird[!(birdlife_species_name_not_in_ebird$alternative_name %in% ebird_tax$species_name),]
+birdlife_tax_alt_names = birdlife_tax %>% 
+  separate_rows(alternative_name, sep = ",") %>% 
+  separate_rows(alternative_name, sep = ";") %>% 
+  filter(!is.na(alternative_name))
+
+birdlife_tax_alt_names
+```
+
+Trying using Birdlife alternative name for finding matching eBird species
+```{r}
+birdlife_species_missing_from_ebird_with_alt_name = birdlife_tax_alt_names[!(birdlife_tax_alt_names$species_name %in% ebird_tax$species_name),]
+inner_join(birdlife_species_missing_from_ebird_with_alt_name, ebird_tax, by = c('alternative_name' = 'species_name'))
 ```
 
 ## Build initial taxonomy mapping with straight forward species
 ```{r}
 ebird_birdlife_taxonomy_mapping = inner_join(
   birdlife_tax[, c('species_name', 'birdlife_id', 'birdlife_common_name')], 
-  ebird_tax[, c('species_name', 'ebird_id', 'ebird_common_name', 'ebird_species_name')]
+  ebird_tax[, c('species_name', 'ebird_id', 'ebird_common_name', 'ebird_species_fullname')]
 )
+ebird_birdlife_taxonomy_mapping$ebird_species_name = ebird_birdlife_taxonomy_mapping$species_name
 head(ebird_birdlife_taxonomy_mapping)
 ```
 
 ```{r}
 mapped_by_alternative_name = inner_join(
-  birdlife_species_name_not_in_ebird[, c('species_name', 'birdlife_id', 'birdlife_common_name', 'alternative_name')], 
-  ebird_tax[, c('species_name', 'ebird_id', 'ebird_common_name', 'ebird_species_name')],
+  birdlife_species_missing_from_ebird_with_alt_name[, c('species_name', 'birdlife_id', 'birdlife_common_name', 'alternative_name')], 
+  ebird_tax[, c('species_name', 'ebird_id', 'ebird_common_name', 'ebird_species_fullname')],
   by = c('alternative_name' = 'species_name')
 )
+names(mapped_by_alternative_name) = c('species_name', 'birdlife_id', 'birdlife_common_name', 'ebird_species_name', 'ebird_id', 'ebird_common_name', 'ebird_species_fullname')
+mapped_by_alternative_name = mapped_by_alternative_name[,c('species_name', 'birdlife_id', 'birdlife_common_name', 'ebird_id', 'ebird_common_name', 'ebird_species_fullname', 'ebird_species_name')]
 mapped_by_alternative_name
 ```
 
 ```{r}
 ebird_birdlife_taxonomy_mapping = rbind(
   ebird_birdlife_taxonomy_mapping,
-  mapped_by_alternative_name[,c('species_name', 'birdlife_id', 'birdlife_common_name', 'ebird_id', 'ebird_common_name', 'ebird_species_name')]
+  mapped_by_alternative_name
 )
 ```
 
 
 ## Species left to map
-Species missing in Birdlife
+
+Species in Birdlife but in our new taxonomy
 ```{r}
-birdlife_tax[!(birdlife_tax$species_name %in% ebird_birdlife_taxonomy_mapping$species_name),]
+missing_birdlife_species = birdlife_tax[!(birdlife_tax$species_name %in% ebird_birdlife_taxonomy_mapping$species_name),]
+missing_birdlife_species
 ```
 
-Species missing in eBird
+
+Species in eBird but not our new taxonomy
 ```{r}
-ebird_tax[!(ebird_tax$ebird_species_name %in% ebird_birdlife_taxonomy_mapping$ebird_species_name),]
+missing_ebird_species = ebird_tax[!(ebird_tax$species_name %in% ebird_birdlife_taxonomy_mapping$ebird_species_name),]
+missing_ebird_species
 ```
 
-### Birdlife
-Extinct Birdlife species
+### Map Remaining Birdlife Species
 
-* Nesoenas duboisi
+```{r}
+ebird_tax$ebird_species_name = ebird_tax$species_name
+```
 
-Absent in eBird
-
-* Leptotila battyi: endemic to Panama, no records on eBird of this species or any Leptotila species in Panama.
-
-Spilopelia suratensis
+### 60483076: Spilopelia suratensis(Western Spotted Dove)
 
 * https://avibase.bsc-eoc.org/species.jsp?lang=EN&avibaseid=AEF9E7D341798053
 * https://ebird.org/species/spodov
@@ -102,14 +116,17 @@ Spilopelia suratensis
 
 ```{r}
 birdlife_spilopelia_suratensis = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Spilopelia chinensis',c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
+  ebird_tax[ebird_tax$species_name == 'Spilopelia chinensis', c('ebird_id', 'ebird_species_name', 'ebird_species_fullname', 'ebird_common_name')],
   birdlife_tax[birdlife_tax$species_name == 'Spilopelia suratensis', c('birdlife_id', 'species_name', 'birdlife_common_name')]
 )
 ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_spilopelia_suratensis)
 birdlife_spilopelia_suratensis
 ```
 
-Patagioenas albipennis
+### 22728712: Nesoenas duboisi(Reunion Pigeon)
+Extinct, so exclude from taxonomy
+
+### 22728289: Patagioenas albipennis(White-winged Pigeon)
 
 * https://avibase.bsc-eoc.org/species.jsp?lang=EN&avibaseid=9DAE75390A64BCF5
 * http://datazone.birdlife.org/species/factsheet/white-winged-pigeon-patagioenas-albipennis
@@ -117,358 +134,234 @@ Patagioenas albipennis
 
 ```{r}
 birdlife_patagioenas_albipennis = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Spilopelia chinensis',c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
+  ebird_tax[ebird_tax$ebird_species_name == 'Spilopelia chinensis',c('ebird_id', 'ebird_species_name', 'ebird_species_fullname', 'ebird_common_name')],
   birdlife_tax[birdlife_tax$species_name == 'Patagioenas albipennis', c('birdlife_id', 'species_name', 'birdlife_common_name')]
 )
 ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_patagioenas_albipennis)
 birdlife_patagioenas_albipennis
 ```
 
-Patagioenas albilinea
+### 22725270: Patagioenas albilinea(Southern Band-tailed Pigeon)
 
 * https://avibase.bsc-eoc.org/species.jsp?lang=EN&avibaseid=975A928B4D624F19
 * http://datazone.birdlife.org/species/factsheet/southern-band-tailed-pigeon-patagioenas-albilinea
 * https://ebird.org/species/batpig1/
+
 ```{r}
 birdlife_patagioenas_albilinea = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Patagioenas fasciata',c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
+  ebird_tax[ebird_tax$ebird_species_name == 'Patagioenas fasciata',c('ebird_id', 'ebird_species_name', 'ebird_species_fullname', 'ebird_common_name')],
   birdlife_tax[birdlife_tax$species_name == 'Patagioenas albilinea', c('birdlife_id', 'species_name', 'birdlife_common_name')]
 )
 ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_patagioenas_albilinea)
 birdlife_patagioenas_albilinea
 ```
-Alopecoenas hoedtii
 
-* https://avibase.bsc-eoc.org/species.jsp?lang=EN&avibaseid=CD21DBC9B8F0385B
-* https://ebird.org/species/wegdov1/
+### 22690868: Leptotila battyi(Brown-backed Dove)
 
-```{r}
-birdlife_alopecoenas_hoedtii = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Pampusana hoedtii',c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
-  birdlife_tax[birdlife_tax$species_name == 'Alopecoenas hoedtii', c('birdlife_id', 'species_name', 'birdlife_common_name')]
-)
-ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_alopecoenas_hoedtii)
-birdlife_alopecoenas_hoedtii
-```
-Alopecoenas jobiensis
+* Leptotila battyi: endemic to Panama, no records on eBird of this species or any Leptotila species in Panama.
 
-* https://avibase.bsc-eoc.org/species.jsp?lang=EN&avibaseid=CD21DBC9B8F0385B
-* https://ebird.org/species/wegdov1/
+### 60444823: Pampusana johannae(Eastern Bronze Ground-dove)
+
+* https://avibase.bsc-eoc.org/species.jsp?avibaseid=A8329D59
 
 ```{r}
-birdlife_alopecoenas_hoedtii = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Pampusana hoedtii',c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
-  birdlife_tax[birdlife_tax$species_name == 'Alopecoenas hoedtii', c('birdlife_id', 'species_name', 'birdlife_common_name')]
+birdlife_otidiphaps_aruensis = cbind(
+  ebird_tax[ebird_tax$ebird_species_fullname == 'Pampusana beccarii [johannae Group]', c('ebird_id', 'ebird_species_name', 'ebird_species_fullname', 'ebird_common_name')],
+  birdlife_tax[birdlife_tax$species_name == 'Pampusana johannae', c('birdlife_id', 'species_name', 'birdlife_common_name')]
 )
-ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_alopecoenas_hoedtii)
-birdlife_alopecoenas_hoedtii
+ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_otidiphaps_aruensis)
+birdlife_otidiphaps_aruensis
 ```
 
-Alopecoenas jobiensis
-```{r}
-birdlife_alopecoenas_jobiensis = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Pampusana jobiensis',c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
-  birdlife_tax[birdlife_tax$species_name == 'Alopecoenas jobiensis', c('birdlife_id', 'species_name', 'birdlife_common_name')]
-)
-ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_alopecoenas_jobiensis)
-birdlife_alopecoenas_jobiensis
-```
-Alopecoenas kubaryi
-```{r}
-birdlife_alopecoenas_kubaryi = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Pampusana kubaryi',c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
-  birdlife_tax[birdlife_tax$species_name == 'Alopecoenas kubaryi', c('birdlife_id', 'species_name', 'birdlife_common_name')]
-)
-ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_alopecoenas_kubaryi)
-birdlife_alopecoenas_kubaryi
-```
-Alopecoenas xanthonurus
-```{r}
-birdlife_alopecoenas_xanthonurus = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Pampusana xanthonura',c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
-  birdlife_tax[birdlife_tax$species_name == 'Alopecoenas xanthonurus', c('birdlife_id', 'species_name', 'birdlife_common_name')]
-)
-ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_alopecoenas_xanthonurus)
-birdlife_alopecoenas_xanthonurus
-```
-Alopecoenas erythropterus
-```{r}
-birdlife_alopecoenas_erythropterus = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Pampusana erythroptera',c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
-  birdlife_tax[birdlife_tax$species_name == 'Alopecoenas erythropterus', c('birdlife_id', 'species_name', 'birdlife_common_name')]
-)
-ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_alopecoenas_erythropterus)
-birdlife_alopecoenas_erythropterus
-```
-Alopecoenas rubescens
-```{r}
-birdlife_alopecoenas_rubescens = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Pampusana rubescens',c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
-  birdlife_tax[birdlife_tax$species_name == 'Alopecoenas rubescens', c('birdlife_id', 'species_name', 'birdlife_common_name')]
-)
-ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_alopecoenas_rubescens)
-birdlife_alopecoenas_rubescens
-```
-Alopecoenas beccarii	
-```{r}
-birdlife_alopecoenas_beccarii = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Pampusana beccarii',c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
-  birdlife_tax[birdlife_tax$species_name == 'Alopecoenas beccarii', c('birdlife_id', 'species_name', 'birdlife_common_name')]
-)
-ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_alopecoenas_beccarii)
-birdlife_alopecoenas_beccarii
-```
-Alopecoenas johannae	
-```{r}
-birdlife_alopecoenas_johannae = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Pampusana beccarii [johannae Group]', c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
-  birdlife_tax[birdlife_tax$species_name == 'Alopecoenas johannae', c('birdlife_id', 'species_name', 'birdlife_common_name')]
-)
-ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_alopecoenas_johannae)
-birdlife_alopecoenas_johannae
-```
-Alopecoenas canifrons
-```{r}
-birdlife_alopecoenas_canifrons = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Pampusana canifrons', c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
-  birdlife_tax[birdlife_tax$species_name == 'Alopecoenas canifrons', c('birdlife_id', 'species_name', 'birdlife_common_name')]
-)
-ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_alopecoenas_canifrons)
-birdlife_alopecoenas_canifrons
-```
-
-Alopecoenas sanctaecrucis
-```{r}
-birdlife_alopecoenas_sanctaecrucis = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Pampusana sanctaecrucis', c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
-  birdlife_tax[birdlife_tax$species_name == 'Alopecoenas sanctaecrucis', c('birdlife_id', 'species_name', 'birdlife_common_name')]
-)
-ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_alopecoenas_sanctaecrucis)
-birdlife_alopecoenas_sanctaecrucis
-```
-
-Alopecoenas stairi
-```{r}
-birdlife_alopecoenas_stairi = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Pampusana stairi', c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
-  birdlife_tax[birdlife_tax$species_name == 'Alopecoenas stairi', c('birdlife_id', 'species_name', 'birdlife_common_name')]
-)
-ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_alopecoenas_stairi)
-birdlife_alopecoenas_stairi
-```
-Alopecoenas ferrugineus
-```{r}
-birdlife_alopecoenas_ferrugineus = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Pampusana ferruginea', c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
-  birdlife_tax[birdlife_tax$species_name == 'Alopecoenas ferrugineus', c('birdlife_id', 'species_name', 'birdlife_common_name')]
-)
-ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_alopecoenas_ferrugineus)
-birdlife_alopecoenas_ferrugineus
-```
-Alopecoenas salamonis
-```{r}
-birdlife_alopecoenas_salamonis = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Pampusana salamonis', c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
-  birdlife_tax[birdlife_tax$species_name == 'Alopecoenas salamonis', c('birdlife_id', 'species_name', 'birdlife_common_name')]
-)
-ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_alopecoenas_salamonis)
-birdlife_alopecoenas_salamonis
-```
-Otidiphaps aruensis
+### 22728031: Otidiphaps aruensis(White-naped Pheasant-pigeon)
 
 * https://avibase.bsc-eoc.org/species.jsp?lang=EN&avibaseid=F197D25F1AB50C3B
 * https://ebird.org/species/phepig1/
 
 ```{r}
 birdlife_otidiphaps_aruensis = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Otidiphaps nobilis aruensis', c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
+  ebird_tax[ebird_tax$ebird_species_fullname == 'Otidiphaps nobilis aruensis', c('ebird_id', 'ebird_species_name', 'ebird_species_fullname', 'ebird_common_name')],
   birdlife_tax[birdlife_tax$species_name == 'Otidiphaps aruensis', c('birdlife_id', 'species_name', 'birdlife_common_name')]
 )
 ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_otidiphaps_aruensis)
 birdlife_otidiphaps_aruensis
 ```
 
-Otidiphaps cervicalis
+### 22725258: Otidiphaps cervicalis(Grey-naped Pheasant-pigeon)
 ```{r}
 birdlife_otidiphaps_cervicalis = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Otidiphaps nobilis cervicalis', c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
+  ebird_tax[ebird_tax$ebird_species_fullname == 'Otidiphaps nobilis cervicalis', c('ebird_id', 'ebird_species_name', 'ebird_species_fullname', 'ebird_common_name')],
   birdlife_tax[birdlife_tax$species_name == 'Otidiphaps cervicalis', c('birdlife_id', 'species_name', 'birdlife_common_name')]
 )
 ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_otidiphaps_cervicalis)
 birdlife_otidiphaps_cervicalis
 ```
 
-Otidiphaps insularis
+### 22726273: Otidiphaps insularis(Black-naped Pheasant-pigeon)
 ```{r}
 birdlife_otidiphaps_insularis = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Otidiphaps nobilis insularis', c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
+  ebird_tax[ebird_tax$ebird_species_fullname == 'Otidiphaps nobilis insularis', c('ebird_id', 'ebird_species_name', 'ebird_species_fullname', 'ebird_common_name')],
   birdlife_tax[birdlife_tax$species_name == 'Otidiphaps insularis', c('birdlife_id', 'species_name', 'birdlife_common_name')]
 )
 ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_otidiphaps_insularis)
 birdlife_otidiphaps_insularis
 ```
 
-Phapitreron nigrorum
+### 22727834: Phapitreron nigrorum(Buff-eared Brown-dove)
+
 ```{r}
 birdlife_phapitreron_nigrorum = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Phapitreron leucotis nigrorum', c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
+  ebird_tax[ebird_tax$ebird_species_fullname == 'Phapitreron leucotis nigrorum', c('ebird_id', 'ebird_species_name', 'ebird_species_fullname', 'ebird_common_name')],
   birdlife_tax[birdlife_tax$species_name == 'Phapitreron nigrorum', c('birdlife_id', 'species_name', 'birdlife_common_name')]
 )
 ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_phapitreron_nigrorum)
 birdlife_phapitreron_nigrorum
 ```
-Phapitreron brevirostris
+
+
+### 22727841: Phapitreron brevirostris(Short-billed Brown-dove)
+
 ```{r}
 birdlife_phapitreron_brevirostris = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Phapitreron leucotis brevirostris/occipitalis', c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
+  ebird_tax[ebird_tax$ebird_species_fullname == 'Phapitreron leucotis brevirostris/occipitalis', c('ebird_id', 'ebird_species_name', 'ebird_species_fullname', 'ebird_common_name')],
   birdlife_tax[birdlife_tax$species_name == 'Phapitreron brevirostris', c('birdlife_id', 'species_name', 'birdlife_common_name')]
 )
 ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_phapitreron_brevirostris)
 birdlife_phapitreron_brevirostris
 ```
-Phapitreron maculipectus
+
+
+### 60543526: Phapitreron maculipectus(Grey-breasted Brown-dove)
+
 ```{r}
 birdlife_phapitreron_maculipectus = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Phapitreron amethystinus maculipectus', c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
+  ebird_tax[ebird_tax$ebird_species_fullname == 'Phapitreron amethystinus maculipectus', c('ebird_id', 'ebird_species_name', 'ebird_species_fullname', 'ebird_common_name')],
   birdlife_tax[birdlife_tax$species_name == 'Phapitreron maculipectus', c('birdlife_id', 'species_name', 'birdlife_common_name')]
 )
 ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_phapitreron_maculipectus)
 birdlife_phapitreron_maculipectus
 ```
-Phapitreron frontalis
+
+
+### 60543516: Phapitreron frontalis(Cebu Brown-dove)
 ```{r}
 birdlife_phapitreron_frontalis = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Phapitreron amethystinus frontalis', c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
+  ebird_tax[ebird_tax$ebird_species_fullname == 'Phapitreron amethystinus frontalis', c('ebird_id', 'ebird_species_name', 'ebird_species_fullname', 'ebird_common_name')],
   birdlife_tax[birdlife_tax$species_name == 'Phapitreron frontalis', c('birdlife_id', 'species_name', 'birdlife_common_name')]
 )
 ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_phapitreron_frontalis)
 birdlife_phapitreron_frontalis
 ```
-Treron delalandii
+
+### 45433495: Treron delalandii(Grey-breasted Green-pigeon)
 
 * https://avibase.bsc-eoc.org/search.jsp?qstr=Treron+permagnus
 
 ```{r}
 birdlife_treron_delalandii = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Treron calvus delalandii/granti', c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
+  ebird_tax[ebird_tax$ebird_species_fullname == 'Treron calvus delalandii/granti', c('ebird_id', 'ebird_species_name', 'ebird_species_fullname', 'ebird_common_name')],
   birdlife_tax[birdlife_tax$species_name == 'Treron delalandii', c('birdlife_id', 'species_name', 'birdlife_common_name')]
 )
 ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_treron_delalandii)
 birdlife_treron_delalandii
 ```
-Treron permagnus
+
+### 22727551: Treron permagnus(Ryukyu Green-pigeon)    
 
 * https://avibase.bsc-eoc.org/species.jsp?lang=EN&avibaseid=1EE907AC088D0B85
 
 ```{r}
 birdlife_treron_permagnus = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Treron formosae permagnus/medioximus', c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
+  ebird_tax[ebird_tax$ebird_species_fullname == 'Treron formosae permagnus/medioximus', c('ebird_id', 'ebird_species_name', 'ebird_species_fullname', 'ebird_common_name')],
   birdlife_tax[birdlife_tax$species_name == 'Treron permagnus', c('birdlife_id', 'species_name', 'birdlife_common_name')]
 )
 ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_treron_permagnus)
 birdlife_treron_permagnus
 ```
-Ducula obiensis
+
+### 22725304: Ducula obiensis(Rusty Imperial-pigeon)   
 
 * https://avibase.bsc-eoc.org/species.jsp?lang=EN&avibaseid=AAC237408FEB8125
 
 ```{r}
 birdlife_ducula_obiensis = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Ducula basilica obiensis', c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
+  ebird_tax[ebird_tax$ebird_species_fullname == 'Ducula basilica obiensis', c('ebird_id', 'ebird_species_name', 'ebird_species_fullname', 'ebird_common_name')],
   birdlife_tax[birdlife_tax$species_name == 'Ducula obiensis', c('birdlife_id', 'species_name', 'birdlife_common_name')]
 )
 ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_ducula_obiensis)
 birdlife_ducula_obiensis
 ```
-Ducula salvadorii
-```{r}
-birdlife_ducula_salvadorii = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Ducula pinon salvadorii', c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
-  birdlife_tax[birdlife_tax$species_name == 'Ducula salvadorii', c('birdlife_id', 'species_name', 'birdlife_common_name')]
-)
-ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_ducula_salvadorii)
-birdlife_ducula_salvadorii
-```
-Ramphiculus epius
+
+### 22725071: Ramphiculus epius(Maroon-chinned Fruit-dove) 
 ```{r}
 birdlife_ramphiculus_epius = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Ptilinopus epius', c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
+  ebird_tax[ebird_tax$ebird_species_name == 'Ptilinopus epius', c('ebird_id', 'ebird_species_name', 'ebird_species_fullname', 'ebird_common_name')],
   birdlife_tax[birdlife_tax$species_name == 'Ramphiculus epius', c('birdlife_id', 'species_name', 'birdlife_common_name')]
 )
 ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_ramphiculus_epius)
 birdlife_ramphiculus_epius
 ```
-Ramphiculus subgularis	
-```{r}
-birdlife_ramphiculus_subgularis = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Ptilinopus subgularis', c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
-  birdlife_tax[birdlife_tax$species_name == 'Ramphiculus subgularis', c('birdlife_id', 'species_name', 'birdlife_common_name')]
-)
-ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_ramphiculus_subgularis)
-birdlife_ramphiculus_subgularis
-```
-Ramphiculus mangoliensis
+
+
+### 22725080: Ramphiculus mangoliensis(Sula Fruit-dove)    
+
 ```{r}
 birdlife_ramphiculus_mangoliensis = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Ptilinopus mangoliensis', c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
+  ebird_tax[ebird_tax$ebird_species_name == 'Ptilinopus mangoliensis', c('ebird_id', 'ebird_species_name', 'ebird_species_fullname', 'ebird_common_name')],
   birdlife_tax[birdlife_tax$species_name == 'Ramphiculus mangoliensis', c('birdlife_id', 'species_name', 'birdlife_common_name')]
 )
 ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_ramphiculus_mangoliensis)
 birdlife_ramphiculus_mangoliensis
 ```
-Ramphiculus fischeri
+
+
+### 22691332: Ramphiculus fischeri(Red-eared Fruit-dove)
+Ramphiculus meridionalis
+
 ```{r}
 birdlife_ramphiculus_fischeri = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Ptilinopus fischeri', c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
-  birdlife_tax[birdlife_tax$species_name == 'Ramphiculus fischeri', c('birdlife_id', 'species_name', 'birdlife_common_name')]
+  ebird_tax[ebird_tax$ebird_species_name == 'Ptilinopus fischeri', c('ebird_id', 'ebird_species_name', 'ebird_species_fullname', 'ebird_common_name')],
+  birdlife_tax[birdlife_tax$birdlife_id == '22691332', c('birdlife_id', 'species_name', 'birdlife_common_name')]
 )
 ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_ramphiculus_fischeri)
 birdlife_ramphiculus_fischeri
 ```
-Ramphiculus meridionalis
 
-* https://avibase.bsc-eoc.org/species.jsp?lang=EN&avibaseid=E41C677F7619363F
-
-```{r}
-birdlife_ramphiculus_meridionalis = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Ptilinopus fischeri meridionalis', c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
-  birdlife_tax[birdlife_tax$species_name == 'Ramphiculus meridionalis', c('birdlife_id', 'species_name', 'birdlife_common_name')]
-)
-ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_ramphiculus_meridionalis)
-birdlife_ramphiculus_meridionalis
-```
-Ptilinopus temminckii
+### 22725286: Ptilinopus temminckii(Western Superb Fruit-dove)
 
 * https://avibase.bsc-eoc.org/species.jsp?lang=EN&avibaseid=722E8494A2E5BD3C
 
 ```{r}
 birdlife_ptilinopus_temminckii = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Ptilinopus superbus temminckii', c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
+  ebird_tax[ebird_tax$ebird_species_fullname == 'Ptilinopus superbus temminckii', c('ebird_id', 'ebird_species_name', 'ebird_species_fullname', 'ebird_common_name')],
   birdlife_tax[birdlife_tax$species_name == 'Ptilinopus temminckii', c('birdlife_id', 'species_name', 'birdlife_common_name')]
 )
 ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_ptilinopus_temminckii)
 birdlife_ptilinopus_temminckii
 ```
-Ptilinopus gestroi
+
+
+### 22728059: Ptilinopus gestroi(Eastern Ornate Fruit-dove)
 
 * https://avibase.bsc-eoc.org/species.jsp?lang=EN&avibaseid=E0D24D45C31E80AB
 
 ```{r}
 birdlife_ptilinopus_gestroi = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Ptilinopus ornatus gestroi', c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
+  ebird_tax[ebird_tax$ebird_species_fullname == 'Ptilinopus ornatus gestroi', c('ebird_id', 'ebird_species_name', 'ebird_species_fullname', 'ebird_common_name')],
   birdlife_tax[birdlife_tax$species_name == 'Ptilinopus gestroi', c('birdlife_id', 'species_name', 'birdlife_common_name')]
 )
 ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_ptilinopus_gestroi)
 birdlife_ptilinopus_gestroi
 ```
 
+### 22728271: Ptilinopus fasciatus(Samoan Fruit-dove)
 Ptilinopus fasciatus
 
 * https://avibase.bsc-eoc.org/species.jsp?lang=EN&avibaseid=9F3042D2364F20B7
 
 ```{r}
 birdlife_ptilinopus_fasciatus = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Ptilinopus porphyraceus fasciatus', c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
+  ebird_tax[ebird_tax$ebird_species_fullname == 'Ptilinopus porphyraceus fasciatus', c('ebird_id', 'ebird_species_name', 'ebird_species_fullname', 'ebird_common_name')],
   birdlife_tax[birdlife_tax$species_name == 'Ptilinopus fasciatus', c('birdlife_id', 'species_name', 'birdlife_common_name')]
 )
 ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_ptilinopus_fasciatus)
@@ -476,56 +369,65 @@ birdlife_ptilinopus_fasciatus
 ```
 
 ### eBird
-Extinct eBird species
 
-* Pampusana norfolkensis
+### 2119: Macropygia doreya(Sultan's Cuckoo-Dove)
 
-What hasn't been mapped?
-```{r}
-ebird_tax[!(ebird_tax$ebird_species_name %in% ebird_birdlife_taxonomy_mapping$ebird_species_name),]
-```
-Macropygia doreya
+2120: Macropygia doreya(Sultan's Cuckoo-Dove (Sulawesi))  
+
+2125: Macropygia doreya(Sultan's Cuckoo-Dove (Sultan's))
 
 * https://avibase.bsc-eoc.org/species.jsp?avibaseid=DF44EED5
 * https://avibase.bsc-eoc.org/species.jsp?lang=EN&avibaseid=FD5160925CD583C1
 
 ```{r}
 ebird_macropygia_doreya = cbind(
-  ebird_tax[ebird_tax$species_name == 'Macropygia doreya', c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
-  birdlife_tax[birdlife_tax$species_name == 'Macropygia amboinensis', c('birdlife_id', 'species_name', 'birdlife_common_name')]
+  ebird_tax[ebird_tax$species_name == 'Macropygia doreya', c('ebird_id', 'ebird_species_name', 'ebird_species_fullname', 'ebird_common_name')],
+  birdlife_tax[birdlife_tax$birdlife_id == '22690561', c('birdlife_id', 'species_name', 'birdlife_common_name')]
 )
 ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, ebird_macropygia_doreya)
 ebird_macropygia_doreya
 ```
 
-Macropygia cinnamomea
-
-* https://avibase.bsc-eoc.org/species.jsp?lang=EN&avibaseid=F30B6A4781D2FA10
-
-```{r}
-ebird_macropygia_cinnamomea = cbind(
-  ebird_tax[ebird_tax$species_name == 'Macropygia cinnamomea', c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
-  birdlife_tax[birdlife_tax$species_name == 'Macropygia emiliana', c('birdlife_id', 'species_name', 'birdlife_common_name')]
-)
-ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, ebird_macropygia_cinnamomea)
-ebird_macropygia_cinnamomea
-```
-Macropygia modiglianii
+### 2143: Macropygia modiglianii(Barusan Cuckoo-Dove) 
 
 * https://avibase.bsc-eoc.org/species.jsp?lang=EN&avibaseid=3A905A46&sec=summary&ssver=1
 
 ```{r}
 ebird_macropygia_modiglianii = cbind(
-  ebird_tax[ebird_tax$species_name == 'Macropygia modiglianii', c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
+  ebird_tax[ebird_tax$species_name == 'Macropygia modiglianii', c('ebird_id', 'ebird_species_name', 'ebird_species_fullname', 'ebird_common_name')],
   birdlife_tax[birdlife_tax$species_name == 'Macropygia emiliana', c('birdlife_id', 'species_name', 'birdlife_common_name')]
 )
 ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, ebird_macropygia_modiglianii)
 ebird_macropygia_modiglianii
 ```
+
+### 2224: Pampusana norfolkensis(Norfolk Ground Dove)
+Extinct, so exclude from mapping
+
+### 2440: Caloenas maculata(Spotted Green Pigeon)    
+Extinct, so exclude from mapping
+
+### 2605: Ptilinopus fischeri(Red-eared Fruit-Dove)
+
+2606: Ptilinopus fischeri(Red-eared Fruit-Dove (Red-eared))
+
+2609: Ptilinopus fischeri(Red-eared Fruit-Dove (Lompobattang))
+
+```{r}
+ebird_ptilinopus_fischeri = cbind(
+  ebird_tax[ebird_tax$ebird_species_fullname == 'Ptilinopus fischeri fischeri/centralis', c('ebird_id', 'ebird_species_name', 'ebird_species_fullname', 'ebird_common_name')],
+  birdlife_tax[birdlife_tax$species_name == 'Ramphiculus fischeri', c('birdlife_id', 'species_name', 'birdlife_common_name')]
+)
+ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, ebird_ptilinopus_fischeri)
+ebird_ptilinopus_fischeri
+```
+
+### 2613: Ptilinopus mangoliensis(Sula Fruit-Dove)"   
+
 Pampusana beccarii beccarii
 ```{r}
 ebird_pampusana_beccarii_beccarii = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Pampusana beccarii beccarii',c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
+  ebird_tax[ebird_tax$ebird_species_name == 'Pampusana beccarii beccarii',c('ebird_id', 'ebird_species_name', 'ebird_species_fullname', 'ebird_common_name')],
   birdlife_tax[birdlife_tax$species_name == 'Alopecoenas beccarii', c('birdlife_id', 'species_name', 'birdlife_common_name')]
 )
 ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, ebird_pampusana_beccarii_beccarii)
@@ -533,42 +435,20 @@ ebird_pampusana_beccarii_beccarii
 ```
 
 
-Ptilinopus fischeri fischeri/centralis
-```{r}
-ebird_ptilinopus_fischeri = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Ptilinopus fischeri fischeri/centralis', c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
-  birdlife_tax[birdlife_tax$species_name == 'Ramphiculus fischeri', c('birdlife_id', 'species_name', 'birdlife_common_name')]
-)
-ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, ebird_ptilinopus_fischeri)
-ebird_ptilinopus_fischeri
-```
-
-Ducula nicobarica
-
-* https://avibase.bsc-eoc.org/species.jsp?lang=EN&avibaseid=2EB3A41049FE360A
-
-```{r}
-ebird_ducula_nicobarica = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Ducula nicobarica', c('ebird_id', 'ebird_species_name', 'ebird_common_name')],
-  birdlife_tax[birdlife_tax$species_name == 'Ducula aenea', c('birdlife_id', 'species_name', 'birdlife_common_name')]
-)
-ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, ebird_ducula_nicobarica)
-ebird_ducula_nicobarica
-```
 ## Confirm all non-extinct species mapped
-Species missing in Birdlife
+Species missing in Birdlife - 1 extinct species and 1 species not recorded in eBird
 ```{r}
 birdlife_tax[!(birdlife_tax$species_name %in% ebird_birdlife_taxonomy_mapping$species_name),]
 ```
 
-Species missing in eBird
+Species missing in eBird - 2 extinct species
 ```{r}
 ebird_tax[!(ebird_tax$ebird_species_name %in% ebird_birdlife_taxonomy_mapping$ebird_species_name),]
 ```
 # Remove Extinct species
 ```{r}
 ebird_birdlife_taxonomy_mapping = ebird_birdlife_taxonomy_mapping[!(ebird_birdlife_taxonomy_mapping$species_name %in% c(
-  'Ectopistes migratorius', 'Columba thiriouxi', 'Nesoenas cicur', 'Raphus cucullatus', 'Alectroenas nitidissimus', 'Nesoenas rodericanus', 'Microgoura meeki', 'Caloenas maculata', 'Pezophaps solitaria', 'Alectroenas payandeei', 'Ptilinopus mercierii', 'Alopecoenas ferrugineus', 'Alopecoenas salamonis', 'Columba jouyi', 'Columba versicolor'
+  'Ectopistes migratorius', 'Columba thiriouxi', 'Nesoenas cicur', 'Raphus cucullatus', 'Alectroenas nitidissimus', 'Nesoenas rodericanus', 'Microgoura meeki', 'Caloenas maculata', 'Pezophaps solitaria', 'Alectroenas payandeei', 'Ptilinopus mercierii', 'Pampusana ferruginea', 'Pampusana salamonis', 'Columba jouyi', 'Columba versicolor'
 )),]
 ```
 
@@ -647,17 +527,6 @@ ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mappin
 ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Spilopelia suratensis'] = 'Stigmatopelia_chinensis'
 ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Patagioenas albipennis'] = 'Patagioenas_maculosa'
 ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Patagioenas albilinea'] = 'Patagioenas_fasciata'
-ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Alopecoenas hoedtii'] = 'Gallicolumba_hoedtii'
-ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Alopecoenas jobiensis'] = 'Gallicolumba_jobiensis'
-ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Alopecoenas kubaryi'] = 'Gallicolumba_kubaryi'
-ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Alopecoenas xanthonurus'] = 'Gallicolumba_xanthonura'
-ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Alopecoenas erythropterus'] = 'Gallicolumba_erythroptera'
-ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Alopecoenas rubescens'] = 'Gallicolumba_rubescens'
-ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Alopecoenas beccarii'] = 'Gallicolumba_beccarii'
-ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Alopecoenas johannae'] = 'Gallicolumba_beccarii'
-ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Alopecoenas canifrons'] = 'Gallicolumba_canifrons'
-ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Alopecoenas sanctaecrucis'] = 'Gallicolumba_sanctaecrucis'
-ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Alopecoenas stairi'] = 'Gallicolumba_stairi'
 ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Otidiphaps aruensis'] = 'Otidiphaps_nobilis'
 ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Otidiphaps cervicalis'] = 'Otidiphaps_nobilis'
 ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Otidiphaps insularis'] = 'Otidiphaps_nobilis'
@@ -678,6 +547,23 @@ ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mappin
 ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Ptilinopus gestroi'] = 'Ptilinopus_ornatus'
 ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Ptilinopus fasciatus'] = 'Ptilinopus_porphyraceus'
 ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Alopecoenas beccarii'] = 'Gallicolumba_beccarii'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Macropygia cinnamomea'] = 'Macropygia_emiliana'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Pampusana hoedtii'] = 'Gallicolumba_hoedtii'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Pampusana jobiensis'] = 'Gallicolumba_jobiensis'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Pampusana kubaryi'] = 'Gallicolumba_kubaryi'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Pampusana xanthonura'] = 'Gallicolumba_xanthonura'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Pampusana erythroptera'] = 'Gallicolumba_erythroptera'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Pampusana rubescens'] = 'Gallicolumba_rubescens'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Pampusana beccarii'] = 'Gallicolumba_beccarii'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Pampusana canifrons'] = 'Gallicolumba_canifrons'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Pampusana sanctaecrucis'] = 'Gallicolumba_sanctaecrucis'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Pampusana stairi'] = 'Gallicolumba_stairi'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Pampusana johannae'] = 'Gallicolumba_beccarii'
+ebird_birdlife_taxonomy_mapping$jetz_species_name[ebird_birdlife_taxonomy_mapping$species_name == 'Ducula nicobarica'] = 'Ducula_aenea'
+```
+
+```{r}
+jetz_phylo_tree$tip.label[jetz_phylo_tree$tip.label %in% c('Gallicolumba_jobiensis')]
 ```
 
 Check all species now mapped
