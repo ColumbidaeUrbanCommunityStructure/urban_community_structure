@@ -9,7 +9,7 @@ source('../env.R')
 ```
 
 ```{r}
-taxonmomic_mapping = read_csv(filename(TAXONOMY_OUTPUT_DIR, 'taxonomy_mapping.csv'))
+taxonomic_mapping = read_csv(filename(TAXONOMY_OUTPUT_DIR, 'taxonomy_mapping.csv'))
 ```
 
 Find sample size, and percentage of checklists (or percentage of effort) for valid urban communities based on presence test data.
@@ -26,7 +26,7 @@ test_species
 
 ## Check how this species are mapped from eBird to Birdlife
 ```{r}
-test_species_mapping = taxonmomic_mapping[taxonmomic_mapping$ebird_species_fullname %in% test_species,]
+test_species_mapping = taxonomic_mapping[taxonomic_mapping$ebird_species_fullname %in% test_species,]
 test_species_mapping[order(test_species_mapping$ebird_species_fullname),]
 ```
 
@@ -106,7 +106,7 @@ This gives a single row for each species in each city.
 Then join the data onto the regional pool data, and the urban summary data.
 ```{r}
 urban_ebird_columbidae_city_summary = ebird_raw %>% 
-  left_join(taxonmomic_mapping, by = c('species_name' = 'ebird_species_fullname')) %>% 
+  left_join(taxonomic_mapping, by = c('species_name' = 'ebird_species_fullname')) %>% 
   group_by(city_id, city_name, ebird_species_name) %>% 
   summarise(total_presence_checklists = n(), total_presence_effort = sum(duration)) %>%
   filter(ebird_species_name %in% test_species) %>%
