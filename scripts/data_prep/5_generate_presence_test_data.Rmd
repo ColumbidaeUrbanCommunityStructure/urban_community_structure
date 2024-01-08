@@ -9,109 +9,18 @@ source('../env.R')
 ```
 
 # Select species
-These are all the species currently available from the eBird Status and Trends data product @eBird2023.
-https://science.ebird.org/en/status-and-trends/species#columb2
-
+Load the ebird taxonomy
 
 ```{r}
-species_available = c("Streptopelia decaocto",
-"Streptopelia semitorquata",
-"Streptopelia capicola",
-"Streptopelia tranquebarica",
-"Spilopelia chinensis",
-"Macropygia phasianella",
-"Chalcophaps indica",
-"Ocyphaps lophotes",
-"Geopelia humeralis",
-"Columbina inca",
-"Columbina passerina",
-"Columbina minuta",
-"Columbina talpacoti",
-"Columbina buckleyi",
-"Columbina squammata",
-"Columbina picui",
-"Claravis pretiosa",
-"Geotrygon montana",
-"Leptotila verreauxi",
-"Leptotila jamaicensis",
-"Leptotila cassinii",
-"Leptotila plumbeiceps",
-"Zentrygon costaricensis",
-"Zentrygon lawrencii",
-"Zentrygon albifacies",
-"Zentrygon chiriquensis",
-"Zenaida meloda",
-"Zenaida asiatica",
-"Zenaida aurita",
-"Zenaida auriculata",
-"Zenaida macroura",
-"Treron affinis",
-"Treron phoenicopterus",
-"Treron sieboldii",
-"Treron formosae",
-"Ducula aenea",
-"Hemiphaga novaeseelandiae",
-"Columba livia",
-"Columba guinea",
-"Columba oenas",
-"Columba palumbus",
-"Patagioenas cayennensis",
-"Patagioenas speciosa",
-"Patagioenas squamosa",
-"Patagioenas picazuro",
-"Patagioenas corensis",
-"Patagioenas maculosa",
-"Patagioenas leucocephala",
-"Patagioenas flavirostris",
-"Patagioenas fasciata",
-"Patagioenas araucana",
-"Patagioenas subvinacea",
-"Patagioenas nigrirostris",
-"Streptopelia turtur",
-"Streptopelia orientalis")
-
-length(species_available)
+ebird_tax = read_csv(filename(EBIRD_WORKING_OUTPUT_DIR, 'taxonomy.csv'))
+names(ebird_tax) = c('ebird_id', 'category', 'species_name', 'common_name')
+head(ebird_tax)
 ```
 
 Filter against library list, as not everything on website is availble in library
 ```{r}
-species_available = ebirdst_runs$scientific_name[ebirdst_runs$scientific_name %in% species_available]
+species_available = ebirdst_runs$scientific_name[ebirdst_runs$scientific_name %in% ebird_tax$species_name]
 species_available
-```
-
-## First check taxonomic mapping required for any of these species:
-```{r}
-taxonmomic_mapping = read_csv(filename(TAXONOMY_OUTPUT_DIR, 'taxonomy_mapping.csv'))
-```
-
-Species with 1 eBird taxa, and multiple Birdlife taxa will reuqire the ranges of the Birdlife taxa to be combined. 
-```{r}
-taxonmomic_mapping[taxonmomic_mapping$ebird_species_name %in% species_available,] %>%
-  group_by(ebird_species_name) %>% 
-  summarise(number_of_birdlife_species = n(), birdlife_species_names = paste(species_name, collapse = ",")) %>%
-  filter(number_of_birdlife_species > 1)
-```
-
-* *Patagioenas fasciata*, will need the range of Patagioenas fasciata and Patagioenas albilinea combined.
-
-* *Spilopelia chinensis*, will need the range of Spilopelia chinensis, Spilopelia suratensis, and Patagioenas albipennis combined.
-
-Check whether we need to map eBird species names to Birdlife
-```{r}
-taxonmomic_mapping[taxonmomic_mapping$ebird_species_name %in% species_available,] %>%
-  filter(ebird_species_name != species_name) 
-```
-
-Species with 1 Birdlife taxa, and multiple eBird taxa will, would mean that we would have cities with no records but potentially have presence test data. We should avoid these species.
-```{r}
-taxonmomic_mapping[taxonmomic_mapping$ebird_species_name %in% species_available,] %>%
-  group_by(species_name) %>% 
-  summarise(number_of_ebird_species = n(), ebird_species_names = paste(ebird_species_name, collapse = ",")) %>%
-  filter(number_of_ebird_species > 1)
-```
-
-```{r}
-test_species = species_available
 ```
 
 # Download Status and Trends data
@@ -122,7 +31,7 @@ ebirdst_data_dir()
 ```
 
 ```{r}
-for (species in test_species) {
+for (species in species_available) {
   print(paste('fetching', species))
   ebirdst_download_status(
     species = species,
@@ -153,7 +62,7 @@ city_data
 ```{r}
 abundance_data = data.frame()
 
-for (species in test_species) {
+for (species in species_available) {
   abd <- load_raster(species, resolution = "3km", product = "abundance", period = "seasonal")
   abd_wgs84 = project(abd, initial_city_selection)
   city_abundance = terra::extract(abd_wgs84, initial_city_selection)
@@ -194,5 +103,6 @@ head(abundance_data)
 
 ```{r}
 write_csv(abundance_data, filename(EBIRD_WORKING_OUTPUT_DIR, 'ebird_trends_abundance_test_data.csv'))
+abundance_data = read_csv(filename(EBIRD_WORKING_OUTPUT_DIR, 'ebird_trends_abundance_test_data.csv'))
 ```
 
