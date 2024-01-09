@@ -393,8 +393,8 @@ labs(title = 'Boxplot of percentage of city checklists\ngiven whether the specie
 Here we can see that there is a prediction problem with species considered present that have a very low percentage of recorded checklists.
 
 ```{r}
-get_true_false_test_results = function(min_city_checklists) {
-  data = trimmed_data[trimmed_data$total_city_checklists >= min_city_checklists,]
+get_true_false_test_results = function(min_city_checklists, df = trimmed_data) {
+  data = df[df$total_city_checklists >= min_city_checklists,]
   
   result = data.frame()
   coeeffs = c()
@@ -436,14 +436,118 @@ ggplot(result_present, aes(x = min_city_checklists, y = mean_false_probability))
 Some results at different minimum total city checklists, the test estimate gives us a percentage of checklists cut off for whether a species is present.
 However, we can see that the mean probabilty for present remains high for species that are absent.
 ```{r}
-result[result_present$min_city_checklists %in% c(100, 500, 1000, 1500, 2000),]
+result_present[result_present$min_city_checklists %in% c(100, 500, 1000, 1500, 2000),]
 ```
-
+### Which rows are causing prediction problems?
 Take a look at those records that are expected present, but have low percentage of checklists recorded. Is there any pattern here?
 ```{r}
-trimmed_data[trimmed_data$nonzero_abundance & trimmed_data$percentage_checklists < 2.5 & trimmed_data$total_city_checklists > 100,
+problem_rows = trimmed_data[trimmed_data$nonzero_abundance & trimmed_data$percentage_checklists < 2.5 & trimmed_data$total_city_checklists > 100,
              c('city_name', 'species_name', 'total_city_checklists', 'mean_breeding', 'median_breeding', 'mean_resident', 'median_resident', 'mean_nonbreeding', 'median_nonbreeding', 'seasonal', 'percentage_checklists', 'city_id')]
+problem_rows
+```
+Any particular species?
+```{r}
+problem_rows %>% group_by(species_name) %>% summarise(
+  total_problem_records = n(), 
+  mean_mean_breeding = mean(mean_breeding), 
+  max_mean_breeding = max(mean_breeding), 
+  mean_median_breeding = mean(median_breeding), 
+  max_median_breeding = max(median_breeding), 
+  mean_mean_nonbreeding = mean(mean_nonbreeding), 
+  max_mean_nonbreeding = max(mean_nonbreeding), 
+  mean_median_nonbreeding = mean(median_nonbreeding), 
+  max_median_nonbreeding = max(median_nonbreeding), 
+  mean_mean_resident = mean(mean_resident), 
+  max_mean_resident = max(mean_resident), 
+  mean_median_resident = mean(median_resident), 
+  max_median_resident = max(median_resident)
+) %>% arrange(total_problem_records)
+```
+
+Any particular geographical regions?
+```{r}
+sf::sf_use_s2(FALSE)
+COUNTRY_BOUNDARIES = '/Users/james/Dropbox/PhD/WorldBank_countries_Admin0_10m/WB_countries_Admin0_10m.shp'
+world_map = st_simplify(st_read(COUNTRY_BOUNDARIES), dTolerance = 0.02)
+
+initial_city_selection = st_read(filename(mkdir(GEO_WORKING_OUTPUT_DIR, 'cities'), 'initial_selection.shp'))
+
+problem_regions = problem_rows %>%
+  left_join(initial_city_selection) %>%
+  group_by(city_id, city_name) %>%
+  summarise(total_problem_records = n(), geom = st_centroid(geometry))
+
+ggplot() +  
+  geom_sf(data = world_map, aes(geometry = geometry)) +
+  geom_sf(data = problem_regions, aes(geometry = geom, colour = total_problem_records)) + 
+  theme(legend.position="bottom") + scale_colour_gradient2(
+    low = "darkgreen",
+    mid = "yellow",
+    high = "red",
+    midpoint = 3,
+    space = "Lab",
+    na.value = "grey50",
+    guide = "colourbar",
+    aesthetics = "colour",
+  )
+```
+### Try excluding particular problem species
+Exclude
+
+* Streptopelia orientalis
+* Leptotila verreauxi
+* Streptopelia decaocto
+* Streptopelia tranquebarica
+
+```{r}
+problem_species_to_exclude = c('Streptopelia orientalis', 'Leptotila verreauxi', 'Streptopelia decaocto', 'Streptopelia tranquebarica')
+```
+
+```{r}
+trimmed_data_with_excluded_species = trimmed_data[!(trimmed_data$species_name %in% problem_species_to_exclude),]
+
+result_present_exclude_species = data.frame()
+
+for (min_city_checklist in min_city_checklists) {
+  result_present_exclude_species = rbind(result_present_exclude_species, get_true_false_test_results(min_city_checklist, df = trimmed_data_with_excluded_species))
+}
+
+ggplot(result_present_exclude_species, aes(x = min_city_checklists, y = mean_false_probability)) + geom_line() +
+  xlab('Min total city checklists') + ylab('Mean presence probablity, given species absent')
+```
+
+Some results at different minimum total city checklists, the test estimate gives us a percentage of checklists cut off for whether a species is present.
+However, we can see that the mean probabilty for present remains high for species that are absent.
+```{r}
+result_present_exclude_species[result_present_exclude_species$min_city_checklists %in% c(100, 500, 1000, 1500, 2000),]
 ```
 
 
+### Try excluding particular regions of the world
+Exclude cities in Southern Asia and Central America
+
+```{r}
+cities_joined_to_world = st_join(initial_city_selection, world_map)
+problem_species_to_exclude = cities_joined_to_world$city_id[cities_joined_to_world$SUBREGION %in% c('Southern Asia', 'Central America')]
+```
+
+```{r}
+trimmed_data_with_excluded_cities = trimmed_data[!(trimmed_data$city_id %in% problem_species_to_exclude),]
+
+result_present_exclude_cities = data.frame()
+
+for (min_city_checklist in min_city_checklists) {
+  result_present_exclude_cities = rbind(result_present_exclude_cities, get_true_false_test_results(min_city_checklist, df = trimmed_data_with_excluded_cities))
+}
+
+ggplot(result_present_exclude_cities, aes(x = min_city_checklists, y = mean_false_probability)) + geom_line() +
+  xlab('Min total city checklists') + ylab('Mean presence probablity, given species absent')
+```
+
+
+Some results at different minimum total city checklists, the test estimate gives us a percentage of checklists cut off for whether a species is present.
+However, we can see that the mean probabilty for present remains high for species that are absent.
+```{r}
+result_present_exclude_cities[result_present_exclude_cities$min_city_checklists %in% c(100, 500, 1000, 1500, 2000),]
+```
 
