@@ -8,6 +8,7 @@ Using eBird trends and status abundance data, can we find a minimum number of ci
 
 ```{r}
 source('../env.R')
+options(warn=-1)
 ```
 
 ```{r}
@@ -277,7 +278,7 @@ columbidae[!is.na(columbidae$mean_resident) & sqrt(columbidae$mean_resident) > 5
 
 ## Create max_abundance parameter
 max_abundance is the maximum of breeding, nonbreeding, or resident abundance.
-```{r}
+```{r, echo = FALSE, warning = FALSE}
 columbidae$max_mean_abundance = apply(columbidae[,c('mean_breeding', 'mean_nonbreeding', 'mean_resident')], 1, max, na.rm = T)
 columbidae$max_mean_abundance[columbidae$max_mean_abundance == -Inf] = NA
 ```
@@ -422,13 +423,15 @@ get_true_false_test_results = function(min_city_checklists, df = trimmed_data) {
 
 Try predicting species presence (i.e. max_mean_abundance > 0) based on the percentage of checklists a species is recorded on.
 For each run we predict the result in our test data, and then find the mean prediction for true vs false.
-```{r}
+```{r, echo=FALSE, warning=FALSE}
 result_present = data.frame()
 
 for (min_city_checklist in min_city_checklists) {
   result_present = rbind(result_present, get_true_false_test_results(min_city_checklist))
 }
+```
 
+```{r}
 ggplot(result_present, aes(x = min_city_checklists, y = mean_false_probability)) + geom_line() +
   xlab('Min total city checklists') + ylab('Mean presence probablity, given species absent')
 ```
@@ -503,7 +506,7 @@ Exclude
 problem_species_to_exclude = c('Streptopelia orientalis', 'Leptotila verreauxi', 'Streptopelia decaocto', 'Streptopelia tranquebarica')
 ```
 
-```{r}
+```{r, echo=FALSE, warning=FALSE}
 trimmed_data_with_excluded_species = trimmed_data[!(trimmed_data$species_name %in% problem_species_to_exclude),]
 
 result_present_exclude_species = data.frame()
@@ -511,7 +514,9 @@ result_present_exclude_species = data.frame()
 for (min_city_checklist in min_city_checklists) {
   result_present_exclude_species = rbind(result_present_exclude_species, get_true_false_test_results(min_city_checklist, df = trimmed_data_with_excluded_species))
 }
+```
 
+```{r}
 ggplot(result_present_exclude_species, aes(x = min_city_checklists, y = mean_false_probability)) + geom_line() +
   xlab('Min total city checklists') + ylab('Mean presence probablity, given species absent')
 ```
@@ -531,7 +536,7 @@ cities_joined_to_world = st_join(initial_city_selection, world_map)
 problem_species_to_exclude = cities_joined_to_world$city_id[cities_joined_to_world$SUBREGION %in% c('Southern Asia', 'Central America')]
 ```
 
-```{r}
+```{r, echo=FALSE, warning=FALSE}
 trimmed_data_with_excluded_cities = trimmed_data[!(trimmed_data$city_id %in% problem_species_to_exclude),]
 
 result_present_exclude_cities = data.frame()
@@ -539,7 +544,9 @@ result_present_exclude_cities = data.frame()
 for (min_city_checklist in min_city_checklists) {
   result_present_exclude_cities = rbind(result_present_exclude_cities, get_true_false_test_results(min_city_checklist, df = trimmed_data_with_excluded_cities))
 }
+```
 
+```{r}
 ggplot(result_present_exclude_cities, aes(x = min_city_checklists, y = mean_false_probability)) + geom_line() +
   xlab('Min total city checklists') + ylab('Mean presence probablity, given species absent')
 ```
@@ -550,4 +557,28 @@ However, we can see that the mean probabilty for present remains high for specie
 ```{r}
 result_present_exclude_cities[result_present_exclude_cities$min_city_checklists %in% c(100, 500, 1000, 1500, 2000),]
 ```
+```{r}
+min(result_present_exclude_cities$min_city_checklists[result_present_exclude_cities$mean_false_probability < 0.5])
+```
 
+```{r}
+round(result_present_exclude_cities$percentage_checklists_cutoff[result_present_exclude_cities$min_city_checklists == 350], 1)
+```
+
+### In Summary
+If we're happy that we can exclude South American and South Asian cities due to poor eBird sampling data leading to their models producing invalid abundance. Then selecting the first test that produces an average true probability under 0.5 for absent species, means we should set the minimum required number of checklists within a city to 380, and the percentage cut-off for a species being present as 3.6%.
+
+The number of cities in the analysis is then:
+```{r}
+nrow(urban_summary[urban_summary$total_city_checklists >= 350,])
+```
+
+Distribution of those cities
+```{r}
+selected_cities_for_study = urban_summary$city_id[urban_summary$total_city_checklists >= 350]
+selected_city_centres = st_centroid(initial_city_selection[initial_city_selection$city_id %in% selected_cities_for_study,])
+
+ggplot() +  
+  geom_sf(data = world_map, aes(geometry = geometry)) +
+  geom_sf(data = selected_city_centres, aes(geometry = geometry), colour = "red")
+```
