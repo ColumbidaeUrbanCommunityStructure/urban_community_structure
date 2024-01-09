@@ -87,10 +87,9 @@ Our new abundance data:
 abundance_data_regional[abundance_data_regional$city_name %in% inspection_cities,]
 ```
 
+## Are any species now missing that are abundant?
 Check to see if we have filtered out any species that should cause us concern.
 This list contains all species that have a non-zero abundance but have now been removed from our data (e.g. they do not occur within the regional pool of the city, or more specifically their birdlife/ebird range does not overlap the city vector). We can fix this by seeking alternative ways of defining the regional pools, e.g. by appending the eBird status and trends ranges for a species.
-
-Are any species now missing that are abundant?
 ```{r}
 city_id_species_pairs_present = paste(abundance_data_regional$species_name, abundance_data_regional$city_id, sep = '::')
 abundance_data %>% 
