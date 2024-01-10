@@ -43,10 +43,11 @@ names(birdlifeTaxonomyWb) <- birdlifeTaxonomyWb[2,]
 birdlifeTaxonomy <- birdlifeTaxonomyWb[-2,]
 birdlifeTaxonomy
 ```
-
+Fetch all columbidae species that are not extinct and are not an invalid birdlife species.
 ```{r}
-birdlifeColumbidae = birdlifeTaxonomy[!is.na(birdlifeTaxonomy$Order) & birdlifeTaxonomy$Order == 'COLUMBIFORMES', c('SISRecID', 'Scientific name', 'Common name', 'Synonyms')]
-names(birdlifeColumbidae) = c('birdlife_id', 'species_name', 'common_name', 'synonyms')
+birdlifeColumbidae = birdlifeTaxonomy[!is.na(birdlifeTaxonomy$Order) & birdlifeTaxonomy$Order == 'COLUMBIFORMES', c('SISRecID', 'Scientific name', 'Common name', 'Synonyms', '2023 IUCN Red List category')]
+names(birdlifeColumbidae) = c('birdlife_id', 'species_name', 'common_name', 'synonyms', 'red_list_2023')
+birdlifeColumbidae = birdlifeColumbidae[!(birdlifeColumbidae$red_list_2023 %in% c('EX', 'NR')),]
 birdlifeColumbidae
 ```
 
@@ -55,205 +56,22 @@ Check to see if we have any missing distributions
 birdlifeColumbidae[!(birdlifeColumbidae$species_name %in% birdlife$SCI_NAME),]
 ```
 
-Most of those species are extinct. The species not extinct are:
-* Nesoenas picturata	(?)
-* Geotrygon lawrencii (previously considered conspecific of Zentrygon carrikeri) - not a species recognised by birdlife http://datazone.birdlife.org/species/factsheet/22729899
-* Gallicolumba beccarii	- not a species recognised by birdlife http://datazone.birdlife.org/species/factsheet/22691066
-* Geophaps ferruginea - not a species recognised by birdlife http://datazone.birdlife.org/species/factsheet/22725184 - lumped in with G. plumifera
-* Ducula constans - not a species recognised by birdlife http://datazone.birdlife.org/species/factsheet/ducula-constans
-* Ducula salvadorii	 - not a species recognised by birdlife http://datazone.birdlife.org/species/factsheet/45448199 - previously lumped as D. pinon
-* Ptilinopus subgularis	 - not a species recognised by birdlife http://datazone.birdlife.org/species/factsheet/22691351
-* Ramphiculus meridionalis - not a species recognised by birdlife http://datazone.birdlife.org/species/factsheet/22728045 - previously placed in the genus Ptilinopus and lumped as P. fischeri
-* Stigmatopelia chinensis - not a species recognised by birdlife http://datazone.birdlife.org/species/factsheet/stigmatopelia-chinensis
-
-Extinct species:
-* Caloenas maculata	
-* Nesoenas rostrata	
-* Gallicolumba norfolciensis
-
-### Missing Nesoenas picturata
-```{r}
-birdlifeColumbidae[birdlifeColumbidae$species_name == 'Nesoenas picturata',]
-```
-
-```{r}
-birdlife[birdlife$SCI_NAME == 'Nesoenas picturatus',]
-```
-```{r}
-birdlifeColumbidae[birdlifeColumbidae$birdlife_id == '22690364',]
-```
-Already present, update synonyms
-```{r}
-birdlifeColumbidae$synonyms[birdlifeColumbidae$birdlife_id == '22690364'] = 'Columba picturata; Streptopelia picturata,Nesoenas picturata'
-```
-
-
-### Missing Geotrygon lawrencii
-Previously considered conspecific of Zentrygon carrikeri
-
-http://datazone.birdlife.org/species/factsheet/22729899
-
-```{r}
-birdlifeColumbidae[birdlifeColumbidae$species_name == 'Geotrygon lawrencii',]
-```
-
-```{r}
-birdlife[birdlife$SCI_NAME == 'Zentrygon carrikeri',]
-```
-```{r}
-birdlifeColumbidae[birdlifeColumbidae$birdlife_id == '22690901',]
-```
-Already present, update synonyms
-```{r}
-birdlifeColumbidae$synonyms[birdlifeColumbidae$birdlife_id == '22690901'] = 'Geotrygon carrikeri,Geotrygon lawrencii'
-```
-
-### Missing Gallicolumba beccarii
-http://datazone.birdlife.org/species/factsheet/22691066
-
-```{r}
-birdlifeColumbidae[birdlifeColumbidae$species_name == 'Gallicolumba beccarii',]
-```
-
-```{r}
-birdlife[birdlife$SCI_NAME == 'Pampusana beccarii',]
-```
-```{r}
-birdlifeColumbidae[birdlifeColumbidae$birdlife_id == '60444792',]
-```
-Already present, update synonyms
-```{r}
-birdlifeColumbidae$synonyms[birdlifeColumbidae$birdlife_id == '60444792'] = 'Gallicolumba beccarii'
-```
-
-
-### Missing Geophaps ferruginea
-http://datazone.birdlife.org/species/factsheet/22725184 - lumped in with G. plumifera
-
-```{r}
-birdlifeColumbidae[birdlifeColumbidae$species_name == 'Geophaps ferruginea',]
-```
-
-```{r}
-birdlife[birdlife$SCI_NAME == 'Geophaps plumifera',]
-```
-```{r}
-birdlifeColumbidae[birdlifeColumbidae$birdlife_id == '22690682',]
-```
-Already present, update synonyms
-```{r}
-birdlifeColumbidae$synonyms[birdlifeColumbidae$birdlife_id == '22690682'] = 'Geophaps ferruginea'
-```
-
-### Missing Ducula constans
-http://datazone.birdlife.org/species/factsheet/ducula-constans
-
-```{r}
-birdlifeColumbidae[birdlifeColumbidae$species_name == 'Ducula constans',]
-```
-
-```{r}
-birdlife[birdlife$SCI_NAME == 'Ducula spilorrhoa',]
-```
-
-```{r}
-birdlifeColumbidae[birdlifeColumbidae$birdlife_id == '22733554',]
-```
-Already present, update synonyms
-```{r}
-birdlifeColumbidae$synonyms[birdlifeColumbidae$birdlife_id == '22733554'] = 'Ducula constans'
-```
-
-### Missing Ducula salvadorii
-http://datazone.birdlife.org/species/factsheet/45448199 - previously lumped as D. pinon
-
-```{r}
-birdlifeColumbidae[birdlifeColumbidae$species_name == 'Ducula salvadorii',]
-```
-
-```{r}
-birdlife[birdlife$SCI_NAME == 'Ducula pinon',]
-```
-
-```{r}
-birdlifeColumbidae[birdlifeColumbidae$birdlife_id == '22691760',]
-```
-
-Already present, update synonyms
-```{r}
-birdlifeColumbidae$synonyms[birdlifeColumbidae$birdlife_id == '22691760'] = 'Ducula salvadorii'
-```
-
-### Missing Ptilinopus subgularis
-http://datazone.birdlife.org/species/factsheet/22691351
-
-```{r}
-birdlifeColumbidae[birdlifeColumbidae$species_name == 'Ptilinopus subgularis',]
-```
-
-```{r}
-birdlife[birdlife$SCI_NAME == 'Ramphiculus subgularis',]
-```
-
-```{r}
-birdlifeColumbidae[birdlifeColumbidae$birdlife_id == '22728146',]
-```
-Already present, update synonyms
-```{r}
-birdlifeColumbidae$synonyms[birdlifeColumbidae$birdlife_id == '22728146'] = 'Ptilinopus subgularis'
-```
-
-### Missing Ramphiculus meridionalis
-http://datazone.birdlife.org/species/factsheet/22728045 - previously placed in the genus Ptilinopus and lumped as P. fischeri
-
-```{r}
-birdlifeColumbidae[birdlifeColumbidae$species_name == 'Ramphiculus meridionalis',]
-```
-
-```{r}
-birdlife[birdlife$SCI_NAME == 'Ramphiculus fischeri',]
-```
-```{r}
-birdlifeColumbidae[birdlifeColumbidae$birdlife_id == '22691332',]
-```
-Already present, update synonyms
-```{r}
-birdlifeColumbidae$synonyms[birdlifeColumbidae$birdlife_id == '22691332'] = 'Ramphiculus meridionalis'
-```
-
-### Missing Stigmatopelia chinensis
-```{r}
-birdlifeColumbidae[birdlifeColumbidae$species_name == 'Stigmatopelia chinensis',]
-```
-
-```{r}
-birdlife[birdlife$SCI_NAME == 'Spilopelia chinensis',]
-```
-
-```{r}
-birdlifeColumbidae[birdlifeColumbidae$birdlife_id == '60482887',]
-```
-Already present, update synonyms
-```{r}
-birdlifeColumbidae$synonyms[birdlifeColumbidae$birdlife_id == '60482887'] = 'Streptopelia chinensis,Stigmatopelia chinensis'
-```
-
 ## Store Birdlife taxonomy
 ```{r}
-write_csv(birdlifeColumbidae[birdlifeColumbidae$species_name %in% birdlife$SCI_NAME,], filename(BIRDLIFE_WORKING_OUTPUT_DIR, 'taxonomy.csv'))
+write_csv(birdlifeColumbidae, filename(BIRDLIFE_WORKING_OUTPUT_DIR, 'taxonomy.csv'))
 birdlifeColumbidae = read_csv(filename(BIRDLIFE_WORKING_OUTPUT_DIR, 'taxonomy.csv'))
 head(birdlifeColumbidae)
 ```
 
 ## Filter Birdlife Distributions to only Columbidae
-Do we have any distributions not in our taxonomy?
+Do we have any distributions not in our taxonomy, are are not extinct?
 ```{r}
-birdlife[!(birdlife$SCI_NAME %in% birdlifeColumbidae$species_name),]
+birdlife[!(birdlife$SCI_NAME %in% birdlifeColumbidae$species_name) & birdlife$PRESENCE != 5,]
 ```
 
 ```{r}
 COLUMBIDAE_WORLD_DISTRIBUTIONS = filename(BIRDLIFE_WORKING_OUTPUT_DIR, "columbidae_world.shp")
-write_sf(birdlife, COLUMBIDAE_WORLD_DISTRIBUTIONS)
+write_sf(birdlife[birdlife$PRESENCE != 5,], COLUMBIDAE_WORLD_DISTRIBUTIONS)
 columbidaeDistribution = read_sf(COLUMBIDAE_WORLD_DISTRIBUTIONS)
 ```
 
@@ -297,10 +115,6 @@ urban_columbidae_distributions[urban_columbidae_distributions$PRESENCE > 5, c('S
 ```
 
 
-Any extinct species?
-```{r}
-urban_columbidae_distributions[urban_columbidae_distributions$PRESENCE == 5, c('SCI_NAME', 'city_name', 'city_id')]
-```
 
 Possibly Extinct species
 ```{r}

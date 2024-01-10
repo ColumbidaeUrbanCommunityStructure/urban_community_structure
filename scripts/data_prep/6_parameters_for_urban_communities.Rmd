@@ -468,7 +468,7 @@ problem_rows %>% group_by(species_name) %>% summarise(
 ```
 
 Any particular geographical regions?
-```{r}
+```{r, echo=FALSE, warning=FALSE}
 sf::sf_use_s2(FALSE)
 COUNTRY_BOUNDARIES = '/Users/james/Dropbox/PhD/WorldBank_countries_Admin0_10m/WB_countries_Admin0_10m.shp'
 world_map = st_simplify(st_read(COUNTRY_BOUNDARIES), dTolerance = 0.02)
@@ -521,8 +521,6 @@ ggplot(result_present_exclude_species, aes(x = min_city_checklists, y = mean_fal
   xlab('Min total city checklists') + ylab('Mean presence probablity, given species absent')
 ```
 
-Some results at different minimum total city checklists, the test estimate gives us a percentage of checklists cut off for whether a species is present.
-However, we can see that the mean probabilty for present remains high for species that are absent.
 ```{r}
 result_present_exclude_species[result_present_exclude_species$min_city_checklists %in% c(100, 500, 1000, 1500, 2000),]
 ```
@@ -533,11 +531,11 @@ Exclude cities in Southern Asia and Central America
 
 ```{r}
 cities_joined_to_world = st_join(initial_city_selection, world_map)
-problem_species_to_exclude = cities_joined_to_world$city_id[cities_joined_to_world$SUBREGION %in% c('Southern Asia', 'Central America')]
+problem_cities_to_exclude = cities_joined_to_world$city_id[cities_joined_to_world$SUBREGION %in% c('Southern Asia', 'Central America')]
 ```
 
 ```{r, echo=FALSE, warning=FALSE}
-trimmed_data_with_excluded_cities = trimmed_data[!(trimmed_data$city_id %in% problem_species_to_exclude),]
+trimmed_data_with_excluded_cities = trimmed_data[!(trimmed_data$city_id %in% problem_cities_to_exclude),]
 
 result_present_exclude_cities = data.frame()
 
@@ -552,8 +550,6 @@ ggplot(result_present_exclude_cities, aes(x = min_city_checklists, y = mean_fals
 ```
 
 
-Some results at different minimum total city checklists, the test estimate gives us a percentage of checklists cut off for whether a species is present.
-However, we can see that the mean probabilty for present remains high for species that are absent.
 ```{r}
 result_present_exclude_cities[result_present_exclude_cities$min_city_checklists %in% c(100, 500, 1000, 1500, 2000),]
 ```

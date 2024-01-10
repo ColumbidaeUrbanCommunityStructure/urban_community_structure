@@ -75,7 +75,7 @@ Macropygia macassariensis,154625453,Flores Sea Cuckoo-dove,2103,Flores Sea Cucko
 Macropygia magna,154625310,Timor Cuckoo-dove,2106,Timor Cuckoo-Dove,Macropygia magna,Macropygia magna,Macropygia_magna
 Macropygia timorlaoensis,154625942,Tanimbar Cuckoo-dove,2107,Tanimbar Cuckoo-Dove,Macropygia timorlaoensis,Macropygia timorlaoensis,Macropygia_magna
 Macropygia amboinensis,22690561,Slender-billed Cuckoo-dove,2108,Amboyna Cuckoo-Dove,Macropygia amboinensis,Macropygia amboinensis,Macropygia_amboinensis
-Macropygia phasianella,22690571,Brown Cuckoo-dove,2102,Brown Cuckoo-Dove,Macropygia phasianella,Macropygia phasianella,Macropygia_phasianella
+Macropygia phasianella,22690571,Brown Cuckoo-dove,2102,Brown Cuckoo-Dove,Macropygia phasianella,Macropygia phasianella,Macropygia_amboinensis
 Macropygia ruficeps,22690576,Little Cuckoo-dove,2151,Little Cuckoo-Dove,Macropygia ruficeps,Macropygia ruficeps,Macropygia_ruficeps
 Macropygia nigrirostris,22690580,Black-billed Cuckoo-dove,2147,Black-billed Cuckoo-Dove,Macropygia nigrirostris,Macropygia nigrirostris,Macropygia_nigrirostris
 Macropygia mackinlayi,22690584,Mackinlay's Cuckoo-dove,2148,Mackinlay's Cuckoo-Dove,Macropygia mackinlayi,Macropygia mackinlayi,Macropygia_mackinlayi
@@ -140,7 +140,7 @@ Leptotila rufaxilla,22690877,Grey-fronted Dove,2375,Gray-fronted Dove,Leptotila 
 Leptotila wellsi,22690874,Grenada Dove,2382,Grenada Dove,Leptotila wellsi,Leptotila wellsi,Leptotila_wellsi
 Leptotila pallida,22690886,Pallid Dove,2383,Pallid Dove,Leptotila pallida,Leptotila pallida,Leptotila_pallida
 Leptotila megalura,22690857,Yungas Dove,2384,Large-tailed Dove,Leptotila megalura,Leptotila megalura,Leptotila_megalura
-Zentrygon carrikeri,22690901,Tuxtla Quail-dove,2386,Tuxtla Quail-Dove,Zentrygon carrikeri,Zentrygon carrikeri,Geotrygon_lawrencii
+Zentrygon carrikeri,22690901,Tuxtla Quail-dove,2386,Tuxtla Quail-Dove,Zentrygon carrikeri,Zentrygon carrikeri,Geotrygon_carrikeri
 Zentrygon costaricensis,22690908,Buff-fronted Quail-dove,2387,Buff-fronted Quail-Dove,Zentrygon costaricensis,Zentrygon costaricensis,Geotrygon_costaricensis
 Zentrygon lawrencii,22728963,Purplish-backed Quail-dove,2388,Purplish-backed Quail-Dove,Zentrygon lawrencii,Zentrygon lawrencii,Geotrygon_lawrencii
 Zentrygon albifacies,22690932,White-faced Quail-dove,2389,White-faced Quail-Dove,Zentrygon albifacies,Zentrygon albifacies,Geotrygon_albifacies
@@ -264,7 +264,7 @@ Treron capellei,22691198,Large Green-pigeon,2532,Large Green-Pigeon,Treron capel
 Treron phoenicopterus,22691203,Yellow-footed Green-pigeon,2533,Yellow-footed Green-Pigeon,Treron phoenicopterus,Treron phoenicopterus,Treron_phoenicopterus
 Treron waalia,22691212,Bruce's Green-pigeon,2539,Bruce's Green-Pigeon,Treron waalia,Treron waalia,Treron_waalia
 Treron griveaudi,22728176,Comoro Green-pigeon,2540,Comoro Green-Pigeon,Treron griveaudi,Treron griveaudi,Treron_calvus
-Treron australis,22727848,Madagascar Green-pigeon,2541,Madagascar Green-Pigeon,Treron australis,Treron australis,Treron_australis
+Treron australis,22727848,Madagascar Green-pigeon,2541,Madagascar Green-Pigeon,Treron australis,Treron australis,Treron_calvus
 Treron calvus,45433492,African Green-pigeon,2553,African Green-Pigeon,Treron calvus,Treron calvus,Treron_calvus
 Treron calvus,45433492,African Green-pigeon,2554,African Green-Pigeon (African),Treron calvus [calvus Group],Treron calvus,Treron_calvus
 Treron calvus,45433492,African Green-pigeon,2568,African Green-Pigeon (Gray-breasted),Treron calvus delalandii/granti,Treron calvus,Treron_calvus
@@ -405,11 +405,10 @@ Ramphiculus merrilli,22691322,Cream-bellied Fruit-dove,2602,Cream-breasted Fruit
 Ramphiculus marchei,22691317,Flame-breasted Fruit-dove,2601,Flame-breasted Fruit-Dove,Ptilinopus marchei,Ptilinopus marchei,Ptilinopus_marchei
 Ramphiculus leclancheri,22691346,Black-chinned Fruit-dove,2614,Black-chinned Fruit-Dove,Ptilinopus leclancheri,Ptilinopus leclancheri,Ptilinopus_leclancheri
 Ramphiculus jambu,22691341,Jambu Fruit-dove,2610,Jambu Fruit-Dove,Ptilinopus jambu,Ptilinopus jambu,Ptilinopus_jambu
-Ramphiculus subgularis,22728146,Banggai Fruit-dove,2612,Banggai Fruit-Dove,Ptilinopus subgularis,Ptilinopus subgularis,Ptilinopus_subgularis
 Ramphiculus occipitalis,22691327,Yellow-breasted Fruit-dove,2598,Yellow-breasted Fruit-Dove,Ptilinopus occipitalis,Ptilinopus occipitalis,Ptilinopus_occipitalis
 Chrysoena victor,22691573,Orange Dove,2730,Orange Dove,Ptilinopus victor,Ptilinopus victor,Ptilinopus_victor
 Chrysoena luteovirens,22691577,Golden Dove,2733,Golden Dove,Ptilinopus luteovirens,Ptilinopus luteovirens,Ptilinopus_luteovirens
-Chrysoena viridis,22691581,Whistling Dove,2734,Velvet Dove,Ptilinopus layardi,Ptilinopus layardi,Ptilinopus_viridis
+Chrysoena viridis,22691581,Whistling Dove,2734,Velvet Dove,Ptilinopus layardi,Ptilinopus layardi,Ptilinopus_layardi
 Spilopelia suratensis,60483076,Western Spotted Dove,2084,Spotted Dove,Spilopelia chinensis,Spilopelia chinensis,Stigmatopelia_chinensis
 Spilopelia suratensis,60483076,Western Spotted Dove,2085,Spotted Dove (Western),Spilopelia chinensis suratensis/ceylonensis,Spilopelia chinensis,Stigmatopelia_chinensis
 Spilopelia suratensis,60483076,Western Spotted Dove,2088,Spotted Dove (Eastern),Spilopelia chinensis chinensis/tigrina,Spilopelia chinensis,Stigmatopelia_chinensis
