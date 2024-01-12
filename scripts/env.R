@@ -7,6 +7,10 @@ library(stringr)
 library(phytools)
 library(ebirdst)
 library(terra)
+library(vegan)
+library(tidyr)
+library(multcomp)
+library(ggpubr)
 
 options(scipen=99999)
 

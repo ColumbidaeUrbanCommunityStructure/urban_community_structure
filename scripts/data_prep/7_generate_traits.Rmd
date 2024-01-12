@@ -7,3 +7,356 @@ bibliography: ../ref.bib
 ```{r}
 source('../env.R')
 ```
+
+# Create measured traits database for Jetz Columbidae Taxonomy
+Here we create traits based on the @AVONET2022 morphology and trait database.
+
+## Load Mapping Birdlife to Jetz
+```{r}
+birdlife_jetz_mapping = read_csv('/Users/james/Dropbox/PhD/BirdLife/Taxonomy/birdlife_v8_columbidae_taxonomy_to_jetz.csv')
+birdlife_jetz_mapping
+```
+
+## Load Avonet Traits
+```{r}
+avonet_birdlife = read_csv('/Users/james/Dropbox/PhD/Avonet/TraitData/AVONET1_BirdLife.csv')
+avonet_birdlife
+```
+### Avonet Columbidae traits
+```{r}
+avonet_columbidae = avonet_birdlife[avonet_birdlife$Order1 == 'Columbiformes',]
+avonet_columbidae
+```
+
+### Check we have all species from our mapping file (e.g. all species mapping to Birdlife V8 taxonomy)
+Avonet uses Birdlife V5 taxonomy.
+```{r}
+birdlife_jetz_mapping[!(birdlife_jetz_mapping$SpeciesName_v5 %in% avonet_columbidae$Species1),]
+```
+
+### Check which species we are losing from avonet
+We can check that we are only losing species that are absent from Birdlife V8 by checking our Birdlife to Jetz mapping scripts.
+```{r}
+avonet_columbidae[!(avonet_columbidae$Species1 %in% birdlife_jetz_mapping$SpeciesName_v5),]
+```
+
+## Map traits to Jetz
+```{r}
+avonet_jetz = avonet_columbidae %>%
+  inner_join(birdlife_jetz_mapping[,c('SpeciesName_v5', 'JetzSpeciesName')], by=c('Species1' = 'SpeciesName_v5')) %>%
+  group_by(JetzSpeciesName) %>%
+  summarise(
+    beak_length_culmen = mean(Beak.Length_Culmen),
+    beak_length_nares = mean(Beak.Length_Nares),
+    beak_width = mean(Beak.Width),
+    beak_depth = mean(Beak.Depth),
+    tarsus_length = mean(Tarsus.Length),
+    wing_length = mean(Wing.Length),
+    kipps_distance = mean(Kipps.Distance),
+    secondary1 = mean(Secondary1),
+    handwing_index = mean(`Hand-Wing.Index`),
+    tail_length = mean(Tail.Length),
+    mass = mean(Mass),
+    habitat = toString(unique(na.omit(Habitat))),
+    habitat_density = toString(unique(na.omit(Habitat.Density))),
+    migration =  toString(unique(na.omit(Migration))),
+    trophic_level =  toString(unique(na.omit(Trophic.Level))),
+    trophic_niche =  toString(unique(na.omit(Trophic.Niche))),
+    primary_lifestyle =  toString(unique(na.omit(Primary.Lifestyle)))
+  )
+
+avonet_jetz
+```
+Check we have just one row per species
+```{r}
+length(unique(avonet_jetz$JetzSpeciesName)) == nrow(avonet_jetz)
+```
+
+### Check for mapping species that have two factor values
+```{r}
+avonet_jetz[
+  grepl(',', avonet_jetz$habitat, fixed = TRUE) |
+  grepl(',', avonet_jetz$habitat_density, fixed = TRUE) |
+  grepl(',', avonet_jetz$migration, fixed = TRUE) |
+  grepl(',', avonet_jetz$trophic_level, fixed = TRUE) |
+  grepl(',', avonet_jetz$trophic_niche, fixed = TRUE) |
+  grepl(',', avonet_jetz$primary_lifestyle, fixed = TRUE),
+  c('JetzSpeciesName', 'habitat', 'habitat_density', 'migration', 'trophic_level', 'trophic_niche', 'primary_lifestyle')
+]
+```
+Species that are migratory and year round residents
+```{r}
+avonet_jetz[avonet_jetz$JetzSpeciesName %in% c('Columba_palumbus', 'Patagioenas_fasciata'),]
+```
+```{r}
+avonet_jetz$migration[avonet_jetz$JetzSpeciesName %in% c('Macropygia_amboinensis', 'Treron_calvus')] = '1'
+```
+
+Tropic niche of Macropygia amboinensis from avibase is Omnivore
+https://avibase.bsc-eoc.org/species.jsp?lang=EN&avibaseid=FD5160925CD583C1&sec=lifehistory
+```{r}
+avonet_jetz$trophic_niche[avonet_jetz$JetzSpeciesName %in% c('Macropygia_amboinensis')] = 'Omnivore'
+```
+
+### Should now have no species with dual factor values
+```{r}
+avonet_jetz[
+  grepl(',', avonet_jetz$habitat, fixed = TRUE) |
+  grepl(',', avonet_jetz$habitat_density, fixed = TRUE) |
+  grepl(',', avonet_jetz$migration, fixed = TRUE) |
+  grepl(',', avonet_jetz$trophic_level, fixed = TRUE) |
+  grepl(',', avonet_jetz$trophic_niche, fixed = TRUE) |
+  grepl(',', avonet_jetz$primary_lifestyle, fixed = TRUE),
+  c('JetzSpeciesName', 'habitat', 'habitat_density', 'migration', 'trophic_level', 'trophic_niche', 'primary_lifestyle')
+]
+
+avonet_jetz$habitat = as.factor(avonet_jetz$habitat)
+avonet_jetz$habitat_density = as.factor(avonet_jetz$habitat_density)
+avonet_jetz$migration = as.factor(avonet_jetz$migration)
+avonet_jetz$trophic_level = as.factor(avonet_jetz$trophic_level)
+avonet_jetz$trophic_niche = as.factor(avonet_jetz$trophic_niche)
+avonet_jetz$primary_lifestyle = as.factor(avonet_jetz$primary_lifestyle)
+```
+
+# Generate composite traits
+This uses a methodogy from @Trisos2014 and @Bregman2016 to create traits that describe a species lifestyle.
+
+These traits are namely:
+* Overall body size. 
+* trophic - beak shape (beak length, width, depth) - measures competitive exclusion (e.g. over-dispersion) via accentuation of foraging differences
+* locomotory (wing, tail, tarsus length)
+* tarsus-to-tail length ratio
+
+
+## Trophic trait
+```{r}
+trophic_trait_pca = rda(avonet_jetz[,c('beak_length_culmen', 'beak_width', 'beak_depth')])
+```
+
+```{r}
+avonet_jetz$trophic_pc1 = trophic_trait_pca$Ybar[,1]
+avonet_jetz$trophic_pc2 = trophic_trait_pca$Ybar[,2]
+avonet_jetz$trophic_pc3 = trophic_trait_pca$Ybar[,3]
+```
+
+How does PC1 explain trophic niche?
+```{r}
+trophic_pc1_aov = aov(trophic_pc1 ~ trophic_niche,
+  data = avonet_jetz
+)
+
+summary(trophic_pc1_aov)
+
+summary(glht(trophic_pc1_aov,
+  linfct = mcp(trophic_niche = "Tukey")
+))
+```
+
+How does PC2 explain trophic niche?
+```{r}
+trophic_pc2_aov = aov(trophic_pc2 ~ trophic_niche,
+  data = avonet_jetz
+)
+
+summary(trophic_pc2_aov)
+
+summary(glht(trophic_pc2_aov,
+  linfct = mcp(trophic_niche = "Tukey")
+))
+```
+
+How does PC3 explain trophic niche?
+```{r}
+trophic_pc3_aov = aov(trophic_pc3 ~ trophic_niche,
+  data = avonet_jetz
+)
+
+summary(trophic_pc3_aov)
+
+summary(glht(trophic_pc3_aov,
+  linfct = mcp(trophic_niche = "Tukey")
+))
+```
+
+```{r}
+avonet_jetz %>% 
+  pivot_longer(cols = c('trophic_pc1', 'trophic_pc2', 'trophic_pc3'), names_to = 'axis') %>% 
+  ggplot(aes(x = trophic_niche, y = value, color = axis)) + 
+    geom_boxplot() + xlab('Trophic Niche') + ylab('PC Value')
+```
+
+```{r}
+avonet_jetz %>% 
+  ggplot(aes(x = trophic_niche, y = trophic_pc1, fill = trophic_niche)) +
+    geom_violin(alpha = 0.5) +
+    geom_point(position = position_jitter(seed = 1, width = 0.2)) +
+    theme(legend.position = "none") +
+    labs(title = "Trophic PC1")
+```
+```{r}
+avonet_jetz %>% 
+  ggplot(aes(x = trophic_niche, y = trophic_pc2, fill = trophic_niche)) +
+    geom_violin(alpha = 0.5) +
+    geom_point(position = position_jitter(seed = 1, width = 0.2)) +
+    theme(legend.position = "none") +
+    labs(title = "Trophic PC2")
+```
+
+```{r}
+ggarrange(ncol = 2, nrow = 2, common.legend = T,
+          ggplot(avonet_jetz, aes(y = trophic_pc1, x = trophic_pc2, color = trophic_niche)) + geom_point(),
+          ggplot(avonet_jetz, aes(y = trophic_pc1, x = trophic_pc3, color = trophic_niche)) + geom_point(),
+          ggplot(avonet_jetz, aes(y = trophic_pc3, x = trophic_pc2, color = trophic_niche)) + geom_point()
+)
+```
+
+
+Is PC1 correlated to mass?
+```{r}
+cor(avonet_jetz$trophic_pc1, avonet_jetz$mass)
+```
+
+Is PC2 correlated to mass?
+```{r}
+cor(avonet_jetz$trophic_pc2, avonet_jetz$mass)
+```
+
+Is PC3 correlated to mass?
+```{r}
+cor(avonet_jetz$trophic_pc3, avonet_jetz$mass)
+```
+
+## Locomotory trait
+```{r}
+loco_trait_pca = rda(avonet_jetz[,c('tarsus_length', 'wing_length', 'tail_length')])
+summary(loco_trait_pca)
+```
+
+```{r}
+avonet_jetz$locomotory_pc1 = loco_trait_pca$Ybar[,1]
+avonet_jetz$locomotory_pc2 = loco_trait_pca$Ybar[,2]
+avonet_jetz$locomotory_pc3 = loco_trait_pca$Ybar[,3]
+```
+
+How does PC1 explain lifstyle?
+```{r}
+loco_lifstyle_pc1_aov = aov(locomotory_pc1 ~ primary_lifestyle,
+  data = avonet_jetz
+)
+
+summary(loco_lifstyle_pc1_aov)
+
+summary(glht(loco_lifstyle_pc1_aov,
+  linfct = mcp(primary_lifestyle = "Tukey")
+))
+```
+
+How does PC2 explain lifstyle?
+```{r}
+loco_lifstyle_pc2_aov = aov(locomotory_pc2 ~ primary_lifestyle,
+  data = avonet_jetz
+)
+
+summary(loco_lifstyle_pc2_aov)
+
+summary(glht(loco_lifstyle_pc2_aov,
+  linfct = mcp(primary_lifestyle = "Tukey")
+))
+```
+
+How does PC3 explain lifstyle?
+```{r}
+loco_lifstyle_pc3_aov = aov(locomotory_pc3 ~ primary_lifestyle,
+  data = avonet_jetz
+)
+
+summary(loco_lifstyle_pc3_aov)
+
+summary(glht(loco_lifstyle_pc3_aov,
+  linfct = mcp(primary_lifestyle = "Tukey")
+))
+```
+
+```{r}
+avonet_jetz %>% 
+  pivot_longer(cols = c('locomotory_pc1', 'locomotory_pc2', 'locomotory_pc3'), names_to = 'axis') %>% 
+  ggplot(aes(x = primary_lifestyle, y = value, color = axis)) + 
+    geom_boxplot() + xlab('Primary Lifestype') + ylab('PC Value')
+```
+
+```{r}
+avonet_jetz %>% 
+  ggplot(aes(x = primary_lifestyle, y = locomotory_pc1, fill = primary_lifestyle)) +
+    geom_violin(alpha = 0.5) +
+    geom_point(position = position_jitter(seed = 1, width = 0.2)) +
+    theme(legend.position = "none") +
+    labs(title = "Locomotory PC1")
+```
+
+```{r}
+avonet_jetz %>% 
+  ggplot(aes(x = primary_lifestyle, y = locomotory_pc2, fill = primary_lifestyle)) +
+    geom_violin(alpha = 0.5) +
+    geom_point(position = position_jitter(seed = 1, width = 0.2)) +
+    theme(legend.position = "none") +
+    labs(title = "Locomotory PC2")
+```
+```{r}
+avonet_jetz %>% 
+  pivot_longer(cols = c('locomotory_pc1', 'locomotory_pc2', 'locomotory_pc3'), names_to = 'axis') %>% 
+  ggplot(aes(x = migration, y = value, color = axis)) + 
+    geom_boxplot() + xlab('Migration') + ylab('PC Value')
+```
+
+```{r}
+avonet_jetz %>% 
+  ggplot(aes(x = migration, y = locomotory_pc1, fill = migration)) +
+    geom_violin(alpha = 0.5) +
+    geom_point(position = position_jitter(seed = 1, width = 0.2)) +
+    theme(legend.position = "none") +
+    labs(title = "Locomotory PC1")
+```
+
+```{r}
+avonet_jetz %>% 
+  ggplot(aes(x = migration, y = locomotory_pc2, fill = migration)) +
+    geom_violin(alpha = 0.5) +
+    geom_point(position = position_jitter(seed = 1, width = 0.2)) +
+    theme(legend.position = "none") +
+    labs(title = "Locomotory PC2")
+```
+
+```{r}
+ggarrange(ncol = 2, nrow = 2, common.legend = T,
+          ggplot(avonet_jetz, aes(y = locomotory_pc1, x = locomotory_pc2, color = primary_lifestyle)) + geom_point(),
+          ggplot(avonet_jetz, aes(y = locomotory_pc1, x = locomotory_pc3, color = primary_lifestyle)) + geom_point(),
+          ggplot(avonet_jetz, aes(y = locomotory_pc3, x = locomotory_pc2, color = primary_lifestyle)) + geom_point()
+)
+```
+
+Is PC1 correlated to mass?
+```{r}
+cor(avonet_jetz$locomotory_pc1, avonet_jetz$mass)
+```
+
+Is PC2 correlated to mass?
+```{r}
+cor(avonet_jetz$locomotory_pc2, avonet_jetz$mass)
+```
+
+Is PC3 correlated to mass?
+```{r}
+cor(avonet_jetz$locomotory_pc3, avonet_jetz$mass)
+```
+
+# Store our new trait data
+```{r}
+trait_database = avonet_jetz %>%
+  dplyr::select(JetzSpeciesName, beak_width, trophic_pc2, locomotory_pc2, mass) %>%
+  rename(jetz_species_name=JetzSpeciesName, gape_width=beak_width, trophic_trait=trophic_pc2, locomotory_trait=locomotory_pc2)
+trait_database
+```
+
+```{r}
+write_csv(trait_database, filename(TAXONOMY_OUTPUT_DIR, 'traits_jetz.csv'))
+```
