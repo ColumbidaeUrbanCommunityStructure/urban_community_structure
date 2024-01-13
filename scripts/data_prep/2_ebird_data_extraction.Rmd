@@ -213,6 +213,8 @@ WITH dedupe_group AS (
     duration,
     obs_date,
     effort_km,
+    lat,
+    long,
     ROW_NUMBER() OVER (PARTITION BY group_id ORDER BY checklist_id) row_number
   FROM checklists
   WHERE group_id != ''
@@ -222,15 +224,17 @@ WITH dedupe_group AS (
     locality_id,
     duration,
     obs_date,
-    effort_km
+    effort_km,
+    lat,
+    long
   FROM checklists
   WHERE group_id = ''
 )
-SELECT checklist_id, locality_id, duration, effort_km, obs_date 
+SELECT checklist_id, locality_id, lat, long, duration, effort_km, obs_date 
 FROM dedupe_group 
 WHERE row_number = 1
 UNION ALL
-SELECT checklist_id, locality_id, duration, effort_km, obs_date 
+SELECT checklist_id, locality_id, lat, long, duration, effort_km, obs_date 
 FROM non_group;"
 ```
 
@@ -246,7 +250,7 @@ Then we apply filters such that:
 2. effort_km = '' OR (effort_km >= 0 AND effort_km <= 10)
 
 ```{bash}
-echo -e ".mode csv\n.headers on\nSELECT checklist_id, locality_id, city_id, city_name, duration, obs_date FROM unique_checklists JOIN locality_to_city USING (locality_id) WHERE duration >= 5 AND duration <= 240 AND (effort_km = '' OR (effort_km >= 0 AND effort_km <= 10))" > /tmp/export_command.sqlite
+echo -e ".mode csv\n.headers on\nSELECT checklist_id, locality_id, city_id, city_name, lat, long, duration, obs_date FROM unique_checklists JOIN locality_to_city USING (locality_id) WHERE duration >= 5 AND duration <= 240 AND (effort_km = '' OR (effort_km >= 0 AND effort_km <= 10))" > /tmp/export_command.sqlite
 sqlite3 ${CHECKLIST_DB} < /tmp/export_command.sqlite > ${EBIRD_URBAN_CHECKLISTS_FILE}
 ```
 
