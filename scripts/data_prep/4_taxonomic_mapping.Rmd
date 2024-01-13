@@ -122,7 +122,7 @@ birdlife_spilopelia_suratensis
 ### 22728712: Nesoenas duboisi(Reunion Pigeon)
 Extinct, so exclude from taxonomy
 
-### 22728289: Patagioenas albipennis(White-winged Pigeon)
+### 22728289: Patagioenas albipennis (White-winged Pigeon)
 
 * https://avibase.bsc-eoc.org/species.jsp?lang=EN&avibaseid=9DAE75390A64BCF5
 * http://datazone.birdlife.org/species/factsheet/white-winged-pigeon-patagioenas-albipennis
@@ -130,7 +130,7 @@ Extinct, so exclude from taxonomy
 
 ```{r}
 birdlife_patagioenas_albipennis = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Spilopelia chinensis',c('ebird_id', 'ebird_species_name', 'ebird_species_fullname', 'ebird_common_name')],
+  ebird_tax[ebird_tax$ebird_species_name == 'Patagioenas maculosa',c('ebird_id', 'ebird_species_name', 'ebird_species_fullname', 'ebird_common_name')],
   birdlife_tax[birdlife_tax$species_name == 'Patagioenas albipennis', c('birdlife_id', 'species_name', 'birdlife_common_name')]
 )
 ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_patagioenas_albipennis)

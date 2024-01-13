@@ -41,6 +41,8 @@ EBIRD_DATA_OUTPUT_DIR = mkdir(DATA_OUTPUT_DIR, 'ebird')
 
 TAXONOMY_OUTPUT_DIR = mkdir(DATA_OUTPUT_DIR, 'taxonomy')
 
+COMMUNITY_OUTPUT_DIR = mkdir(DATA_OUTPUT_DIR, 'community')
+
 PROVIDED_DATA = mkdir(mkdir('../..', 'data'), 'provided')
 
 PHYLO_TREE = filename(PROVIDED_DATA, 'phylogeny__stage2_hackett_mcc_no_neg.tre')

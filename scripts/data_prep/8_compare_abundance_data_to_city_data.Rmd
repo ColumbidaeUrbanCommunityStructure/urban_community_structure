@@ -1,0 +1,580 @@
+---
+title: "Find parameters for building urban communities"
+output: html_notebook
+bibliography: ../ref.bib 
+---
+
+Using eBird trends and status abundance data, can we find a minimum number of city total checklists required, and a cut off percentage of checklists recorded, such that we can be confident that any species recorded on more than that percentage of checklist is present in the city (given the city has more that the total minimum total checklists recorded within it).
+
+```{r}
+source('../env.R')
+options(warn=-1)
+```
+
+```{r}
+taxonomic_mapping = read_csv(filename(TAXONOMY_OUTPUT_DIR, 'taxonomy_mapping.csv'))
+```
+
+Find sample size, and percentage of checklists (or percentage of effort) for valid urban communities based on presence test data.
+
+# Load abundance data
+This data contains the mean and median abundance across three different seasons for each city (breeding, nonbreeding, resident).
+The data comes from the eBird status and trends data sets and is calculated from all the pixels that occur within a city polygon for each species.
+```{r}
+abundance_data = read_csv(filename(EBIRD_WORKING_OUTPUT_DIR, 'ebird_trends_abundance_test_data.csv'))
+head(abundance_data)
+```
+These are the species available for our test
+```{r}
+test_species = unique(abundance_data$species)
+test_species
+```
+
+## Check how these species are mapped from eBird to Birdlife
+```{r}
+test_species_mapping = taxonomic_mapping[taxonomic_mapping$ebird_species_fullname %in% test_species,]
+test_species_mapping[order(test_species_mapping$ebird_species_fullname),]
+```
+Problem species:
+
+* eBird's `Patagioenas fasciata` covers the range of Birdlife's `Patagioenas fasciata` and `Patagioenas albilinea`.
+* eBird's `Spilopelia chinensis` covers the range of Birdlife's `Spilopelia chinensis`, `Spilopelia suratensis`, and `Patagioenas albipennis`.
+
+```{r}
+birdlife_species_to_keep = append(test_species_mapping$species_name, c('Patagioenas albilinea', 'Spilopelia suratensis', 'Patagioenas albipennis'))
+```
+
+# Create regional pool data
+This data is created from Birdlife (and some eBird) distrbution data, a species is recorded as occuring in a regional pool when its range polygon intersects with a city polygon.
+
+A set of city names we will use for inspecting data:
+```{r}
+inspection_cities = c('Manchester', 'Bogota', 'Los Angeles', 'Jakarta', 'Nairobi', 'Medellín', 'San Jose')
+```
+
+Load data
+```{r}
+regional_pool_data_input = read_csv(filename(BIRDLIFE_WORKING_OUTPUT_DIR, 'urban_distributions.csv'))
+regional_pool_data_input$seasonal = factor(regional_pool_data_input$seasonal, levels = c('Resident', 'Breeding Season', 'Non-breeding Season', 'Passage', ordered = T))
+regional_pool_data_input[regional_pool_data_input$city_name %in% inspection_cities,]
+```
+Map taxonomy to eBird
+```{r}
+regional_pool_data = regional_pool_data_input %>% 
+  filter(species_name %in% birdlife_species_to_keep) %>%
+  left_join(test_species_mapping[,c('species_name', 'ebird_species_name')]) %>%
+  arrange(seasonal) %>%
+  group_by(city_id, city_name, ebird_species_name) %>%
+  summarise(seasonal = first(seasonal)) %>%
+  arrange(city_id, ebird_species_name)
+```
+
+Final regional pool data
+```{r}
+regional_pool_data[regional_pool_data$city_name %in% inspection_cities,]
+```
+
+# Filter abundance data to regional pools
+The abundance data includes a record for every species in every city, even though many of those values will be 0 or NA.
+Here we filter out those erroneous rows by joining the abundance data to our regional pool data. This will ensure we only have test data (an abundance score) for species that we expect to occur within a city.
+```{r}
+abundance_data_regional = left_join(regional_pool_data, abundance_data, by = c('city_id' = 'city_id', 'city_name' = 'city_name', 'ebird_species_name' = 'species'))
+abundance_data_regional = abundance_data_regional %>% arrange(city_id) %>% rename(species_name='ebird_species_name') %>%
+  select(city_id, city_name, species_name, seasonal, mean_nonbreeding, median_nonbreeding, sd_nonbreeding, mean_breeding, median_breeding, sd_breeding, mean_resident, median_resident, sd_resident)
+```
+
+Our new abundance data:
+```{r}
+abundance_data_regional[abundance_data_regional$city_name %in% inspection_cities,]
+```
+
+## Are any species now missing that are abundant?
+Check to see if we have filtered out any species that should cause us concern.
+This list contains all species that have a non-zero abundance but have now been removed from our data (e.g. they do not occur within the regional pool of the city, or more specifically their birdlife/ebird range does not overlap the city vector). We can fix this by seeking alternative ways of defining the regional pools, e.g. by appending the eBird status and trends ranges for a species.
+```{r}
+city_id_species_pairs_present = paste(abundance_data_regional$species_name, abundance_data_regional$city_id, sep = '::')
+abundance_data %>% 
+  filter(mean_breeding > 0 | mean_nonbreeding > 0 | mean_resident > 0) %>% 
+  group_by(city_id, species) %>% 
+  filter(!(paste(species, city_id, sep = '::') %in% city_id_species_pairs_present)) %>%
+  select(city_id, city_name, species, mean_breeding, mean_nonbreeding, mean_resident)
+```
+
+# Create urban summary data
+Get number of checklists and total effort in each city
+```{r}
+urban_checklists = read_csv(filename(EBIRD_WORKING_OUTPUT_DIR, 'urban_checklists.csv'))
+
+urban_summary = urban_checklists %>% group_by(city_id, city_name) %>% summarise(total_city_checklists = n(), total_city_effort = sum(duration))
+
+urban_summary[urban_summary$city_name %in% inspection_cities,]
+```
+
+# Create urban pools
+For each of our test species, find the number of checklists and total effort in each city from the eBird raw observational data
+```{r}
+ebird_raw = read_csv(filename(EBIRD_WORKING_OUTPUT_DIR, 'urban_columbidae.csv'))
+head(ebird_raw)
+```
+
+Mapping of ebird full species name to species binomial
+```{r}
+ebird_map_to_species = distinct(taxonomic_mapping[taxonomic_mapping$ebird_species_name %in% test_species,c('ebird_species_name', 'ebird_species_fullname')])
+ebird_map_to_species[order(ebird_map_to_species$ebird_species_name),]
+```
+
+Now calculate the total number of checklists each species appears on, and then total effort of those checklists within each city.
+This gives a single row for each species in each city.
+Then join the data onto the regional pool data, and the urban summary data.
+```{r}
+urban_ebird_columbidae_city_summary = ebird_raw %>% 
+  left_join(ebird_map_to_species, by = c('species_name' = 'ebird_species_fullname')) %>% 
+  group_by(city_id, city_name, ebird_species_name) %>% 
+  summarise(total_presence_checklists = n(), total_presence_effort = sum(duration)) %>%
+  filter(ebird_species_name %in% test_species) %>%
+  left_join(regional_pool_data, by = c('city_id' = 'city_id', 'city_name' = 'city_name', 'ebird_species_name' = 'ebird_species_name')) %>%
+  left_join(urban_summary, by = c('city_id' = 'city_id', 'city_name' = 'city_name')) %>%
+  rename(species_name='ebird_species_name') %>%
+  arrange(city_id, species_name)
+```
+
+NA for seasonal indicates that the species is on an eBird checklist for the city, but not in the birdlife regional pool.
+```{r}
+urban_ebird_columbidae_city_summary[urban_ebird_columbidae_city_summary$city_name %in% inspection_cities,]
+```
+
+We also want records for each city that could have that pigeon (e.g. in regional pool range) but has no eBird records.
+Create absence records for all species in the birdlife regional pool data for all cities.
+```{r}
+urban_columbidae_absence_records_part1 = left_join(regional_pool_data, urban_summary) %>% rename(species_name='ebird_species_name')
+
+urban_columbidae_absence_records_part1$total_presence_checklists = 0
+urban_columbidae_absence_records_part1$total_presence_effort = 0
+
+urban_columbidae_absence_records = urban_columbidae_absence_records_part1[!is.na(urban_columbidae_absence_records_part1$total_city_checklists),]
+
+urban_columbidae_absence_records[urban_columbidae_absence_records$city_name %in% inspection_cities,]
+```
+
+Append the absence and presence data together, and then deduplicate to ensure only one species per city.
+Then calculate the percentage of all checklists, and the percentage of total effort in a city for each species.
+```{r}
+urban_columbidae_presence_and_absence = rbind(urban_ebird_columbidae_city_summary, urban_columbidae_absence_records) %>%
+  group_by(city_id, city_name, species_name, total_city_checklists, total_city_effort, seasonal) %>%
+  summarise(total_presence_checklists = max(total_presence_checklists), total_presence_effort = max(total_presence_effort)) %>%
+  arrange(city_id, species_name)
+
+urban_columbidae_presence_and_absence$percentage_checklists = urban_columbidae_presence_and_absence$total_presence_checklists * 100 / urban_columbidae_presence_and_absence$total_city_checklists
+urban_columbidae_presence_and_absence$percentage_effort = urban_columbidae_presence_and_absence$total_presence_effort * 100 / urban_columbidae_presence_and_absence$total_city_effort
+
+urban_columbidae_presence_and_absence[urban_columbidae_presence_and_absence$city_name %in% inspection_cities,]
+```
+
+# Join all data together
+Finally join our our test data result to show predicted abundance, remove any NA abundance as there is insufficent data in these places for a prediction.
+```{r}
+columbidae = left_join(urban_columbidae_presence_and_absence, abundance_data, by = c('species_name' = 'species', 'city_id' = 'city_id', 'city_name' = 'city_name'))
+columbidae[columbidae$city_name %in% inspection_cities,]
+```
+
+# Plot our species pools for each inspection city
+```{r}
+plot_city_species = function(city_id) {
+  city_row =  urban_summary[urban_summary$city_id == city_id, c('city_name', 'total_city_checklists')]
+  
+  ggplot(columbidae[columbidae$city_id == city_id,], aes(x = species_name, y = percentage_checklists, fill = seasonal)) + 
+    geom_bar(stat = "identity") + 
+    geom_text(aes(label = paste('breeding', round(mean_breeding, 1), '\nresident', round(mean_resident, 1)))) + 
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + 
+    xlab('Species name') + ylab('% of Checklist present') + 
+    facet_wrap(~city_id) + 
+    geom_hline(yintercept=5, linetype='dotted', col = 'red') +
+    labs(title = paste(city_row$city_name, city_row$total_city_checklists))
+}
+```
+
+Here we show the city and total number of checklists. Then for each species plotted against percentage of checklists, the breeding and resident abundance.
+```{r}
+plot_city_species(14)
+```
+
+```{r}
+plot_city_species(624)
+```
+
+```{r}
+plot_city_species(1786)
+```
+
+```{r}
+plot_city_species(4830)
+```
+
+```{r}
+plot_city_species(11920)
+```
+
+# Predict abundance from percentage of checklists present
+Each species is recorded on checklists, within each city we have found the percentage of all checklists within a city that a species is recorded on.
+A city with a low number of total checklists is likely to have eratic and unreliable values for species percentage of checklists.
+Here we try to find out what is the minimum number of checklists for a city to have, for percentage of total checklists to map to abundance.
+
+## Woodpigeon breeding abundance
+```{r}
+ggplot(columbidae[columbidae$species_name == 'Columba palumbus',], aes(y = percentage_checklists, x = mean_breeding, color = log(total_city_checklists))) + geom_jitter() + geom_jitter() + scale_colour_gradient2(
+  low = "red",
+  mid = "yellow",
+  high = "darkgreen",
+  midpoint = log(100),
+  space = "Lab",
+  na.value = "grey50",
+  guide = "colourbar",
+  aesthetics = "colour",
+) + 
+xlab('Mean breeding abundance') + ylab('Percentage of city checklists') + 
+labs(title = 'Woodpigeon data across all cities', color = 'Log of total\nnumber of\ncity checklists')
+```
+## Breeding abundance
+```{r}
+ggplot(columbidae, aes(y = percentage_checklists, x = sqrt(mean_breeding), color = log(total_city_checklists))) + geom_jitter() + geom_jitter() + scale_colour_gradient2(
+  low = "red",
+  mid = "yellow",
+  high = "darkgreen",
+  midpoint = log(100),
+  space = "Lab",
+  na.value = "grey50",
+  guide = "colourbar",
+  aesthetics = "colour",
+) + geom_smooth() + 
+xlab('Sqrt of Mean breeding abundance') + ylab('Percentage of city checklists') + 
+labs(title = 'All species data across all cities', color = 'Log of total\nnumber of\ncity checklists')
+```
+
+Outliers, where sqrt of breeding abundance greater than 3.5
+```{r}
+columbidae[!is.na(columbidae$mean_breeding) & sqrt(columbidae$mean_breeding) > 3.5,]
+```
+
+## Resident abundance
+```{r}
+ggplot(columbidae, aes(y = percentage_checklists, x = sqrt(mean_resident), color = log(total_city_checklists))) + geom_jitter() + geom_jitter() + scale_colour_gradient2(
+  low = "red",
+  mid = "yellow",
+  high = "darkgreen",
+  midpoint = log(100),
+  space = "Lab",
+  na.value = "grey50",
+  guide = "colourbar",
+  aesthetics = "colour",
+) + geom_smooth() + 
+xlab('Sqrt of Mean resident abundance') + ylab('Percentage of city checklists') + 
+labs(title = 'All species data across all cities', color = 'Log of total\nnumber of\ncity checklists')
+```
+
+Outliers, where sqrt of resident abundance greater than 5
+```{r}
+columbidae[!is.na(columbidae$mean_resident) & sqrt(columbidae$mean_resident) > 5,]
+```
+
+## Create max_abundance parameter
+max_abundance is the maximum of breeding, nonbreeding, or resident abundance.
+```{r, echo = FALSE, warning = FALSE}
+columbidae$max_mean_abundance = apply(columbidae[,c('mean_breeding', 'mean_nonbreeding', 'mean_resident')], 1, max, na.rm = T)
+columbidae$max_mean_abundance[columbidae$max_mean_abundance == -Inf] = NA
+```
+
+Plot that against percentage of checklists, remove outliers where sqrt of max_abundance greater than 5.
+```{r}
+ggplot(columbidae[!is.na(columbidae$max_mean_abundance) & sqrt(columbidae$max_mean_abundance) < 5,], aes(y = percentage_checklists, x = sqrt(max_mean_abundance), color = log(total_city_checklists))) + geom_jitter() + geom_jitter() + scale_colour_gradient2(
+  low = "red",
+  mid = "yellow",
+  high = "darkgreen",
+  midpoint = log(100),
+  space = "Lab",
+  na.value = "grey50",
+  guide = "colourbar",
+  aesthetics = "colour",
+) + geom_smooth() + 
+xlab('Sqrt of Max mean abundance') + ylab('Percentage of city checklists') + 
+labs(title = 'All species data across all cities', subtitle='Sqrt of max mean abundance < 5', color = 'Log of total\nnumber of\ncity checklists')
+```
+Create trimmed dataset, removing all species with a sqrt of max_abundance greater than 5.
+```{r}
+trimmed_data = columbidae[!is.na(columbidae$max_mean_abundance) & sqrt(columbidae$max_mean_abundance) < 5,]
+```
+
+## Test predicting abundance directly.
+Here we try to predict abundance from the percentage of checklists a species occurs on.
+We try to find a cut off for the minimum total number of checklists recorded in a city to improve the prediction.
+For each test we split the cities 50/50 into training and test data, and run the test 20 times for each cut off.
+
+```{r}
+seeds = c(123, 456, 678, 10, 11, 345, 32, 11, 54, 90, 9999, 1234, 5678, 2323, 9011, 532, 111, 678, 6501, 3)
+
+# min_city_checklists is the minimum number of cities a checklist must have to be included.
+# get_model is a function that takes a dataframe subset of `columbidae`, and returns the result of `lm`
+# get_actual is a function that returns the expected result of the prediction given a dataframe subset of `columbidae`
+get_mean_test_error = function(min_city_checklists, get_model, get_expected) {
+  data = trimmed_data[trimmed_data$total_city_checklists >= min_city_checklists,]
+  
+  result = data.frame()
+  
+  for(seed in seeds) {
+    set.seed(seed)
+    train = sample(1:nrow(data), nrow(data)/2)
+    test=(-train)
+    
+    model = get_model(data[train,])
+    prediction = predict(model, data[test,])
+    
+    result = rbind(result, data.frame(prediction = prediction, actual = get_expected(data[test,])))
+  }
+
+  sum((result$prediction - result$actual)^2) / nrow(result)
+}
+
+min_city_checklists = seq(0, 5000, by=10)
+```
+
+### Predict abundance directly
+```{r}
+result_abundance = data.frame()
+
+for (min_city_checklist in min_city_checklists) {
+  result_abundance = rbind(result_abundance, data.frame(
+    min_city_checklist = min_city_checklist,
+    mean_test_error = get_mean_test_error(
+      min_city_checklist, 
+      function(training_data) {lm(max_mean_abundance ~ percentage_checklists, training_data)},
+      function(test_data) {test_data$max_mean_abundance})
+  ))
+}
+
+ggplot(result_abundance, aes(x = min_city_checklist, y = mean_test_error)) + geom_line() +
+  xlab('Minimum total number of city checklists') + ylab('Mean test error for all 20 tests') +
+  labs(title = 'Predicting max abundance of a species in a city from the percentage of checklists')
+```
+
+### Predict square root of abundance
+Here we repeat the above test, but instead try to predict the sqrt of max abundance.
+```{r}
+result_sqrt_abundance = data.frame()
+
+for (min_city_checklist in min_city_checklists) {
+  result_sqrt_abundance = rbind(result_sqrt_abundance, data.frame(
+    min_city_checklist = min_city_checklist,
+    mean_test_error = get_mean_test_error(
+      min_city_checklist, 
+      function(training_data) {lm(sqrt(max_mean_abundance) ~ percentage_checklists, training_data)},
+      function(test_data) {sqrt(test_data$max_mean_abundance)})
+  ))
+}
+
+ggplot(result_sqrt_abundance, aes(x = min_city_checklist, y = mean_test_error)) + geom_line() +
+  xlab('Minimum total number of city checklists') + ylab('Mean test error for all 20 tests') +
+  labs(title = 'Predicting sqrt max abundance from the percentage of checklists')
+```
+
+## Test predicting the presence.
+Here we try a simpler test of whether a species is present or not.
+Set present as having whether a species has a max_mean_abundance greater than 0
+
+```{r}
+trimmed_data$nonzero_abundance = trimmed_data$max_mean_abundance > 0
+```
+
+Bin data into 25 bins based on number of total city checklists.
+Boxplot percentage of checklists based on whether species are present (i.e. max_mean_abundance greater than 0)
+```{r}
+trimmed_data$total_city_checklists_bin = cut(trimmed_data$total_city_checklists, breaks = 25, labels = F)
+trimmed_data$total_city_checklists_bin = as.factor(trimmed_data$total_city_checklists_bin)
+ggplot(trimmed_data, aes(x = total_city_checklists_bin, y = percentage_checklists)) + geom_boxplot() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + facet_wrap(~ nonzero_abundance) + xlab('Total city checklists group') + ylab('Percentage of city checklists') + 
+labs(title = 'Boxplot of percentage of city checklists\ngiven whether the species is considered present')
+```
+Here we can see that there is a prediction problem with species considered present that have a very low percentage of recorded checklists.
+
+```{r}
+get_true_false_test_results = function(min_city_checklists, df = trimmed_data) {
+  data = df[df$total_city_checklists >= min_city_checklists,]
+  
+  result = data.frame()
+  coeeffs = c()
+  
+  for(seed in seeds) {
+    train = sample(1:nrow(data), nrow(data) / 2)
+    test=(-train)
+    
+    model = glm(nonzero_abundance ~ percentage_checklists, "binomial", data[train,])
+    prediction = predict(model, data[test,], type = "response")
+    
+    result = rbind(result, data.frame(actual = data$nonzero_abundance[test], predicted = prediction))
+    coeeffs = append(coeeffs, model$coefficients['percentage_checklists'])
+  }
+
+  data.frame(
+    mean_false_probability = mean(result$predicted[!result$actual]),
+    mean_true_probablility = mean(result$predicted[result$actual]),
+    percentage_checklists_cutoff = mean(coeeffs),
+    min_city_checklists = min_city_checklists
+  )
+}
+```
+
+
+Try predicting species presence (i.e. max_mean_abundance > 0) based on the percentage of checklists a species is recorded on.
+For each run we predict the result in our test data, and then find the mean prediction for true vs false.
+```{r, echo=FALSE, warning=FALSE}
+result_present = data.frame()
+
+for (min_city_checklist in min_city_checklists) {
+  result_present = rbind(result_present, get_true_false_test_results(min_city_checklist))
+}
+```
+
+```{r}
+ggplot(result_present, aes(x = min_city_checklists, y = mean_false_probability)) + geom_line() +
+  xlab('Min total city checklists') + ylab('Mean presence probablity, given species absent')
+```
+
+Some results at different minimum total city checklists, the test estimate gives us a percentage of checklists cut off for whether a species is present.
+However, we can see that the mean probabilty for present remains high for species that are absent.
+```{r}
+result_present[result_present$min_city_checklists %in% c(100, 500, 1000, 1500, 2000),]
+```
+### Which rows are causing prediction problems?
+Take a look at those records that are expected present, but have low percentage of checklists recorded. Is there any pattern here?
+```{r}
+problem_rows = trimmed_data[trimmed_data$nonzero_abundance & trimmed_data$percentage_checklists < 2.5 & trimmed_data$total_city_checklists > 100,
+             c('city_name', 'species_name', 'total_city_checklists', 'mean_breeding', 'median_breeding', 'mean_resident', 'median_resident', 'mean_nonbreeding', 'median_nonbreeding', 'seasonal', 'percentage_checklists', 'city_id')]
+problem_rows
+```
+Any particular species?
+```{r}
+problem_rows %>% group_by(species_name) %>% summarise(
+  total_problem_records = n(), 
+  mean_mean_breeding = mean(mean_breeding), 
+  max_mean_breeding = max(mean_breeding), 
+  mean_median_breeding = mean(median_breeding), 
+  max_median_breeding = max(median_breeding), 
+  mean_mean_nonbreeding = mean(mean_nonbreeding), 
+  max_mean_nonbreeding = max(mean_nonbreeding), 
+  mean_median_nonbreeding = mean(median_nonbreeding), 
+  max_median_nonbreeding = max(median_nonbreeding), 
+  mean_mean_resident = mean(mean_resident), 
+  max_mean_resident = max(mean_resident), 
+  mean_median_resident = mean(median_resident), 
+  max_median_resident = max(median_resident)
+) %>% arrange(total_problem_records)
+```
+
+Any particular geographical regions?
+```{r, echo=FALSE, warning=FALSE}
+sf::sf_use_s2(FALSE)
+COUNTRY_BOUNDARIES = '/Users/james/Dropbox/PhD/WorldBank_countries_Admin0_10m/WB_countries_Admin0_10m.shp'
+world_map = st_simplify(st_read(COUNTRY_BOUNDARIES), dTolerance = 0.02)
+
+initial_city_selection = st_read(filename(mkdir(GEO_WORKING_OUTPUT_DIR, 'cities'), 'initial_selection.shp'))
+
+problem_regions = problem_rows %>%
+  left_join(initial_city_selection) %>%
+  group_by(city_id, city_name) %>%
+  summarise(total_problem_records = n(), geom = st_centroid(geometry))
+
+ggplot() +  
+  geom_sf(data = world_map, aes(geometry = geometry)) +
+  geom_sf(data = problem_regions, aes(geometry = geom, colour = total_problem_records)) + 
+  theme(legend.position="bottom") + scale_colour_gradient2(
+    low = "darkgreen",
+    mid = "yellow",
+    high = "red",
+    midpoint = 3,
+    space = "Lab",
+    na.value = "grey50",
+    guide = "colourbar",
+    aesthetics = "colour",
+  )
+```
+### Try excluding particular problem species
+Exclude
+
+* Streptopelia orientalis
+* Leptotila verreauxi
+* Streptopelia decaocto
+* Streptopelia tranquebarica
+
+```{r}
+problem_species_to_exclude = c('Streptopelia orientalis', 'Leptotila verreauxi', 'Streptopelia decaocto', 'Streptopelia tranquebarica')
+```
+
+```{r, echo=FALSE, warning=FALSE}
+trimmed_data_with_excluded_species = trimmed_data[!(trimmed_data$species_name %in% problem_species_to_exclude),]
+
+result_present_exclude_species = data.frame()
+
+for (min_city_checklist in min_city_checklists) {
+  result_present_exclude_species = rbind(result_present_exclude_species, get_true_false_test_results(min_city_checklist, df = trimmed_data_with_excluded_species))
+}
+```
+
+```{r}
+ggplot(result_present_exclude_species, aes(x = min_city_checklists, y = mean_false_probability)) + geom_line() +
+  xlab('Min total city checklists') + ylab('Mean presence probablity, given species absent')
+```
+
+```{r}
+result_present_exclude_species[result_present_exclude_species$min_city_checklists %in% c(100, 500, 1000, 1500, 2000),]
+```
+
+
+### Try excluding particular regions of the world
+Exclude cities in Southern Asia and Central America
+
+```{r}
+cities_joined_to_world = st_join(initial_city_selection, world_map)
+problem_cities_to_exclude = cities_joined_to_world$city_id[cities_joined_to_world$SUBREGION %in% c('Southern Asia', 'Central America')]
+```
+
+```{r, echo=FALSE, warning=FALSE}
+trimmed_data_with_excluded_cities = trimmed_data[!(trimmed_data$city_id %in% problem_cities_to_exclude),]
+
+result_present_exclude_cities = data.frame()
+
+for (min_city_checklist in min_city_checklists) {
+  result_present_exclude_cities = rbind(result_present_exclude_cities, get_true_false_test_results(min_city_checklist, df = trimmed_data_with_excluded_cities))
+}
+```
+
+```{r}
+ggplot(result_present_exclude_cities, aes(x = min_city_checklists, y = mean_false_probability)) + geom_line() +
+  xlab('Min total city checklists') + ylab('Mean presence probablity, given species absent')
+```
+
+
+```{r}
+result_present_exclude_cities[result_present_exclude_cities$min_city_checklists %in% c(100, 500, 1000, 1500, 2000),]
+```
+```{r}
+min(result_present_exclude_cities$min_city_checklists[result_present_exclude_cities$mean_false_probability < 0.5])
+```
+
+```{r}
+round(result_present_exclude_cities$percentage_checklists_cutoff[result_present_exclude_cities$min_city_checklists == 350], 1)
+```
+
+### In Summary
+If we're happy that we can exclude South American and South Asian cities due to poor eBird sampling data leading to their models producing invalid abundance. Then selecting the first test that produces an average true probability under 0.5 for absent species, means we should set the minimum required number of checklists within a city to 380, and the percentage cut-off for a species being present as 3.6%.
+
+The number of cities in the analysis is then:
+```{r}
+nrow(urban_summary[urban_summary$total_city_checklists >= 350,])
+```
+
+Distribution of those cities
+```{r}
+selected_cities_for_study = urban_summary$city_id[urban_summary$total_city_checklists >= 350]
+selected_city_centres = st_centroid(initial_city_selection[initial_city_selection$city_id %in% selected_cities_for_study,])
+
+ggplot() +  
+  geom_sf(data = world_map, aes(geometry = geometry)) +
+  geom_sf(data = selected_city_centres, aes(geometry = geometry), colour = "red")
+```
