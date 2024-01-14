@@ -1,0 +1,47 @@
+---
+title: "Select thresholds for urban communities"
+output: html_notebook
+bibliography: ../ref.bib  
+---
+
+```{r}
+source('../env.R')
+```
+
+# Species investigate
+@Bonier2007 contains a list of species considered to be urban birds. The species from the Columbiae family are:
+
+* Columba fasciata 
+* Columba livia
+* Columba palumbus
+* Columba picazuro
+* Columbina cruziana 
+* Columbina inca
+* Columbina passerina
+* Columbina squammata
+* Columbina talpacoti
+* Streptopelia chinensis      
+* Streptopelia decaocto
+* Streptopelia lugens
+* Streptopelia orientalis   
+* Streptopelia semitorquata
+* Streptopelia senegalensis
+
+The species they consider to be rural birds are:
+
+* Columba speciosa
+* Columba oenas
+* Columba cayennensis
+* Columba plumbea
+* Columbina cyanopis
+
+Here will will investigate what each of these species look like within our pool data.
+
+```{r}
+pools = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'jetz_all_recorded_species_with_spatial_data.csv'))
+pools
+```
+
+## Columba fasciata 
+```{r}
+```
