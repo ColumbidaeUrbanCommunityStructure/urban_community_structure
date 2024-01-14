@@ -271,6 +271,7 @@ all_species
 all_species %>% 
   filter(total_city_checklists > 350) %>%
   summarise(
+    number_records = n(),
     mean_percentage_checklists = mean(percentage_checklists),
     lower_10_quant_percentage_checklists = quantile(percentage_checklists, 0.1),
     lower_20_quant_percentage_checklists = quantile(percentage_checklists, 0.2),
@@ -282,6 +283,7 @@ Area
 all_species %>% 
   filter(percentage_total_city_area_surveyed > 10) %>%
   summarise(
+    number_records = n(),
     mean_percentage_surveyed_area = mean(percentage_surveyed_area),
     lower_10_quant_percentage_surveyed_area = quantile(percentage_surveyed_area, 0.1),
     lower_20_quant_percentage_surveyed_area = quantile(percentage_surveyed_area, 0.2),
