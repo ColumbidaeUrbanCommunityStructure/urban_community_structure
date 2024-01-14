@@ -266,19 +266,27 @@ Streptopelia_senegalensis
 all_species = bind_rows(Columba_fasciata,Columba_livia,Columba_palumbus,Columba_picazuro,Columbina_cruziana,Columbina_inca,Columbina_passerina,Columbina_squammata,Columbina_talpacoti,Streptopelia_chinensis,Streptopelia_decaocto,Streptopelia_lugens,Streptopelia_orientalis,Streptopelia_semitorquata,Streptopelia_senegalensis)
 all_species
 ```
-
+ Checklists
 ```{r}
 all_species %>% 
-  filter(percentage_total_city_area_surveyed > 10) %>%
+  filter(total_city_checklists > 350) %>%
   summarise(
     mean_percentage_checklists = mean(percentage_checklists),
     lower_10_quant_percentage_checklists = quantile(percentage_checklists, 0.1),
     lower_20_quant_percentage_checklists = quantile(percentage_checklists, 0.2),
-    mean_percentage_surveyed_area = mean(percentage_surveyed_area),
-    lower_10_quant_percentage_surveyed_area = quantile(percentage_surveyed_area, 0.1),
-    lower_20_quant_percentage_surveyed_area = quantile(percentage_surveyed_area, 0.2)
+    min_percentage_checklists = min(percentage_checklists)
   )
 ```
-
+Area
+```{r}
+all_species %>% 
+  filter(percentage_total_city_area_surveyed > 10) %>%
+  summarise(
+    mean_percentage_surveyed_area = mean(percentage_surveyed_area),
+    lower_10_quant_percentage_surveyed_area = quantile(percentage_surveyed_area, 0.1),
+    lower_20_quant_percentage_surveyed_area = quantile(percentage_surveyed_area, 0.2),
+    min_percentage_surveyed_area = min(percentage_surveyed_area)
+  )
+```
 
 
