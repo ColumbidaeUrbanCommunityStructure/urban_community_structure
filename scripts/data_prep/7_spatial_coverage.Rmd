@@ -64,3 +64,101 @@ city_total_areas
 
 
 ## Find area each each city each pigeon is found
+```{r}
+pools = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'jetz_all_recorded_species.csv'))
+head(pools)
+```
+
+```{r}
+columbidae_checklists = read_csv(filename(EBIRD_WORKING_OUTPUT_DIR, 'urban_columbidae.csv'))
+nrow(columbidae_checklists)
+head(columbidae_checklists)
+```
+```{r}
+taxonomic_mapping = read_csv(filename(TAXONOMY_OUTPUT_DIR, 'taxonomy_mapping.csv'))
+ebird_to_jetz_mapping = unique(taxonomic_mapping[,c('ebird_species_fullname', 'jetz_species_name')])
+ebird_to_jetz_mapping
+```
+```{r}
+columbidae_checklists_jetz = columbidae_checklists %>% left_join(ebird_to_jetz_mapping, by = c('species_name' = 'ebird_species_fullname')) %>% dplyr::select(checklist_id, jetz_species_name, city_id)
+nrow(columbidae_checklists_jetz)
+columbidae_checklists_jetz_distinct = distinct(columbidae_checklists_jetz)
+head(columbidae_checklists_jetz_distinct)
+```
+
+```{r}
+sf::sf_use_s2(FALSE)
+pools$area_found = NA
+
+row = 2
+for (row in 1:nrow(pools)) {
+  selected_city_id = pools[row, c('city_id')]
+  selected_species = pools[row, c('jetz_species_name')]
+  
+  checklists = columbidae_checklists_jetz_distinct %>% 
+    filter(city_id == as.integer(selected_city_id)) %>% filter(jetz_species_name %in% c(selected_species)) %>% 
+    dplyr::select(checklist_id)
+  
+  checklist_locations = urban_checklists %>% 
+    filter(checklist_id %in% checklists$checklist_id) %>% 
+    dplyr::select(lat, long) %>% 
+    distinct()
+  
+  if (nrow(checklist_locations) > 0) {
+    city_polygon = initial_city_selection_m[initial_city_selection_m$city_id == as.integer(selected_city_id),]
+    
+    buffered_checklists %>% mutate(area_metres = st_area(geometry))
+    
+    checklists_sf = st_as_sf(checklist_locations, coords = c("long", "lat"))
+    st_crs(checklists_sf) = 4326
+    
+    pools$area_found[row] = checklists_sf %>%
+      st_transform(METRE_BASED_CRS) %>%
+      st_buffer(RADIUS_FROM_CHECKLIST_CENTRE_FOR_SPATIAL_COVERAGE_M) %>%
+      st_union() %>%
+      st_intersection(st_buffer(city_polygon, 0)) %>%
+      st_area()
+  } else {
+    pools$area_found[row] = 0
+  }
+}
+```
+
+```{r}
+write_csv(pools, filename(EBIRD_WORKING_OUTPUT_DIR, 'area_found_within_city.csv'))
+```
+
+## Pull all data together
+```{r}
+nrow(pools)
+pools_city_data = pools %>% left_join(city_total_areas) %>% rename(total_city_area_m2='area_metres', total_city_area_surveyed_m2='surveyed_area', total_presence_area_m2='area_found', percentage_total_city_area_surveyed='percentaged_surveyed') %>% mutate(percentage_total_city_area_surveyed = as.integer(percentage_total_city_area_surveyed), total_city_area_m2 = as.integer(total_city_area_m2)) %>%  mutate(across(where(is.numeric), round, 2))
+nrow(pools_city_data)
+```
+
+```{r}
+pools_city_data$percentage_surveyed_area = pools_city_data$total_presence_area_m2 * 100 / pools_city_data$total_city_area_surveyed_m2
+pools_city_data = pools_city_data %>% dplyr::select(city_id, city_name, total_city_checklists, total_city_effort, total_city_area_m2, total_city_area_surveyed_m2, percentage_total_city_area_surveyed, jetz_species_name, percentage_checklists, percentage_effort, percentage_surveyed_area, seasonal, presence, origin) %>% data.frame()
+pools_city_data
+```
+
+```{r}
+write_csv(pools, filename(COMMUNITY_OUTPUT_DIR, 'jetz_all_recorded_species_with_spatial_data.csv'))
+```
+
+## Compare spatial metric to checklists
+
+```{r}
+ggplot(distinct(pools_city_data[,c('total_city_checklists', 'total_city_area_surveyed')]), aes(x = total_city_checklists, y = total_city_area_surveyed)) +
+  geom_point() + geom_smooth()
+```
+
+```{r}
+length(unique(pools_city_data$city_id[pools_city_data$percentage_total_city_area_surveyed > 20]))
+```
+
+```{r}
+ggplot(pools_city_data[pools_city_data$percentage_total_city_area_surveyed > 20,], aes(x = percentage_checklists, y = percentage_surveyed_area)) +
+  geom_point() + geom_smooth()
+```
+
+
