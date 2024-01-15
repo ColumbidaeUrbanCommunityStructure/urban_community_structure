@@ -137,7 +137,7 @@ nrow(pools_city_data)
 
 ```{r}
 pools_city_data$percentage_surveyed_area = pools_city_data$total_presence_area_m2 * 100 / pools_city_data$total_city_area_surveyed_m2
-pools_city_data = pools_city_data %>% dplyr::select(city_id, city_name, total_city_checklists, total_city_effort, total_city_area_m2, total_city_area_surveyed_m2, percentage_total_city_area_surveyed, jetz_species_name, percentage_checklists, percentage_effort, percentage_surveyed_area, seasonal, presence, origin) %>% data.frame()
+pools_city_data = pools_city_data %>% dplyr::select(city_id, city_name, total_city_checklists, total_city_locations, total_city_effort, total_city_area_m2, total_city_area_surveyed_m2, percentage_total_city_area_surveyed, jetz_species_name, percentage_checklists, percentage_locations, percentage_effort, percentage_surveyed_area, seasonal, presence, origin) %>% data.frame()
 pools_city_data
 ```
 
