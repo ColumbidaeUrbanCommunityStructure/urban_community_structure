@@ -4,7 +4,7 @@ City Number	City	Country	Census Year	Population Estimate
 3	Sydney	Australia	1999	4,031,944
 4	Dhaka	Bangladesh	1991	3,397,187
 5	Belo Horizonte	Brazil	2000	2,154,161
-6	Brasilia	Brazil	2000	2,016,497
+6	Ceilândia	Brazil	2000	2,016,497
 7	Curitiba	Brazil	2000	1,618,279
 8	Fortaleza	Brazil	2000	2,139,372
 9	Recife	Brazil	2000	1,388,193
@@ -48,14 +48,14 @@ City Number	City	Country	Census Year	Population Estimate
 47	Baghdad	Iraq	1987	3,841,268
 48	Rome	Italy	1995	2,648,843
 49	Nagoya	Japan	2000	2,171,378
-50	Osaka	Japan	2000	2,598,589
+50	Osaka [Kyoto]	Japan	2000	2,598,589
 51	Tokyo	Japan	2000	8,130,408
 52	Pyongyang	Korea	1993	2,741,260
 53	Bamako	Mali	1999	1,114,000
 54	Casablanca	Morocco	1993	2,943,000
 55	Karachi	Pakistan	1998	9,339,023
 56	Lima	Peru	1993	5,681,941
-57	Quezon City	Philippines	1995	1,989,419
+57	Quezon City [Manila]	Philippines	1995	1,989,419
 58	Moscow	Russia	1999	8,297,056
 59	Saint Petersburg	Russia	1999	4,678,102
 60	Dakar	Senegal	1999	1,968,000
@@ -69,6 +69,6 @@ City Number	City	Country	Census Year	Population Estimate
 68	Chicago	USA	2000	2,896,016
 69	Houston	USA	2000	1,953,631
 70	Los Angeles	USA	2000	3,694,820
-71	New York City	USA	2000	8,008,278
+71	New York	USA	2000	8,008,278
 72	Tashkent	Uzbekistan	1999	2,142,700
 73	Caracas	Venezuela	1990	1,823,222
