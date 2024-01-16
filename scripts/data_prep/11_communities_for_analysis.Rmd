@@ -1,0 +1,142 @@
+---
+title: "Build Analysis Communities"
+output: html_notebook
+bibliography: ../ref.bib  
+---
+
+```{r}
+source('../env.R')
+```
+
+# Build Communities
+Build three community data sets:
+
+1. High threshold - birds that cover most of the city
+2. Middle threshold - should include most urban adapter species
+3. Low threshold - includes species that regularly use cities, but are around the fringes or in larger green areas.
+
+Using the species in cities from @Bonier2007, the high threshold will find 80% of those species, the middle threshold will find 90%, and the lowest threshold will find 100%.
+
+We include cities with at least 10% of their area surveyed.
+The thresholds are:
+
+1. High: Species present in at least 40% of the surveyed area.
+2: Medium: Species present in at least 15% of the surveyed area.
+3: Low: Species present in at least 3.5% of the surveyed area.
+
+```{r}
+raw_data = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'jetz_all_recorded_species_with_spatial_data.csv'))
+raw_data_trimmed_to_accepted_cities = raw_data[raw_data$percentage_total_city_area_surveyed > 10,]
+length(unique(raw_data_trimmed_to_accepted_cities$city_id))
+```
+Trim out species in cities but not regional pool data
+```{r}
+pools = raw_data_trimmed_to_accepted_cities[!is.na(raw_data_trimmed_to_accepted_cities$seasonal),]
+```
+
+Assign to communities
+```{r}
+pools$present_urban_high = pools$percentage_surveyed_area > 40
+pools$present_urban_med = pools$percentage_surveyed_area > 15
+pools$present_urban_low = pools$percentage_surveyed_area > 3.5
+```
+
+```{r}
+write_csv(pools %>% 
+            dplyr::select(
+              city_id,
+              city_name,
+              jetz_species_name,
+              seasonal,
+              presence,
+              origin,
+              present_urban_high,
+              present_urban_med,
+              present_urban_low
+            ), filename(COMMUNITY_OUTPUT_DIR, 'communities_for_analysis.csv'))
+
+city_data = pools %>%
+            dplyr::select(
+              city_id,
+              city_name,
+              total_city_checklists,
+              total_city_locations,
+              total_city_effort,
+              total_city_area_m2,
+              percentage_total_city_area_surveyed
+            ) %>%
+            distinct()
+
+write_csv(city_data, filename(CITY_DATA_OUTPUT_DIR, 'city_effort.csv'))
+```
+
+Create shape file with selected cities
+```{r}
+initial_city_selection = st_read(filename(mkdir(GEO_WORKING_OUTPUT_DIR, 'cities'), 'initial_selection.shp'))
+final_city_selection = initial_city_selection[initial_city_selection$city_id %in% city_data$city_id,] %>%
+  left_join(city_data) %>% 
+  dplyr::select(!c('total_city_area_m2')) %>%
+  mutate(across(where(is.numeric), as.integer))
+ 
+write_sf(final_city_selection, filename(CITY_DATA_OUTPUT_DIR, 'city_selection.shp'))
+```
+
+Plot our selected cities
+```{r, fig.height=6, fig.width=6}
+sf::sf_use_s2(FALSE)
+COUNTRY_BOUNDARIES = '/Users/james/Dropbox/PhD/WorldBank_countries_Admin0_10m/WB_countries_Admin0_10m.shp'
+world_map = st_simplify(st_read(COUNTRY_BOUNDARIES), dTolerance = 0.02)
+
+ggplot() +  
+  geom_sf(data = world_map, aes(geometry = geometry)) +
+  geom_sf(data = final_city_selection, aes(geometry = geometry, colour = percentage_total_city_area_surveyed)) + 
+  theme(legend.position="bottom") + scale_colour_gradient2(
+    low = "darkgreen",
+    mid = "yellow",
+    high = "red",
+    midpoint = 3,
+    space = "Lab",
+    na.value = "grey50",
+    guide = "colourbar",
+    aesthetics = "colour",
+  )
+```
+
+
+# Compare our communities to eBird Status and Trends abundance data
+
+The data comes from the eBird status and trends data sets and is calculated from all the pixels that occur within a city polygon for each species.
+```{r}
+abundance_data = read_csv(filename(EBIRD_WORKING_OUTPUT_DIR, 'ebird_trends_abundance_test_data.csv'))
+head(abundance_data)
+```
+
+```{r}
+abundance_data_jetz = abundance_data %>% left_join(test_species_mapping, by=c('species' = 'ebird_species_name')) %>% dplyr::select(-c('species'))
+abundance_data_jetz
+```
+
+```{r, echo = FALSE, warning = FALSE}
+abundance_data_jetz$max_mean_abundance = apply(abundance_data_jetz[,c('mean_breeding', 'mean_nonbreeding', 'mean_resident')], 1, max, na.rm = T)
+abundance_data_jetz$max_mean_abundance[abundance_data_regional$max_mean_abundance == -Inf] = NA
+```
+
+```{r}
+analytical_pools = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'communities_for_analysis.csv'))
+comparison_data = inner_join(analytical_pools, abundance_data_jetz[,c('city_id', 'jetz_species_name', 'max_mean_abundance')])
+comparison_data
+```
+```{r}
+comparison_data$present_urban_never = !comparison_data$present_urban_low & !comparison_data$present_urban_med & !comparison_data$present_urban_high
+
+comparison_data %>% 
+  dplyr::select(city_id, jetz_species_name, max_mean_abundance, present_urban_high, present_urban_med, present_urban_low, present_urban_never) %>%
+  filter(sqrt(max_mean_abundance) < 5) %>%
+  pivot_longer(cols = starts_with('present_urban'), names_to = 'urban_pool') %>%
+  mutate(urban_pool = factor(urban_pool, levels=c('present_urban_never', 'present_urban_low', 'present_urban_med', 'present_urban_high'), labels=c('Always Absent', 'Low', 'Medium', 'High'))) %>%
+  filter(value) %>%
+  ggplot(aes(x = urban_pool, y = max_mean_abundance)) + geom_boxplot() + xlab('Threshold') + ylab('Mean abundance across cities') +
+  labs(title = 'Mean Species Urban Abundance at each Threshold', subtitle='eBird Status & Trends abundance data')
+
+ggsave(filename(FIGURES_OUTPUT_DIR, 'thresholds_to_ebird_trends_and_status_abundance_data.jpg'))
+```

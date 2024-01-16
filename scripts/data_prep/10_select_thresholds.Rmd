@@ -54,7 +54,7 @@ bornier_cities[!(bornier_cities$City %in% pools$city_name),]
 ```
 
 ```{r}
-reported_rows = c('city_id', 'city_name', 'percentage_checklists', 'percentage_locations', 'percentage_surveyed_area', 'total_city_checklists', 'total_city_locations', 'percentage_total_city_area_surveyed')
+reported_rows = c('city_id', 'city_name', 'jetz_species_name', 'percentage_checklists', 'percentage_locations', 'percentage_surveyed_area', 'total_city_checklists', 'total_city_locations', 'percentage_total_city_area_surveyed')
 ```
 
 ## Columba fasciata 
@@ -195,7 +195,6 @@ Streptopelia_chinensis = pools %>%
   dplyr::select(reported_rows)
 Streptopelia_chinensis
 ```
-
 ## Streptopelia decaocto
 ```{r}
 bornier_cities$City[bornier_cities$`City Number` %in% c(35,47,48,54,55,62,65,66,67)]
@@ -268,18 +267,22 @@ Streptopelia_senegalensis
 ## Data Exploration
 ```{r}
 all_species = bind_rows(Columba_fasciata,Columba_livia,Columba_palumbus,Columba_picazuro,Columbina_cruziana,Columbina_inca,Columbina_passerina,Columbina_squammata,Columbina_talpacoti,Streptopelia_chinensis,Streptopelia_decaocto,Streptopelia_lugens,Streptopelia_orientalis,Streptopelia_semitorquata,Streptopelia_senegalensis)
-all_species
+all_species %>% arrange(percentage_checklists)
 ```
 Checklists
 ```{r}
 all_species %>% 
-  filter(total_city_checklists > 350) %>%
+  filter(total_city_checklists > 200) %>%
   summarise(
     number_records = n(),
     mean_percentage_checklists = mean(percentage_checklists),
     lower_10_quant_percentage_checklists = quantile(percentage_checklists, 0.1),
     lower_20_quant_percentage_checklists = quantile(percentage_checklists, 0.2),
-    min_percentage_checklists = min(percentage_checklists)
+    min_percentage_checklists = min(percentage_checklists),
+    mean_percentage_locations = mean(percentage_locations),
+    lower_10_quant_percentage_locations = quantile(percentage_locations, 0.1),
+    lower_20_quant_percentage_locations = quantile(percentage_locations, 0.2),
+    min_percentage_locations = min(percentage_locations)
   )
 ```
 
@@ -305,7 +308,11 @@ all_species %>%
     mean_percentage_surveyed_area = mean(percentage_surveyed_area),
     lower_10_quant_percentage_surveyed_area = quantile(percentage_surveyed_area, 0.1),
     lower_20_quant_percentage_surveyed_area = quantile(percentage_surveyed_area, 0.2),
-    min_percentage_surveyed_area = min(percentage_surveyed_area)
+    min_percentage_surveyed_area = min(percentage_surveyed_area),
+    mean_percentage_checklists = mean(percentage_checklists),
+    lower_10_quant_percentage_checklists = quantile(percentage_checklists, 0.1),
+    lower_20_quant_percentage_checklists = quantile(percentage_checklists, 0.2),
+    min_percentage_checklists = min(percentage_checklists)
   )
 ```
 
