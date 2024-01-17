@@ -11,6 +11,8 @@ library(vegan)
 library(tidyr)
 library(multcomp)
 library(ggpubr)
+library(picante)
+library(fundiversity)
 
 options(scipen=99999)
 

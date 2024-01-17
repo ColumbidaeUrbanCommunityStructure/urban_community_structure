@@ -135,8 +135,13 @@ comparison_data %>%
   pivot_longer(cols = starts_with('present_urban'), names_to = 'urban_pool') %>%
   mutate(urban_pool = factor(urban_pool, levels=c('present_urban_never', 'present_urban_low', 'present_urban_med', 'present_urban_high'), labels=c('Always Absent', 'Low', 'Medium', 'High'))) %>%
   filter(value) %>%
-  ggplot(aes(x = urban_pool, y = max_mean_abundance)) + geom_boxplot() + xlab('Threshold') + ylab('Mean abundance across cities') +
-  labs(title = 'Mean Species Urban Abundance at each Threshold', subtitle='eBird Status & Trends abundance data')
+  ggplot(aes(x = urban_pool, y = max_mean_abundance)) + 
+    geom_boxplot() +
+    xlab('Threshold') + 
+    ylab('Mean abundance across cities') +
+    labs(title = 'Mean Species Urban Abundance at each Threshold', subtitle='eBird Status & Trends abundance data') +
+    theme_bw() +
+    theme(legend.position = "none")
 
 ggsave(filename(FIGURES_OUTPUT_DIR, 'thresholds_to_ebird_trends_and_status_abundance_data.jpg'))
 ```
