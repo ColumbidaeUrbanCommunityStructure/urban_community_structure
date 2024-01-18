@@ -1,0 +1,52 @@
+---
+title: "Create city parameters"
+output: html_notebook
+bibliography: ../ref.bib  
+---
+
+```{r}
+source('../env.R')
+```
+
+Cities in our analysis
+```{r}
+city_polygons = read_sf(filename(CITY_DATA_OUTPUT_DIR, 'city_selection.shp'))
+```
+
+# Assign cities to realms
+Using the @Resolve2017 datasets which are available here. These have been exported to a shape file using google earth engine.
+
+https://developers.google.com/earth-engine/datasets/catalog/RESOLVE_ECOREGIONS_2017
+
+```{r}
+sf::sf_use_s2(FALSE)
+resolve = st_buffer(read_sf('/Users/james/Dropbox/PhD/Ecoregions2017/Ecoregions2017.shp'), 0)
+head(resolve)
+```
+
+```{r}
+sf::sf_use_s2(FALSE)
+cities_in_realms = st_intersection(city_polygons, resolve)
+cities_in_realms$area = st_area(cities_in_realms)
+head(cities_in_realms)
+```
+
+```{r}
+cities_in_realms[cities_in_realms$city_id == 903,]
+```
+
+```{r}
+city_to_single_realm = cities_in_realms %>% 
+  group_by(city_id, city_nm, REALM) %>% 
+  summarise(realm_area = sum(area)) %>% 
+  st_drop_geometry()  %>%
+  arrange(desc(realm_area)) %>% 
+  group_by(city_id, city_nm) %>% 
+  summarise(core_realm = first(REALM), core_realm_area = first(realm_area), number_of_realms = n(), min_area = min(realm_area), max_area = max(realm_area)) %>% 
+  arrange(number_of_realms)
+head(city_to_single_realm)
+```
+```{r}
+write_csv(city_to_single_realm[,c('city_id', 'core_realm')], filename(CITY_DATA_OUTPUT_DIR, 'realms.csv'))
+```
+

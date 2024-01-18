@@ -13,6 +13,8 @@ library(multcomp)
 library(ggpubr)
 library(picante)
 library(fundiversity)
+library(GGally)
+library(ggtree)
 
 options(scipen=99999)
 

@@ -188,7 +188,8 @@ sqlite3 ${CHECKLIST_DB} "CREATE TABLE checklists (locality_id NVARCHAR(12), lat 
 ```
 
 ```{bash}
-echo -e ".separator \\t\n.import ${EBIRD_CHECKLIST_FIRST_PASS_FILE} checklists" > /tmp/import_command.sqlite
+echo '.separator \t' > /tmp/import_command.sqlite
+echo '.import ${EBIRD_CHECKLIST_FIRST_PASS_FILE} checklists' >> /tmp/import_command.sqlite
 sqlite3 ${CHECKLIST_DB} < /tmp/import_command.sqlite
 ```
 

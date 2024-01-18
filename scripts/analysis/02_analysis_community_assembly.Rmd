@@ -1,0 +1,409 @@
+---
+title: "Metrics for assessing community assembly processes"
+output: html_notebook
+bibliography: ../ref.bib  
+---
+
+```{r}
+source('../env.R')
+```
+
+```{r}
+community_data = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'community_assembly_metrics.csv'))
+community_data$is_urban_threshold = factor(community_data$is_urban_threshold, levels = c('low', 'medium', 'high'), labels = c('Low', 'Medium', 'High'))
+head(community_data)
+colnames(community_data)
+```
+
+Join on realms
+```{r}
+city_to_realm = read_csv(filename(CITY_DATA_OUTPUT_DIR, 'realms.csv'))
+community_data_with_realm = left_join(community_data, city_to_realm)
+```
+Cities as points
+```{r}
+city_points = st_centroid(read_sf(filename(CITY_DATA_OUTPUT_DIR, 'city_selection.shp')))
+
+city_points_low = city_points %>% left_join(community_data[community_data$is_urban_threshold == 'Low',])
+city_points_med = city_points %>% left_join(community_data[community_data$is_urban_threshold == 'Medium',])
+city_points_high = city_points %>% left_join(community_data[community_data$is_urban_threshold == 'High',])
+```
+  
+```{r}
+sf::sf_use_s2(FALSE)
+COUNTRY_BOUNDARIES = '/Users/james/Dropbox/PhD/WorldBank_countries_Admin0_10m/WB_countries_Admin0_10m.shp'
+world_map = st_simplify(st_read(COUNTRY_BOUNDARIES), dTolerance = 0.02)
+```
+```{r}
+normalised_colours_scale = scale_colour_gradient2(
+    low = "darkgreen",
+    mid = "yellow",
+    high = "red",
+    midpoint = 0.5,
+    space = "Lab",
+    na.value = "grey50",
+    guide = "colourbar",
+    aesthetics = "colour",
+  )
+```
+
+Load community data, and create long format version
+```{r}
+communities = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'communities_for_analysis.csv'))
+
+communities_summary = communities %>% group_by(city_id) %>% summarise(
+  regional_pool_size = n(), 
+  urban_size_high = sum(present_urban_high), 
+  urban_size_med = sum(present_urban_med), 
+  urban_size_low = sum(present_urban_low)
+)
+
+communities_summary_long = bind_rows(
+  communities_summary %>% rename(urban_pool_size = 'urban_size_high') %>% dplyr::select(city_id, regional_pool_size, urban_pool_size) %>% mutate(is_urban_threshold = 'High'),
+  communities_summary %>% rename(urban_pool_size = 'urban_size_med') %>% dplyr::select(city_id, regional_pool_size, urban_pool_size) %>% mutate(is_urban_threshold = 'Medium'),
+  communities_summary %>% rename(urban_pool_size = 'urban_size_low') %>% dplyr::select(city_id, regional_pool_size, urban_pool_size) %>% mutate(is_urban_threshold = 'Low')
+)
+communities_summary_long
+```
+
+Load trait data
+```{r}
+traits = read_csv(filename(TAXONOMY_OUTPUT_DIR, 'traits_jetz.csv'))
+head(traits)
+```
+
+# Examine individual metrics
+```{r}
+geom_normalised_histogram = function(name, gg) {
+  gg + 
+    geom_histogram(aes(fill = core_realm), binwidth = 0.1, position = "dodge") +
+    geom_vline(aes(xintercept = 0.5), color = "#000000", size = 0.4) +
+    geom_vline(aes(xintercept = 0), color = "#000000", size = 0.2, linetype = "dashed") +
+    geom_vline(aes(xintercept = 1), color = "#000000", size = 0.2, linetype = "dashed") + 
+    ylab("Number of cities") + xlab("Normalised Response") + ylim(c(0, 70)) +
+    labs(title = name, fill = 'Realm') +
+    facet_wrap(~ is_urban_threshold, ncol=1) + 
+    theme_bw() +
+    theme(legend.position="bottom")
+}
+```
+
+```{r}
+geom_map = function(map_sf, title) {
+  norm_mntd_analysis_geo = ggplot() + 
+    geom_sf(data = world_map, aes(geometry = geometry)) +
+    map_sf +
+    normalised_colours_scale +
+    labs(title = title, colour = 'Normalised\nResponse')
+}
+```
+
+## MNTD
+```{r}
+norm_mntd_analysis_plot = geom_normalised_histogram(
+  'MNTD', 
+  ggplot(community_data_with_realm, aes(mntd_normalised))
+)
+norm_mntd_analysis_plot
+```
+
+```{r}
+norm_mntd_analysis_geo = geom_map(geom_sf(data = city_points_low, aes(color = mntd_normalised, geometry = geometry)), 'Low threshold')
+norm_mntd_analysis_geo
+```
+
+```{r, fig.width = 4, fig.height = 4}
+ggarrange(norm_mntd_analysis_plot, 
+          ggarrange(
+            norm_mntd_analysis_geo, 
+            geom_map(geom_sf(data = city_points_med, aes(color = mntd_normalised, geometry = geometry)), 'Medium threshold'),
+            geom_map(geom_sf(data = city_points_high, aes(color = mntd_normalised, geometry = geometry)), 'High threshold'),
+            ncol=1, common.legend = T),
+          ncol = 2)
+ggsave(filename(FIGURES_OUTPUT_DIR, 'normalised_mntd.jpg'), width = 2500, height=2500, units = 'px')
+```
+
+## FD
+```{r}
+norm_fd_analysis_plot = geom_normalised_histogram(
+  'FD', 
+  ggplot(community_data_with_realm, aes(fd_normalised))
+)
+norm_fd_analysis_plot
+```
+
+```{r}
+norm_fd_analysis_geo = geom_map(geom_sf(data = city_points_low, aes(color = fd_normalised, geometry = geometry)), 'Low threshold')
+norm_fd_analysis_geo
+```
+
+```{r, fig.width = 4, fig.height = 4}
+ggarrange(norm_fd_analysis_plot, 
+          ggarrange(
+            norm_fd_analysis_geo, 
+            geom_map(geom_sf(data = city_points_med, aes(color = fd_normalised, geometry = geometry)), 'Medium threshold'),
+            geom_map(geom_sf(data = city_points_high, aes(color = fd_normalised, geometry = geometry)), 'High threshold'),
+            ncol=1, common.legend = T),
+          ncol = 2)
+ggsave(filename(FIGURES_OUTPUT_DIR, 'normalised_fd.jpg'), width = 2500, height=2500, units = 'px')
+```
+
+## FD - Locomotory
+```{r}
+norm_fd_loco_analysis_plot = geom_normalised_histogram(
+  'FD Locomotory', 
+  ggplot(community_data_with_realm, aes(locomotory_trait_fd_normalised))
+)
+norm_fd_loco_analysis_plot
+```
+## VAR - Locomotory
+```{r}
+norm_var_loco_analysis_plot = geom_normalised_histogram(
+  'Var Locomotory', 
+  ggplot(community_data_with_realm, aes(locomotory_trait_var_normalised))
+)
+norm_var_loco_analysis_plot
+```
+## FD - Trophic
+```{r}
+norm_fd_trophic_analysis_plot = geom_normalised_histogram(
+  'FD Trophic', 
+  ggplot(community_data_with_realm, aes(trophic_trait_fd_normalised))
+)
+norm_fd_trophic_analysis_plot
+```
+
+## VAR - Trophic
+```{r}
+norm_var_trophic_analysis_plot = geom_normalised_histogram(
+  'Var Trophic', 
+  ggplot(community_data_with_realm, aes(trophic_trait_var_normalised))
+)
+norm_var_trophic_analysis_plot
+```
+
+## FD - Gape Width
+```{r}
+norm_fd_gape_analysis_plot = geom_normalised_histogram(
+  'FD Gape Width', 
+  ggplot(community_data_with_realm, aes(gape_width_fd_normalised))
+)
+norm_fd_gape_analysis_plot
+```
+
+## VAR - Gape Width
+```{r}
+norm_var_gape_analysis_plot = geom_normalised_histogram(
+  'Var Gape Width', 
+  ggplot(community_data_with_realm, aes(gape_width_var_normalised))
+)
+norm_var_gape_analysis_plot
+```
+
+## FD - Mass
+```{r}
+norm_fd_mass_analysis_plot = geom_normalised_histogram(
+  'FD Mass', 
+  ggplot(community_data_with_realm, aes(mass_fd_normalised))
+)
+norm_fd_mass_analysis_plot
+```
+
+## VAR - Mass
+```{r}
+norm_var_mass_analysis_plot = geom_normalised_histogram(
+  'Var Mass', 
+  ggplot(community_data_with_realm, aes(mass_var_normalised))
+)
+norm_var_mass_analysis_plot
+```
+
+# Compare metrics against each other
+
+```{r}
+ggplot(community_data_with_realm, aes(x = fd_normalised, y = mntd_normalised, colour = core_realm)) + 
+  geom_point() +
+  ylab("MNTD") + 
+  xlab("FD") +
+  theme_bw() +
+  facet_wrap(~ is_urban_threshold, ncol = 2) + labs(color = "Realm")
+```
+
+```{r}
+mntd_fd_analysis = community_data_with_realm %>% 
+  dplyr::select(city_id, is_urban_threshold, mntd_normalised, fd_normalised) %>%
+  left_join(communities_summary_long) %>%
+  mutate(urban_pool_perc = urban_pool_size * 100 / regional_pool_size)
+mntd_fd_analysis
+```
+
+```{r}
+ggpairs(mntd_fd_analysis %>% dplyr::filter(is_urban_threshold == 'Low') %>% dplyr::select(mntd_normalised, fd_normalised, regional_pool_size, urban_pool_size, urban_pool_perc))
+```
+
+```{r}
+ggpairs(mntd_fd_analysis %>% dplyr::filter(is_urban_threshold == 'Medium') %>% dplyr::select(mntd_normalised, fd_normalised, regional_pool_size, urban_pool_size, urban_pool_perc))
+```
+
+```{r}
+ggpairs(mntd_fd_analysis %>% dplyr::filter(is_urban_threshold == 'High') %>% dplyr::select(mntd_normalised, fd_normalised, regional_pool_size, urban_pool_size, urban_pool_perc))
+```
+
+
+# Plot Urban/Regional Traits
+
+```{r}
+communities_with_traits = communities %>% left_join(traits) %>% left_join(city_to_realm) %>% filter(core_realm != 'Oceania')
+head(communities_with_traits)
+```
+
+```{r}
+realms = unique(communities_with_traits$core_realm)
+realms
+```
+
+```{r}
+communities_with_traits_long = bind_rows(
+  communities_with_traits %>% dplyr::select(gape_width, trophic_trait, locomotory_trait, mass, core_realm) %>% mutate(record_type = 'Regional'),
+  communities_with_traits %>% filter(present_urban_low) %>% dplyr::select(gape_width, trophic_trait, locomotory_trait, mass, core_realm) %>% mutate(record_type = 'Urban Low Threshold'),
+  communities_with_traits %>% filter(present_urban_med) %>% dplyr::select(gape_width, trophic_trait, locomotory_trait, mass, core_realm) %>% mutate(record_type = 'Urban Medium Threshold'),
+  communities_with_traits %>% filter(present_urban_high) %>% dplyr::select(gape_width, trophic_trait, locomotory_trait, mass, core_realm) %>% mutate(record_type = 'Urban High Threshold')
+)
+communities_with_traits_long$record_type = factor(communities_with_traits_long$record_type, levels = c('Regional', 'Urban Low Threshold', 'Urban Medium Threshold', 'Urban High Threshold'))
+
+head(communities_with_traits_long)
+```
+
+```{r}
+convex_hull_loco_trophic_per_realm = function(filtered_df, realms) {
+  result = data.frame()
+  
+  for (realm in realms) {
+    result = rbind(result, 
+      filtered_df %>% 
+        filter(core_realm == realm) %>% 
+        slice(chull(trophic_trait, locomotory_trait)) %>% 
+        dplyr::select(trophic_trait, locomotory_trait) %>%
+        mutate(core_realm = realm)
+    )
+  }
+  
+  result
+}
+```
+
+```{r}
+regional_hull = convex_hull_loco_trophic_per_realm(communities_with_traits, realms)
+urban_hull_high = convex_hull_loco_trophic_per_realm(communities_with_traits %>% filter(present_urban_high), realms)
+urban_hull_med = convex_hull_loco_trophic_per_realm(communities_with_traits %>% filter(present_urban_med), realms)
+urban_hull_low = convex_hull_loco_trophic_per_realm(communities_with_traits %>% filter(present_urban_low), realms)
+
+ggplot(data = communities_with_traits_long, aes(x = trophic_trait, y = locomotory_trait)) +
+  geom_point(aes(colour = record_type)) +
+  geom_polygon(data = regional_hull, alpha = 0.2, fill = "green", color="green") +
+  geom_polygon(data = urban_hull_low, alpha = 0.3, fill = "yellow", color="yellow") +
+  geom_polygon(data = urban_hull_med, alpha = 0.4, fill = "orange", color = "orange") +
+  geom_polygon(data = urban_hull_high, alpha = 0.5, fill = "red", color = "red") +
+  theme_bw() + scale_color_manual(values=c("green", "yellow", "orange", "red")) +
+  xlab('Trophic Trait') + ylab('Locomotory Trait') + 
+  theme(legend.position="bottom") + 
+  facet_wrap(~ core_realm)
+ggsave(filename(FIGURES_OUTPUT_DIR, 'traits_by_realm_loco_trophic.jpg'))
+```
+```{r}
+convex_hull_gape_mass_per_realm = function(filtered_df, realms) {
+  result = data.frame()
+  
+  for (realm in realms) {
+    result = rbind(result, 
+      filtered_df %>% 
+        filter(core_realm == realm) %>% 
+        slice(chull(gape_width, mass)) %>% 
+        dplyr::select(gape_width, mass) %>%
+        mutate(core_realm = realm)
+    )
+  }
+  
+  result
+}
+```
+
+
+```{r}
+regional_hull_gm = convex_hull_gape_mass_per_realm(communities_with_traits, realms)
+urban_hull_high_gm = convex_hull_gape_mass_per_realm(communities_with_traits %>% filter(present_urban_high), realms)
+urban_hull_med_gm = convex_hull_gape_mass_per_realm(communities_with_traits %>% filter(present_urban_med), realms)
+urban_hull_low_gm = convex_hull_gape_mass_per_realm(communities_with_traits %>% filter(present_urban_low), realms)
+
+ggplot(data = communities_with_traits_long, aes(x = gape_width, y = mass)) +
+  geom_point(aes(colour = record_type)) +
+  geom_polygon(data = regional_hull_gm, alpha = 0.2, fill = "green", color="green") +
+  geom_polygon(data = urban_hull_low_gm, alpha = 0.3, fill = "yellow", color="yellow") +
+  geom_polygon(data = urban_hull_med_gm, alpha = 0.4, fill = "orange", color = "orange") +
+  geom_polygon(data = urban_hull_high_gm, alpha = 0.5, fill = "red", color = "red") +
+  theme_bw() + scale_color_manual(values=c("green", "yellow", "orange", "red")) +
+  xlab('Gape Width') + ylab('Mass') + 
+  theme(legend.position="bottom") + 
+  facet_wrap(~ core_realm)
+ggsave(filename(FIGURES_OUTPUT_DIR, 'traits_by_realm_gape_mass.jpg'))
+```
+
+# Plot Urban/Regional Phylogeny
+
+```{r}
+phylo_tree = read.tree(filename(TAXONOMY_OUTPUT_DIR, 'phylogeny.tre'))
+ggtree(phylo_tree, layout='circular')
+```
+
+```{r}
+plot_phylo = function(realm) {
+  species_df = communities_with_traits %>% filter(core_realm == realm) %>% group_by(jetz_species_name) %>% summarise(
+    regional_pools = n(),
+    urban_pools_high = sum(present_urban_high),
+    urban_pools_medium = sum(present_urban_med),
+    urban_pools_low = sum(present_urban_low)
+  ) %>% mutate(
+    urban_tolerence_high = urban_pools_high / regional_pools,
+    urban_tolerence_med = urban_pools_medium / regional_pools,
+    urban_tolerence_low = urban_pools_low / regional_pools
+  )
+  
+  tree_cropped <- ladderize(drop.tip(phylo_tree, setdiff(phylo_tree$tip.label, species_df$jetz_species_name)))
+  
+  p = ggtree(tree_cropped) + geom_tiplab(align=T) 
+  p1 = facet_plot(p, panel='High', data=species_df, geom=geom_segment, aes(x=0, xend=urban_tolerence_high, y=y, yend=y), size=3, color='red') 
+  p2 = facet_plot(p1, panel='Medium', data=species_df, geom=geom_segment, aes(x=0, xend=urban_tolerence_med, y=y, yend=y), size=3, color='orange') 
+  p3 = facet_plot(p2, panel='Low', data=species_df, geom=geom_segment, aes(x=0, xend=urban_tolerence_low, y=y, yend=y), size=3, color='yellow') 
+  
+  facet_widths(p3 + xlim_tree(60) + theme_tree2(), c(Tree = 5)) + labs(title = realm, subtitle = 'Urban tolerance')
+}
+```
+
+```{r}
+realms
+```
+
+```{r}
+plot_phylo('Nearctic')
+ggsave(filename(FIGURES_OUTPUT_DIR, 'phylogeny_nearctic.jpg'))
+```
+
+```{r, fig.height = 10}
+plot_phylo('Neotropic')
+ggsave(filename(FIGURES_OUTPUT_DIR, 'phylogeny_neotropic.jpg'), width=2187, units="px")
+```
+
+```{r}
+plot_phylo('Palearctic')
+ggsave(filename(FIGURES_OUTPUT_DIR, 'phylogeny_palearctic.jpg'))
+```
+
+```{r}
+plot_phylo('Afrotropic')
+ggsave(filename(FIGURES_OUTPUT_DIR, 'phylogeny_afrotropic.jpg'))
+```
+
+```{r}
+plot_phylo('Australasia')
+ggsave(filename(FIGURES_OUTPUT_DIR, 'phylogeny_australasia.jpg'))
+```
