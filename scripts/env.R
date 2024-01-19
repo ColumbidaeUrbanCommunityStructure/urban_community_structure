@@ -15,6 +15,7 @@ library(picante)
 library(fundiversity)
 library(GGally)
 library(ggtree)
+library(ggrepel)
 
 options(scipen=99999)
 

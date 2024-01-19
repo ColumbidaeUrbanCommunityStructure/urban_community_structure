@@ -20,6 +20,7 @@ Join on realms
 city_to_realm = read_csv(filename(CITY_DATA_OUTPUT_DIR, 'realms.csv'))
 community_data_with_realm = left_join(community_data, city_to_realm)
 ```
+
 Cities as points
 ```{r}
 city_points = st_centroid(read_sf(filename(CITY_DATA_OUTPUT_DIR, 'city_selection.shp')))
@@ -71,10 +72,16 @@ Load trait data
 traits = read_csv(filename(TAXONOMY_OUTPUT_DIR, 'traits_jetz.csv'))
 head(traits)
 ```
+Load realm geo
+```{r}
+sf::sf_use_s2(FALSE)
+resolve = st_simplify(st_buffer(read_sf('/Users/james/Dropbox/PhD/Ecoregions2017/Ecoregions2017.shp'), 0), dTolerance = 0.02)
+head(resolve)
+```
 
 # Examine individual metrics
 ```{r}
-geom_normalised_histogram = function(name, gg) {
+geom_normalised_histogram = function(name, gg, legend.position = "right") {
   gg + 
     geom_histogram(aes(fill = core_realm), binwidth = 0.1, position = "dodge") +
     geom_vline(aes(xintercept = 0.5), color = "#000000", size = 0.4) +
@@ -84,7 +91,7 @@ geom_normalised_histogram = function(name, gg) {
     labs(title = name, fill = 'Realm') +
     facet_wrap(~ is_urban_threshold, ncol=1) + 
     theme_bw() +
-    theme(legend.position="bottom")
+    theme(legend.position=legend.position)
 }
 ```
 
@@ -115,7 +122,7 @@ norm_mntd_analysis_geo
 ```{r, fig.width = 4, fig.height = 4}
 ggarrange(norm_mntd_analysis_plot, 
           ggarrange(
-            norm_mntd_analysis_geo, 
+            geom_normalised_histogram('MNTD', ggplot(community_data_with_realm, aes(mntd_normalised)), legend.position = "bottom"), 
             geom_map(geom_sf(data = city_points_med, aes(color = mntd_normalised, geometry = geometry)), 'Medium threshold'),
             geom_map(geom_sf(data = city_points_high, aes(color = mntd_normalised, geometry = geometry)), 'High threshold'),
             ncol=1, common.legend = T),
@@ -138,7 +145,7 @@ norm_fd_analysis_geo
 ```
 
 ```{r, fig.width = 4, fig.height = 4}
-ggarrange(norm_fd_analysis_plot, 
+ggarrange(geom_normalised_histogram('FD', ggplot(community_data_with_realm, aes(fd_normalised)), legend.position = "bottom"), 
           ggarrange(
             norm_fd_analysis_geo, 
             geom_map(geom_sf(data = city_points_med, aes(color = fd_normalised, geometry = geometry)), 'Medium threshold'),
@@ -156,6 +163,7 @@ norm_fd_loco_analysis_plot = geom_normalised_histogram(
 )
 norm_fd_loco_analysis_plot
 ```
+
 ## VAR - Locomotory
 ```{r}
 norm_var_loco_analysis_plot = geom_normalised_histogram(
@@ -164,6 +172,7 @@ norm_var_loco_analysis_plot = geom_normalised_histogram(
 )
 norm_var_loco_analysis_plot
 ```
+
 ## FD - Trophic
 ```{r}
 norm_fd_trophic_analysis_plot = geom_normalised_histogram(
@@ -219,7 +228,6 @@ norm_var_mass_analysis_plot
 ```
 
 # Compare metrics against each other
-
 ```{r}
 ggplot(community_data_with_realm, aes(x = fd_normalised, y = mntd_normalised, colour = core_realm)) + 
   geom_point() +
@@ -227,6 +235,7 @@ ggplot(community_data_with_realm, aes(x = fd_normalised, y = mntd_normalised, co
   xlab("FD") +
   theme_bw() +
   facet_wrap(~ is_urban_threshold, ncol = 2) + labs(color = "Realm")
+ggsave(filename(FIGURES_OUTPUT_DIR, 'mntd_by_fd.jpg'))
 ```
 
 ```{r}
@@ -243,6 +252,7 @@ ggpairs(mntd_fd_analysis %>% dplyr::filter(is_urban_threshold == 'Low') %>% dply
 
 ```{r}
 ggpairs(mntd_fd_analysis %>% dplyr::filter(is_urban_threshold == 'Medium') %>% dplyr::select(mntd_normalised, fd_normalised, regional_pool_size, urban_pool_size, urban_pool_perc))
+ggsave(filename(FIGURES_OUTPUT_DIR, 'mntd_by_fd_pairs_medium.jpg'))
 ```
 
 ```{r}
@@ -299,11 +309,11 @@ urban_hull_med = convex_hull_loco_trophic_per_realm(communities_with_traits %>% 
 urban_hull_low = convex_hull_loco_trophic_per_realm(communities_with_traits %>% filter(present_urban_low), realms)
 
 ggplot(data = communities_with_traits_long, aes(x = trophic_trait, y = locomotory_trait)) +
+  geom_polygon(data = regional_hull, alpha = 0.1, fill = "green", color="green") +
+  geom_polygon(data = urban_hull_low, alpha = 0.15, fill = "yellow", color="yellow") +
+  geom_polygon(data = urban_hull_med, alpha = 0.2, fill = "orange", color = "orange") +
+  geom_polygon(data = urban_hull_high, alpha = 0.25, fill = "red", color = "red") +
   geom_point(aes(colour = record_type)) +
-  geom_polygon(data = regional_hull, alpha = 0.2, fill = "green", color="green") +
-  geom_polygon(data = urban_hull_low, alpha = 0.3, fill = "yellow", color="yellow") +
-  geom_polygon(data = urban_hull_med, alpha = 0.4, fill = "orange", color = "orange") +
-  geom_polygon(data = urban_hull_high, alpha = 0.5, fill = "red", color = "red") +
   theme_bw() + scale_color_manual(values=c("green", "yellow", "orange", "red")) +
   xlab('Trophic Trait') + ylab('Locomotory Trait') + 
   theme(legend.position="bottom") + 
@@ -328,7 +338,6 @@ convex_hull_gape_mass_per_realm = function(filtered_df, realms) {
 }
 ```
 
-
 ```{r}
 regional_hull_gm = convex_hull_gape_mass_per_realm(communities_with_traits, realms)
 urban_hull_high_gm = convex_hull_gape_mass_per_realm(communities_with_traits %>% filter(present_urban_high), realms)
@@ -336,11 +345,11 @@ urban_hull_med_gm = convex_hull_gape_mass_per_realm(communities_with_traits %>% 
 urban_hull_low_gm = convex_hull_gape_mass_per_realm(communities_with_traits %>% filter(present_urban_low), realms)
 
 ggplot(data = communities_with_traits_long, aes(x = gape_width, y = mass)) +
+  geom_polygon(data = regional_hull_gm, alpha = 0.1, fill = "green", color="green") +
+  geom_polygon(data = urban_hull_low_gm, alpha = 0.15, fill = "yellow", color="yellow") +
+  geom_polygon(data = urban_hull_med_gm, alpha = 0.2, fill = "orange", color = "orange") +
+  geom_polygon(data = urban_hull_high_gm, alpha = 0.25, fill = "red", color = "red") +
   geom_point(aes(colour = record_type)) +
-  geom_polygon(data = regional_hull_gm, alpha = 0.2, fill = "green", color="green") +
-  geom_polygon(data = urban_hull_low_gm, alpha = 0.3, fill = "yellow", color="yellow") +
-  geom_polygon(data = urban_hull_med_gm, alpha = 0.4, fill = "orange", color = "orange") +
-  geom_polygon(data = urban_hull_high_gm, alpha = 0.5, fill = "red", color = "red") +
   theme_bw() + scale_color_manual(values=c("green", "yellow", "orange", "red")) +
   xlab('Gape Width') + ylab('Mass') + 
   theme(legend.position="bottom") + 
@@ -349,15 +358,14 @@ ggsave(filename(FIGURES_OUTPUT_DIR, 'traits_by_realm_gape_mass.jpg'))
 ```
 
 # Plot Urban/Regional Phylogeny
-
 ```{r}
 phylo_tree = read.tree(filename(TAXONOMY_OUTPUT_DIR, 'phylogeny.tre'))
 ggtree(phylo_tree, layout='circular')
 ```
 
 ```{r}
-plot_phylo = function(realm) {
-  species_df = communities_with_traits %>% filter(core_realm == realm) %>% group_by(jetz_species_name) %>% summarise(
+plot_phylo = function(realm, community_df = communities_with_traits) {
+  species_df = community_df %>% filter(core_realm == realm) %>% group_by(jetz_species_name) %>% summarise(
     regional_pools = n(),
     urban_pools_high = sum(present_urban_high),
     urban_pools_medium = sum(present_urban_med),
@@ -407,3 +415,337 @@ ggsave(filename(FIGURES_OUTPUT_DIR, 'phylogeny_afrotropic.jpg'))
 plot_phylo('Australasia')
 ggsave(filename(FIGURES_OUTPUT_DIR, 'phylogeny_australasia.jpg'))
 ```
+
+# Species in communities
+It seems reasonable to expect that cities with simialr regional pools will have similar species entering the city, and thus a similar response to urbanisation.
+
+```{r}
+to_species_matrix = function(filtered_communities) {
+  filtered_communities %>% 
+    dplyr::select(city_id, jetz_species_name) %>% 
+    distinct() %>%
+    mutate(present = TRUE) %>% 
+    pivot_wider(
+      names_from = jetz_species_name, 
+      values_from = "present", 
+      values_fill = list(present = F)
+    ) %>% 
+    tibble::column_to_rownames(var='city_id')
+}
+```
+
+```{r}
+community_nmds = function(filtered_communities) {
+  species_matrix = to_species_matrix(filtered_communities)
+  nmds <- metaMDS(species_matrix, k=2, trymax = 30)
+  nmds_result = data.frame(scores(nmds))
+  nmds_result$city_id = as.double(rownames(scores(nmds)))
+  rownames(nmds_result) = NULL
+  
+  nmds_result %>%
+    left_join(city_points[,c('city_id', 'city_nm')])
+}
+```
+
+```{r}
+plot_nmds = function(plot_data, clusters, realm, plot_is_urban_threshold) {
+  pd = plot_data %>%
+    left_join(community_data) %>%
+    filter(is_urban_threshold == plot_is_urban_threshold)
+  
+  ggplot(pd, aes(x = NMDS1, y = NMDS2)) + 
+    geom_polygon(data = clusters, aes(fill = cluster), alpha = 0.2) +
+    geom_jitter(aes(colour = mntd_normalised, size = fd_normalised)) +
+    normalised_colours_scale +
+    geom_text_repel(aes(label = city_nm), max.overlaps = 25) +
+    labs(
+      title = realm, 
+      subtitle = paste('Regional pool, with urban community values using', plot_is_urban_threshold, 'threshold'), 
+      color = 'MNTD Normalised', 
+      size = 'FD Normalised')
+}
+```
+
+https://www.datacamp.com/tutorial/k-means-clustering-r
+```{r}
+scree_plot = function(community_nmds_data) {
+  # Decide how many clusters to look at
+  n_clusters <- 10
+  
+  # Initialize total within sum of squares error: wss
+  wss <- numeric(n_clusters)
+  
+  set.seed(123)
+  
+  # Look over 1 to n possible clusters
+  for (i in 1:n_clusters) {
+    # Fit the model: km.out
+    km.out <- kmeans(community_nmds_data[,c('NMDS1','NMDS2')], centers = i, nstart = 20)
+    # Save the within cluster sum of squares
+    wss[i] <- km.out$tot.withinss
+  }
+  
+  # Produce a scree plot
+  wss_df <- tibble(clusters = 1:n_clusters, wss = wss)
+   
+  scree_plot <- ggplot(wss_df, aes(x = clusters, y = wss, group = 1)) +
+      geom_point(size = 4)+
+      geom_line() +
+      scale_x_continuous(breaks = c(2, 4, 6, 8, 10)) +
+      xlab('Number of clusters')
+  scree_plot
+}
+```
+
+```{r}
+convex_hull_by_cluster = function(community_df) {
+  result = data.frame()
+  
+  clusters = unique(community_df$cluster)
+  for (cluster_i in clusters) {
+    result = rbind(result, 
+      community_df %>% 
+        filter(cluster == cluster_i) %>% 
+        slice(chull(NMDS1, NMDS2)) %>% 
+        dplyr::select(NMDS1, NMDS2, cluster) 
+    )
+  }
+  
+  result
+}
+```
+
+
+## Nearctic
+```{r}
+nearctic_communities = community_nmds(communities_with_traits %>% filter(core_realm == 'Nearctic'))    
+nearctic_communities
+```
+
+```{r}
+scree_plot(nearctic_communities)
+```
+
+```{r}
+nearctic_clusters <- kmeans(nearctic_communities[,c('NMDS1', 'NMDS2')], centers = 3, nstart = 20)
+nearctic_communities$cluster = as.factor(nearctic_clusters$cluster)
+```
+
+```{r}
+ggplot(nearctic_communities, aes(x = NMDS1, y = NMDS2, colour = cluster)) + geom_point()
+```
+
+
+```{r}
+nearctic_cluster_hulls = convex_hull_by_cluster(nearctic_communities)
+```
+
+```{r}
+plot_nmds(nearctic_communities, nearctic_cluster_hulls, 'Nearctic', 'High')
+```
+
+```{r}
+plot_nmds(nearctic_communities, nearctic_cluster_hulls, 'Nearctic', 'Medium')
+```
+
+```{r}
+plot_nmds(nearctic_communities, nearctic_cluster_hulls, 'Nearctic', 'Low')
+```
+```{r}
+species_in_neartic = nearctic_communities %>% dplyr::select(city_id, cluster) %>% left_join(communities_with_traits)
+
+plot_phylo('Nearctic', species_in_neartic %>% filter(cluster == 1))
+```
+```{r}
+resolve_nearctic = resolve %>% filter(REALM == 'Nearctic')
+
+ggplot() +
+  geom_sf(data = resolve_nearctic, aes(geometry = geometry), alpha = 0.2) +
+  geom_sf(data = nearctic_communities %>% filter(cluster == 1) %>% left_join(city_points_med), aes(color = mntd_normalised, geometry = geometry)) +
+  normalised_colours_scale + theme_bw()
+```
+
+```{r}
+plot_phylo('Nearctic', species_in_neartic %>% filter(cluster == 2))
+```
+```{r}
+ggplot() +
+  geom_sf(data = resolve_nearctic, aes(geometry = geometry), alpha = 0.2) +
+  geom_sf(data = nearctic_communities %>% filter(cluster == 2) %>% left_join(city_points_med), aes(color = mntd_normalised, geometry = geometry)) +
+  normalised_colours_scale + theme_bw()
+```
+
+```{r}
+plot_phylo('Nearctic', species_in_neartic %>% filter(cluster == 3))
+```
+
+```{r}
+ggplot() +
+  geom_sf(data = resolve_nearctic, aes(geometry = geometry), alpha = 0.2) +
+  geom_sf(data = nearctic_communities %>% filter(cluster == 3) %>% left_join(city_points_med), aes(color = mntd_normalised, geometry = geometry)) +
+  normalised_colours_scale + theme_bw()
+```
+
+## Neotropic
+```{r}
+neotropic_communities = community_nmds(communities_with_traits %>% filter(core_realm == 'Neotropic'))    
+neotropic_communities
+```
+
+```{r}
+scree_plot(neotropic_communities)
+```
+
+```{r}
+neotropic_clusters <- kmeans(neotropic_communities[,c('NMDS1', 'NMDS2')], centers = 3, nstart = 20)
+neotropic_communities$cluster = as.factor(neotropic_clusters$cluster)
+```
+
+```{r}
+ggplot(neotropic_communities, aes(x = NMDS1, y = NMDS2, colour = cluster)) + geom_point()
+```
+
+
+```{r}
+neotropic_cluster_hulls = convex_hull_by_cluster(neotropic_communities)
+```
+
+
+```{r}
+plot_nmds(neotropic_communities, neotropic_cluster_hulls, 'Neotropic', 'High')
+```
+
+
+```{r}
+plot_nmds(neotropic_communities, neotropic_cluster_hulls, 'Neotropic', 'Medium')
+```
+
+```{r}
+plot_nmds(neotropic_communities, neotropic_cluster_hulls, 'Neotropic', 'Low')
+```
+
+```{r}
+species_in_neotropic = neotropic_communities %>% dplyr::select(city_id, cluster) %>% left_join(communities_with_traits)
+
+plot_phylo('Neotropic', species_in_neotropic %>% filter(cluster == 1))
+```
+
+```{r}
+resolve_neotropic = resolve %>% filter(REALM == 'Neotropic')
+
+ggplot() +
+  geom_sf(data = resolve_neotropic, aes(geometry = geometry), alpha = 0.2) +
+  geom_sf(data = neotropic_communities %>% filter(cluster == 1) %>% left_join(city_points_med), aes(color = mntd_normalised, geometry = geometry)) +
+  normalised_colours_scale + theme_bw()
+```
+
+```{r}
+plot_phylo('Neotropic', species_in_neotropic %>% filter(cluster == 2))
+```
+
+```{r}
+ggplot() +
+  geom_sf(data = resolve_neotropic, aes(geometry = geometry), alpha = 0.2) +
+  geom_sf(data = neotropic_communities %>% filter(cluster == 2) %>% left_join(city_points_med), aes(color = mntd_normalised, geometry = geometry)) +
+  normalised_colours_scale + theme_bw()
+```
+
+```{r}
+plot_phylo('Neotropic', species_in_neotropic %>% filter(cluster == 3))
+```
+
+```{r}
+ggplot() +
+  geom_sf(data = resolve_neotropic, aes(geometry = geometry), alpha = 0.2) +
+  geom_sf(data = neotropic_communities %>% filter(cluster == 3) %>% left_join(city_points_med), aes(color = mntd_normalised, geometry = geometry)) +
+  normalised_colours_scale + theme_bw()
+```
+
+## Palearctic
+
+## Afrotropic
+
+## Indomalayan
+```{r}
+indomalayan_communities = community_nmds(communities_with_traits %>% filter(core_realm == 'Indomalayan'))    
+indomalayan_communities
+```
+
+```{r}
+scree_plot(indomalayan_communities)
+```
+
+```{r}
+indomalayan_clusters <- kmeans(indomalayan_communities[,c('NMDS1', 'NMDS2')], centers = 4, nstart = 20)
+indomalayan_communities$cluster = as.factor(indomalayan_clusters$cluster)
+```
+
+```{r}
+ggplot(indomalayan_communities, aes(x = NMDS1, y = NMDS2, colour = cluster)) + geom_point()
+```
+
+```{r}
+indomalayan_cluster_hulls = convex_hull_by_cluster(indomalayan_communities)
+```
+
+```{r}
+plot_nmds(indomalayan_communities, indomalayan_cluster_hulls, 'Indomalayan', 'High')
+```
+
+```{r}
+plot_nmds(indomalayan_communities, indomalayan_cluster_hulls, 'Indomalayan', 'Medium')
+```
+
+```{r}
+plot_nmds(indomalayan_communities, indomalayan_cluster_hulls, 'Indomalayan', 'Low')
+```
+
+```{r}
+species_in_indomalayan = indomalayan_communities %>% dplyr::select(city_id, cluster) %>% left_join(communities_with_traits)
+
+plot_phylo('Indomalayan', species_in_indomalayan %>% filter(cluster == 1))
+```
+
+```{r}
+resolve_indomalayan = resolve %>% filter(REALM == 'Indomalayan')
+
+ggplot() +
+  geom_sf(data = resolve_indomalayan, aes(geometry = geometry), alpha = 0.2) +
+  geom_sf(data = indomalayan_communities %>% filter(cluster == 1) %>% left_join(city_points_med), aes(color = mntd_normalised, geometry = geometry)) +
+  normalised_colours_scale + theme_bw()
+```
+
+```{r}
+plot_phylo('Indomalayan', species_in_indomalayan %>% filter(cluster == 2))
+```
+
+```{r}
+ggplot() +
+  geom_sf(data = resolve_indomalayan, aes(geometry = geometry), alpha = 0.2) +
+  geom_sf(data = indomalayan_communities %>% filter(cluster == 2) %>% left_join(city_points_med), aes(color = mntd_normalised, geometry = geometry)) +
+  normalised_colours_scale + theme_bw()
+```
+
+```{r}
+plot_phylo('Indomalayan', species_in_indomalayan %>% filter(cluster == 3))
+```
+
+```{r}
+ggplot() +
+  geom_sf(data = resolve_indomalayan, aes(geometry = geometry), alpha = 0.2) +
+  geom_sf(data = indomalayan_communities %>% filter(cluster == 3) %>% left_join(city_points_med), aes(color = mntd_normalised, geometry = geometry)) +
+  normalised_colours_scale + theme_bw()
+```
+
+```{r}
+plot_phylo('Indomalayan', species_in_indomalayan %>% filter(cluster == 4))
+```
+
+```{r}
+ggplot() +
+  geom_sf(data = resolve_indomalayan, aes(geometry = geometry), alpha = 0.2) +
+  geom_sf(data = indomalayan_communities %>% filter(cluster == 4) %>% left_join(city_points_med), aes(color = mntd_normalised, geometry = geometry)) +
+  normalised_colours_scale + theme_bw()
+```
+
+## Australasia
