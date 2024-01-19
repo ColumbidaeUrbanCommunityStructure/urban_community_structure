@@ -13,6 +13,7 @@ community_data = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'community_assembly_met
 community_data$is_urban_threshold = factor(community_data$is_urban_threshold, levels = c('low', 'medium', 'high'), labels = c('Low', 'Medium', 'High'))
 head(community_data)
 colnames(community_data)
+
 ```
 
 Join on realms
@@ -34,6 +35,7 @@ sf::sf_use_s2(FALSE)
 COUNTRY_BOUNDARIES = '/Users/james/Dropbox/PhD/WorldBank_countries_Admin0_10m/WB_countries_Admin0_10m.shp'
 world_map = st_simplify(st_read(COUNTRY_BOUNDARIES), dTolerance = 0.02)
 ```
+
 ```{r}
 normalised_colours_scale = scale_colour_gradient2(
     low = "darkgreen",
@@ -57,7 +59,9 @@ communities_summary = communities %>% group_by(city_id) %>% summarise(
   urban_size_med = sum(present_urban_med), 
   urban_size_low = sum(present_urban_low)
 )
+```
 
+```{r}
 communities_summary_long = bind_rows(
   communities_summary %>% rename(urban_pool_size = 'urban_size_high') %>% dplyr::select(city_id, regional_pool_size, urban_pool_size) %>% mutate(is_urban_threshold = 'High'),
   communities_summary %>% rename(urban_pool_size = 'urban_size_med') %>% dplyr::select(city_id, regional_pool_size, urban_pool_size) %>% mutate(is_urban_threshold = 'Medium'),
@@ -227,6 +231,7 @@ ggplot(community_data_with_realm, aes(x = fd_normalised, y = mntd_normalised, co
   xlab("FD") +
   theme_bw() +
   facet_wrap(~ is_urban_threshold, ncol = 2) + labs(color = "Realm")
+ggsave(filename(FIGURES_OUTPUT_DIR, 'mntd_by_fd.jpg'))
 ```
 
 ```{r}
@@ -243,6 +248,7 @@ ggpairs(mntd_fd_analysis %>% dplyr::filter(is_urban_threshold == 'Low') %>% dply
 
 ```{r}
 ggpairs(mntd_fd_analysis %>% dplyr::filter(is_urban_threshold == 'Medium') %>% dplyr::select(mntd_normalised, fd_normalised, regional_pool_size, urban_pool_size, urban_pool_perc))
+ggsave(filename(FIGURES_OUTPUT_DIR, 'mntd_by_fd_pairs_medium.jpg'))
 ```
 
 ```{r}
@@ -299,17 +305,18 @@ urban_hull_med = convex_hull_loco_trophic_per_realm(communities_with_traits %>% 
 urban_hull_low = convex_hull_loco_trophic_per_realm(communities_with_traits %>% filter(present_urban_low), realms)
 
 ggplot(data = communities_with_traits_long, aes(x = trophic_trait, y = locomotory_trait)) +
+  geom_polygon(data = regional_hull, alpha = 0.1, fill = "green", color="green") +
+  geom_polygon(data = urban_hull_low, alpha = 0.15, fill = "yellow", color="yellow") +
+  geom_polygon(data = urban_hull_med, alpha = 0.2, fill = "orange", color = "orange") +
+  geom_polygon(data = urban_hull_high, alpha = 0.25, fill = "red", color = "red") +
   geom_point(aes(colour = record_type)) +
-  geom_polygon(data = regional_hull, alpha = 0.2, fill = "green", color="green") +
-  geom_polygon(data = urban_hull_low, alpha = 0.3, fill = "yellow", color="yellow") +
-  geom_polygon(data = urban_hull_med, alpha = 0.4, fill = "orange", color = "orange") +
-  geom_polygon(data = urban_hull_high, alpha = 0.5, fill = "red", color = "red") +
   theme_bw() + scale_color_manual(values=c("green", "yellow", "orange", "red")) +
   xlab('Trophic Trait') + ylab('Locomotory Trait') + 
   theme(legend.position="bottom") + 
   facet_wrap(~ core_realm)
 ggsave(filename(FIGURES_OUTPUT_DIR, 'traits_by_realm_loco_trophic.jpg'))
 ```
+
 ```{r}
 convex_hull_gape_mass_per_realm = function(filtered_df, realms) {
   result = data.frame()
@@ -336,11 +343,11 @@ urban_hull_med_gm = convex_hull_gape_mass_per_realm(communities_with_traits %>% 
 urban_hull_low_gm = convex_hull_gape_mass_per_realm(communities_with_traits %>% filter(present_urban_low), realms)
 
 ggplot(data = communities_with_traits_long, aes(x = gape_width, y = mass)) +
+  geom_polygon(data = regional_hull_gm, alpha = 0.1, fill = "green", color="green") +
+  geom_polygon(data = urban_hull_low_gm, alpha = 0.15, fill = "yellow", color="yellow") +
+  geom_polygon(data = urban_hull_med_gm, alpha = 0.2, fill = "orange", color = "orange") +
+  geom_polygon(data = urban_hull_high_gm, alpha = 0.25, fill = "red", color = "red") +
   geom_point(aes(colour = record_type)) +
-  geom_polygon(data = regional_hull_gm, alpha = 0.2, fill = "green", color="green") +
-  geom_polygon(data = urban_hull_low_gm, alpha = 0.3, fill = "yellow", color="yellow") +
-  geom_polygon(data = urban_hull_med_gm, alpha = 0.4, fill = "orange", color = "orange") +
-  geom_polygon(data = urban_hull_high_gm, alpha = 0.5, fill = "red", color = "red") +
   theme_bw() + scale_color_manual(values=c("green", "yellow", "orange", "red")) +
   xlab('Gape Width') + ylab('Mass') + 
   theme(legend.position="bottom") + 
@@ -407,3 +414,127 @@ ggsave(filename(FIGURES_OUTPUT_DIR, 'phylogeny_afrotropic.jpg'))
 plot_phylo('Australasia')
 ggsave(filename(FIGURES_OUTPUT_DIR, 'phylogeny_australasia.jpg'))
 ```
+
+# Species in communities
+
+```{r}
+communities_with_traits$present_in_region = TRUE
+```
+
+```{r}
+distinct_communities = function(realm, present_community_param, plot_data_is_urban_threshold, title) {
+  to_species_matrix = function(communities, community_param) {
+    c = communities[, c('city_id', 'jetz_species_name', community_param)]
+    names(c) = c('city_id', 'jetz_species_name', 'present')
+    
+    m = pivot_wider(
+      c[c$present,c('jetz_species_name', 'present', 'city_id')], 
+      names_from = jetz_species_name, 
+      values_from = "present", 
+      values_fill = list(present = F)
+    )
+    tibble::column_to_rownames(m, var='city_id')
+  }
+  
+  communities_with_traits_in_realm = communities_with_traits[communities_with_traits$core_realm == realm,]
+
+  species_matrix = communities_with_traits_in_realm %>% to_species_matrix(present_community_param)
+  nmds <- metaMDS(species_matrix, k=2, trymax = 30) 
+  
+  nmds_result = data.frame(scores(nmds)$sites)
+  nmds_result$city_id = as.double(rownames(scores(nmds)$sites))
+  rownames(nmds_result) = NULL
+  
+  plot_data = community_data_with_realm %>% 
+    filter(core_realm == realm) %>%
+    filter(is_urban_threshold == plot_data_is_urban_threshold) %>%
+    left_join(nmds_result) %>%
+    left_join(city_points[,c('city_id', 'city_nm')])
+  
+  ggplot(plot_data, aes(x = NMDS1, y = NMDS2)) + 
+    geom_jitter(aes(colour = mntd_normalised, size = fd_normalised)) +
+    normalised_colours_scale +
+    geom_text_repel(aes(label = city_nm), max.overlaps = 25) +
+    labs(title = realm, subtitle = title, color = 'MNTD Normalised', size = 'FD Normalised')
+}
+```
+
+## Nearctic
+```{r}
+distinct_communities('Nearctic', 'present_in_region', 'High', 'Regional communities, high urban threshold')
+```
+
+```{r}
+distinct_communities('Nearctic', 'present_in_region', 'Medium', 'Regional communities, medium urban threshold')
+ggsave(filename(FIGURES_OUTPUT_DIR, 'community_closeness_vs_mntd_nearctic.jpg'))
+```
+
+```{r}
+distinct_communities('Nearctic', 'present_in_region', 'Low', 'Regional communities, low urban threshold')
+```
+## Neotropic
+```{r}
+distinct_communities('Neotropic', 'present_in_region', 'High', 'Regional communities, high urban threshold')
+```
+
+```{r}
+distinct_communities('Neotropic', 'present_in_region', 'Medium', 'Regional communities, medium urban threshold')
+ggsave(filename(FIGURES_OUTPUT_DIR,'community_closeness_vs_mntd_neotropic.jpg'))
+```
+
+```{r}
+distinct_communities('Neotropic', 'present_in_region', 'Low', 'Regional communities, low urban threshold')
+```
+
+## Palearctic
+```{r}
+distinct_communities('Palearctic', 'present_in_region', 'High', 'Regional communities, high urban threshold')
+```
+
+```{r}
+distinct_communities('Palearctic', 'present_in_region', 'Medium', 'Regional communities, medium urban threshold')
+```
+
+```{r}
+distinct_communities('Palearctic', 'present_in_region', 'Low', 'Regional communities, low urban threshold')
+```
+
+## Afrotropic
+```{r}
+distinct_communities('Afrotropic', 'present_in_region', 'High', 'Regional communities, high urban threshold')
+```
+
+```{r}
+distinct_communities('Afrotropic', 'present_in_region', 'Medium', 'Regional communities, medium urban threshold')
+```
+
+```{r}
+distinct_communities('Afrotropic', 'present_in_region', 'Low', 'Regional communities, low urban threshold')
+```
+
+## Indomalayan
+```{r}
+distinct_communities('Indomalayan', 'present_in_region', 'High', 'Regional communities, high urban threshold')
+```
+
+```{r}
+distinct_communities('Indomalayan', 'present_in_region', 'Medium', 'Regional communities, medium urban threshold')
+ggsave(filename(FIGURES_OUTPUT_DIR,'community_closeness_vs_mntd_indomalayan.jpg'))
+```
+
+```{r}
+distinct_communities('Indomalayan', 'present_in_region', 'Low', 'Regional communities, low urban threshold')
+```
+## Australasia
+```{r}
+distinct_communities('Australasia', 'present_in_region', 'High', 'Regional communities, high urban threshold')
+```
+
+```{r}
+distinct_communities('Australasia', 'present_in_region', 'Medium', 'Regional communities, medium urban threshold')
+```
+
+```{r}
+distinct_communities('Australasia', 'present_in_region', 'Low', 'Regional communities, low urban threshold')
+```
+

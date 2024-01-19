@@ -15,6 +15,7 @@ library(picante)
 library(fundiversity)
 library(GGally)
 library(ggtree)
+library(ggrepel)
 
 options(scipen=99999)
 
@@ -29,7 +30,7 @@ mkdir = function(mainDir, subDir) {
 
 TMP_DIR = '/tmp'
 
-WORKING_OUTPUT_DIR = mkdir('/Users/james/Projects', 'urban_community_structure_wrk')
+WORKING_OUTPUT_DIR = mkdir('/Users/jamese.richardson/PhD', 'urban_community_structure_wrk')
 GEO_WORKING_OUTPUT_DIR = mkdir(WORKING_OUTPUT_DIR, 'geo')
 EBIRD_WORKING_OUTPUT_DIR = mkdir(WORKING_OUTPUT_DIR, 'ebird')
 BIRDLIFE_WORKING_OUTPUT_DIR = mkdir(WORKING_OUTPUT_DIR, 'birdlife')
