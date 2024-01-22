@@ -446,7 +446,7 @@ ebird_tax[!(ebird_tax$ebird_species_name %in% ebird_birdlife_taxonomy_mapping$eb
 # Map to Jetz
 Load my mapping from Birdlife V8 to Jetz, this maps down the birdlife taxonomy versions to Birdlife V3 and thus Jetz. This version contains no extinct species.
 ```{r}
-birdlife_jetz_mapping = read_csv('/Users/james/Dropbox/PhD/BirdLife/Taxonomy/birdlife_v8_columbidae_taxonomy_to_jetz.csv')
+birdlife_jetz_mapping = read_csv(MY_BIRDLIFE_COL_MAPPING)
 ebird_birdlife_taxonomy_mapping[!(ebird_birdlife_taxonomy_mapping$species_name %in% birdlife_jetz_mapping$SpeciesName_v8),]
 ```
 ```{r}

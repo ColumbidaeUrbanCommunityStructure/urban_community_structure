@@ -13,13 +13,13 @@ Here we create traits based on the @AVONET2022 morphology and trait database.
 
 ## Load Mapping Birdlife to Jetz
 ```{r}
-birdlife_jetz_mapping = read_csv('/Users/james/Dropbox/PhD/BirdLife/Taxonomy/birdlife_v8_columbidae_taxonomy_to_jetz.csv')
+birdlife_jetz_mapping = read_csv(MY_BIRDLIFE_COL_MAPPING)
 birdlife_jetz_mapping
 ```
 
 ## Load Avonet Traits
 ```{r}
-avonet_birdlife = read_csv('/Users/james/Dropbox/PhD/Avonet/TraitData/AVONET1_BirdLife.csv')
+avonet_birdlife = read_csv(DL_AVONET)
 avonet_birdlife
 ```
 ### Avonet Columbidae traits

@@ -31,7 +31,6 @@ head(urban_checklists)
 ```
 
 ```{r, warning=FALSE}
-sf::sf_use_s2(FALSE)
 city_total_areas$surveyed_area = NA
 
 for (selected_city_id in city_total_areas$city_id) {
@@ -88,7 +87,6 @@ head(columbidae_checklists_jetz_distinct)
 ```
 
 ```{r}
-sf::sf_use_s2(FALSE)
 pools$area_found = NA
 
 row = 2

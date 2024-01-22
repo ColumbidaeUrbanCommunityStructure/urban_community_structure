@@ -20,12 +20,9 @@ Download full eBird data and sampling data.
 # eBird Sampling Data
 
 ## Check eBird raw sampling data
-@eBird2023 data can be downloaded here:
-https://science.ebird.org/en/use-ebird-data/download-ebird-data-products
-
+@eBird2023 data:
 ```{r}
-EBIRD_SAMPLE_DATA_RAW = '/Users/james/Dropbox/PhD/eBird/ebd_sampling_relNov-2023/ebd_sampling_relNov-2023.txt'
-Sys.setenv(EBIRD_SAMPLE_FILE = EBIRD_SAMPLE_DATA_RAW)
+Sys.setenv(EBIRD_SAMPLE_FILE = DL_EBIRD_SAMPLE_DATA_RAW)
 ```
 
 Read first 5 columns of raw ebird sampling data
@@ -139,8 +136,6 @@ write_sf(all_ebird_locations_sf, filename(mkdir(GEO_WORKING_OUTPUT_DIR, 'ebird')
 
 Join the eBird locations onto the city vectors, giving each location a city and discarding all other locations
 ```{r}
-sf::sf_use_s2(FALSE)
-
 localities_in_cities <- 
   st_join(all_ebird_locations_sf, initial_city_selection) %>%  # spatial join to get intersection of points and poly
   filter(!is.na(city_id))
@@ -285,12 +280,9 @@ The process we follow to complete this is:
 
 
 ## Find the required taxonomy from the eBird Clements taxonomy
-See here for links to download:
-https://science.ebird.org/en/use-ebird-data/the-ebird-taxonomy
 
 ```{r}
-EBIRD_TAXONOMY = '/Users/james/Dropbox/PhD/eBird/taxonomy_2023/ebird_taxonomy_v2023.csv'
-taxonomy = read_csv(EBIRD_TAXONOMY)
+taxonomy = read_csv(DL_EBIRD_TAXONOMY)
 head(taxonomy)
 ```
 
@@ -325,8 +317,8 @@ taxonomy[taxonomy$TAXON_ORDER >= 1874 & taxonomy$TAXON_ORDER <= 2855,c('ORDER', 
 https://science.ebird.org/en/use-ebird-data/download-ebird-data-products
 
 ```{r}
-EBIRD_DATA_RAW = '/Users/james/Dropbox/PhD/eBird/ebd_relNov-2023/ebd_relNov-2023.txt'
-Sys.setenv(EBIRD_FILE = EBIRD_DATA_RAW)
+
+Sys.setenv(EBIRD_FILE = DL_EBIRD_DATA_RAW)
 ```
 
 Read first 5 columns of raw ebird sampling data

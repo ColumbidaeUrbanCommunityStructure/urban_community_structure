@@ -13,28 +13,20 @@ source('../env.R')
 ## Read in the Birdlife Distribution 
 Birdlife dataset @Birdlife2020.
 
-A download of the birdlife distributions can be requested from here:
-https://datazone.birdlife.org/species/requestdis
-
 ```{r}
-BIRDLIFE_DISTRIBUTIONS = '/Users/james/Dropbox/PhD/BirdLife/Distribution/SppDataRequest_columbidae/SppDataRequest.shp'
-birdlife = st_read(BIRDLIFE_DISTRIBUTIONS)
+birdlife = st_read(DL_BIRDLIFE_DISTRIBUTIONS)
 head(birdlife)
 ```
 
 ## Read in the Birdlife Taxonomy
 Load the birdlife taxonomy to find Columbidae species.
 
-The taxonomy can be downloaded here:
-https://datazone.birdlife.org/species/taxonomy
-
 ```{r}
 st_crs(birdlife)
 ```
 
 ```{r}
-BIRDLIFE_TAXONOMY = '/Users/james/Dropbox/PhD/BirdLife/Taxonomy/Handbook of the Birds of the World and BirdLife International Digital Checklist of the Birds of the World_Version_8.xlsx'
-birdlifeTaxonomyWb = read_excel(BIRDLIFE_TAXONOMY)
+birdlifeTaxonomyWb = read_excel(DL_BIRDLIFE_TAXONOMY)
 birdlifeTaxonomyWb
 ```
 
@@ -100,8 +92,6 @@ st_crs(initial_city_selection)
 ```
 
 ```{r}
-sf::sf_use_s2(FALSE)
-
 urban_columbidae_distributions = st_join(initial_city_selection, columbidaeDistribution) 
 
 urban_columbidae_distributions
@@ -161,20 +151,12 @@ urban_columbidae_distributions = read_csv(cache_urban_columbidae_distributions)
 Birdlife is missing the recent invasion of Streptopelia decaocto into North America. 
 We supplement the data for Streptopelia decaocto with the range from eBird's Status and Trends dataset.
 
-This data can be downloaded here:
-https://science.ebird.org/en/status-and-trends/species/eucdov/downloads
-
-The country boundandaries can be downloaded from the world bank here:
-https://datacatalog.worldbank.org/search/dataset/0038272/World-Bank-Official-Boundaries
-
 ```{r}
-COUNTRY_BOUNDARIES = '/Users/james/Dropbox/PhD/WorldBank_countries_Admin0_10m/WB_countries_Admin0_10m.shp'
-world_map = st_simplify(st_read(COUNTRY_BOUNDARIES), dTolerance = 0.02)
+world_map = read_country_boundaries()
 ```
 ### Collared Dove
 Existing range from Birdlife
 ```{r}
-sf::sf_use_s2(FALSE)
 coldov_vect = st_simplify(columbidaeDistribution[columbidaeDistribution$SCI_NAME == 'Streptopelia decaocto', c('PRESENCE')], dTolerance = 0.02)
 
 ggplot() +  
@@ -184,8 +166,7 @@ ggplot() +
 
 Range from eBird
 ```{r}
-EBIRD_EUCDOV_RANGE = '/Users/james/Dropbox/PhD/eBird/eucdov_range_2022/eucdov_range_2022.gpkg'
-eucdov_range_vect = st_read(EBIRD_EUCDOV_RANGE)
+eucdov_range_vect = st_read(DL_EBIRD_EUCDOV_RANGE)
 
 ggplot() +  
   geom_sf(data = world_map, aes(geometry = geometry)) +
@@ -194,8 +175,6 @@ ggplot() +
 
 Extract cities from eBird range
 ```{r}
-sf::sf_use_s2(FALSE)
-
 existing_eucdov_cities = urban_columbidae_distributions$city_id[urban_columbidae_distributions$SCI_NAME == 'Streptopelia decaocto']
 
 eucdov_distribution = st_join(initial_city_selection, eucdov_range_vect) 
@@ -219,7 +198,6 @@ missing_eucdov_cities
 ### Rock dove
 Existing range from Birdlife
 ```{r}
-sf::sf_use_s2(FALSE)
 rocdov_vect = st_simplify(columbidaeDistribution[columbidaeDistribution$SCI_NAME == 'Columba livia', c('PRESENCE')], dTolerance = 0.02)
 
 ggplot() +  
@@ -229,16 +207,13 @@ ggplot() +
 
 Range from eBird
 ```{r}
-EBIRD_ROCPIG_RANGE = '/Users/james/Dropbox/PhD/eBird/rocpig_range_2022/rocpig_range_2022.gpkg'
-rocpig_range_vect = st_read(EBIRD_ROCPIG_RANGE)
+rocpig_range_vect = st_read(DL_EBIRD_ROCPIG_RANGE)
 ggplot() +  
   geom_sf(data = world_map, aes(geometry = geometry)) +
   geom_sf(data = rocpig_range_vect["scientific_name"], aes(geometry = geom), fill = "red")
 ```
 
 ```{r}
-sf::sf_use_s2(FALSE)
-
 existing_rocpig_cities = urban_columbidae_distributions$city_id[urban_columbidae_distributions$SCI_NAME == 'Columba livia']
 
 rocpig_distribution = st_join(initial_city_selection, rocpig_range_vect) 
@@ -261,7 +236,6 @@ missing_rocpig_cities
 ## Add Spotted dove's expanded range into China
 Existing range from Birdlife
 ```{r}
-sf::sf_use_s2(FALSE)
 spodov_vect = st_simplify(columbidaeDistribution[columbidaeDistribution$SCI_NAME %in% c('Spilopelia chinensis','Spilopelia suratensis','Patagioenas albipennis'), c('SCI_NAME')], dTolerance = 0.02)
 
 ggplot() +  
@@ -271,16 +245,13 @@ ggplot() +
 
 Range from eBird
 ```{r}
-EBIRD_SPODOV_RANGE = '/Users/james/Dropbox/PhD/eBird/spodov_range_2022/spodov_range_2022.gpkg'
-spodov_range_vect = st_read(EBIRD_SPODOV_RANGE)
+spodov_range_vect = st_read(DL_EBIRD_SPODOV_RANGE)
 ggplot() +  
   geom_sf(data = world_map, aes(geometry = geometry)) +
   geom_sf(data = spodov_range_vect["scientific_name"], aes(geometry = geom), fill = "red")
 ```
 
 ```{r}
-sf::sf_use_s2(FALSE)
-
 existing_spodov_cities = urban_columbidae_distributions$city_id[urban_columbidae_distributions$SCI_NAME %in% c('Spilopelia chinensis','Spilopelia suratensis','Patagioenas albipennis')]
 
 spodov_distribution = st_join(initial_city_selection, spodov_range_vect) 

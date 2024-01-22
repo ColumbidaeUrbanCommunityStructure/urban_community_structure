@@ -14,18 +14,14 @@ city_polygons = read_sf(filename(CITY_DATA_OUTPUT_DIR, 'city_selection.shp'))
 ```
 
 # Assign cities to realms
-Using the @Resolve2017 datasets which are available here. These have been exported to a shape file using google earth engine.
-
-https://developers.google.com/earth-engine/datasets/catalog/RESOLVE_ECOREGIONS_2017
+Using the @Resolve2017 datasets which are available here. 
 
 ```{r}
-sf::sf_use_s2(FALSE)
-resolve = st_buffer(read_sf('/Users/james/Dropbox/PhD/Ecoregions2017/Ecoregions2017.shp'), 0)
+resolve = read_resolve()
 head(resolve)
 ```
 
 ```{r}
-sf::sf_use_s2(FALSE)
 cities_in_realms = st_intersection(city_polygons, resolve)
 cities_in_realms$area = st_area(cities_in_realms)
 head(cities_in_realms)

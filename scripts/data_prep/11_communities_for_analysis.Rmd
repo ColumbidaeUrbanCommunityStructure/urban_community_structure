@@ -83,9 +83,7 @@ write_sf(final_city_selection, filename(CITY_DATA_OUTPUT_DIR, 'city_selection.sh
 
 Plot our selected cities
 ```{r, fig.height=6, fig.width=6}
-sf::sf_use_s2(FALSE)
-COUNTRY_BOUNDARIES = '/Users/james/Dropbox/PhD/WorldBank_countries_Admin0_10m/WB_countries_Admin0_10m.shp'
-world_map = st_simplify(st_read(COUNTRY_BOUNDARIES), dTolerance = 0.02)
+world_map = read_country_boundaries()
 
 ggplot() +  
   geom_sf(data = world_map, aes(geometry = geometry)) +

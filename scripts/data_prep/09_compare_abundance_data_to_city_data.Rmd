@@ -390,9 +390,7 @@ problem_rows %>% group_by(jetz_species_name) %>% summarise(
 
 Any particular geographical regions?
 ```{r, echo=FALSE, warning=FALSE}
-sf::sf_use_s2(FALSE)
-COUNTRY_BOUNDARIES = '/Users/james/Dropbox/PhD/WorldBank_countries_Admin0_10m/WB_countries_Admin0_10m.shp'
-world_map = st_simplify(st_read(COUNTRY_BOUNDARIES), dTolerance = 0.02)
+world_map = read_country_boundaries()
 
 initial_city_selection = st_read(filename(mkdir(GEO_WORKING_OUTPUT_DIR, 'cities'), 'initial_selection.shp'))
 

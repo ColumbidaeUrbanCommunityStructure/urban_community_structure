@@ -17,6 +17,7 @@ library(GGally)
 library(ggtree)
 library(ggrepel)
 
+sf::sf_use_s2(FALSE)
 options(scipen=99999)
 
 filename = function(directory, filename) {
@@ -28,6 +29,7 @@ mkdir = function(mainDir, subDir) {
   filename(mainDir, subDir)
 }
 
+# Working directories - not stored in repo
 TMP_DIR = '/tmp'
 
 WORKING_OUTPUT_DIR = mkdir('/Users/james/Projects', 'urban_community_structure_wrk')
@@ -37,6 +39,7 @@ BIRDLIFE_WORKING_OUTPUT_DIR = mkdir(WORKING_OUTPUT_DIR, 'birdlife')
 
 KEYS_DIR = mkdir(WORKING_OUTPUT_DIR, 'auth')
 
+# Distributed data - stored in repo
 DATA_OUTPUT_DIR = mkdir(mkdir('../../', 'data'), 'generated')
 CITY_DATA_OUTPUT_DIR = mkdir(DATA_OUTPUT_DIR, 'city')
 TAXONOMY_OUTPUT_DIR = mkdir(DATA_OUTPUT_DIR, 'taxonomy')
@@ -46,3 +49,55 @@ PROVIDED_DATA = mkdir(mkdir('../..', 'data'), 'provided')
 PHYLO_TREE = filename(PROVIDED_DATA, 'phylogeny__stage2_hackett_mcc_no_neg.tre')
 
 FIGURES_OUTPUT_DIR = mkdir('../../', 'figures')
+
+
+# Third Party Data downloaded locally
+# ------------------------------------
+
+# My mapping from Birdlife V8 to Jetz, this maps down the birdlife taxonomy versions to Birdlife V3 and thus Jetz. 
+# This version contains no extinct species.
+MY_BIRDLIFE_COL_MAPPING = '/Users/james/Dropbox/PhD/BirdLife/Taxonomy/birdlife_v8_columbidae_taxonomy_to_jetz.csv'
+
+# Avonet can be downloaded here
+# https://figshare.com/s/b990722d72a26b5bfead
+DL_AVONET = '/Users/james/Dropbox/PhD/Avonet/TraitData/AVONET1_BirdLife.csv'
+
+# The country boundandaries can be downloaded from the world bank here:
+# https://datacatalog.worldbank.org/search/dataset/0038272/World-Bank-Official-Boundaries
+DL_COUNTRY_BOUNDARIES = '/Users/james/Dropbox/PhD/WorldBank_countries_Admin0_10m/WB_countries_Admin0_10m.shp'
+
+read_country_boundaries = function() {
+  st_simplify(st_read(DL_COUNTRY_BOUNDARIES), dTolerance = 0.02)
+}
+
+# A download of the birdlife distributions can be requested from here:
+# https://datazone.birdlife.org/species/requestdis
+DL_BIRDLIFE_DISTRIBUTIONS = '/Users/james/Dropbox/PhD/BirdLife/Distribution/SppDataRequest_columbidae/SppDataRequest.shp'
+
+# The taxonomy can be downloaded here:
+# https://datazone.birdlife.org/species/taxonomy
+DL_BIRDLIFE_TAXONOMY = '/Users/james/Dropbox/PhD/BirdLife/Taxonomy/Handbook of the Birds of the World and BirdLife International Digital Checklist of the Birds of the World_Version_8.xlsx'
+
+# These have been exported to a shape file using google earth engine.
+# https://developers.google.com/earth-engine/datasets/catalog/RESOLVE_ECOREGIONS_2017
+DL_RESOLVE = '/Users/james/Dropbox/PhD/Ecoregions2017/Ecoregions2017.shp'
+
+read_resolve = function() {
+  st_simplify(st_buffer(read_sf(DL_RESOLVE), 0), dTolerance = 0.02)
+}
+
+# ebird data can be downloaded here:
+# https://science.ebird.org/en/use-ebird-data/download-ebird-data-products
+DL_EBIRD_SAMPLE_DATA_RAW = '/Users/james/Dropbox/PhD/eBird/ebd_sampling_relNov-2023/ebd_sampling_relNov-2023.txt'
+DL_EBIRD_DATA_RAW = '/Users/james/Dropbox/PhD/eBird/ebd_relNov-2023/ebd_relNov-2023.txt'
+
+# See here for links to download:
+# https://science.ebird.org/en/use-ebird-data/the-ebird-taxonomy
+DL_EBIRD_TAXONOMY = '/Users/james/Dropbox/PhD/eBird/taxonomy_2023/ebird_taxonomy_v2023.csv'
+
+# eBird: Status & Trends
+# This data can be downloaded here:
+# https://science.ebird.org/en/status-and-trends/species/#columb2
+DL_EBIRD_EUCDOV_RANGE = '/Users/james/Dropbox/PhD/eBird/eucdov_range_2022/eucdov_range_2022.gpkg'
+DL_EBIRD_ROCPIG_RANGE = '/Users/james/Dropbox/PhD/eBird/rocpig_range_2022/rocpig_range_2022.gpkg'
+DL_EBIRD_SPODOV_RANGE = '/Users/james/Dropbox/PhD/eBird/spodov_range_2022/spodov_range_2022.gpkg'

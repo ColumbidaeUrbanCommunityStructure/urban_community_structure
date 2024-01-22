@@ -31,9 +31,7 @@ city_points_high = city_points %>% left_join(community_data[community_data$is_ur
 ```
   
 ```{r}
-sf::sf_use_s2(FALSE)
-COUNTRY_BOUNDARIES = '/Users/james/Dropbox/PhD/WorldBank_countries_Admin0_10m/WB_countries_Admin0_10m.shp'
-world_map = st_simplify(st_read(COUNTRY_BOUNDARIES), dTolerance = 0.02)
+world_map = read_country_boundaries()
 ```
 ```{r}
 normalised_colours_scale = scale_colour_gradient2(
@@ -74,8 +72,7 @@ head(traits)
 ```
 Load realm geo
 ```{r}
-sf::sf_use_s2(FALSE)
-resolve = st_simplify(st_buffer(read_sf('/Users/james/Dropbox/PhD/Ecoregions2017/Ecoregions2017.shp'), 0), dTolerance = 0.02)
+resolve = read_resolve()
 head(resolve)
 ```
 
