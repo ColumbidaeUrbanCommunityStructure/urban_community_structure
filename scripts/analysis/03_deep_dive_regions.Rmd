@@ -1,0 +1,249 @@
+---
+title: "Deep dive regional communities"
+output: html_notebook
+bibliography: ../ref.bib  
+---
+
+```{r}
+source('../env.R')
+```
+
+# Species in communities
+It seems reasonable to expect that cities with simialr regional pools will have similar species entering the city, and thus a similar response to urbanisation.
+
+## Load data
+```{r}
+communities = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'communities_for_analysis.csv'))
+
+communities_summary = communities %>% group_by(city_id) %>% summarise(
+  regional_pool_size = n(), 
+  urban_size_high = sum(present_urban_high), 
+  urban_size_med = sum(present_urban_med), 
+  urban_size_low = sum(present_urban_low)
+)
+
+communities_summary_long = bind_rows(
+  communities_summary %>% rename(urban_pool_size = 'urban_size_high') %>% dplyr::select(city_id, regional_pool_size, urban_pool_size) %>% mutate(is_urban_threshold = 'High'),
+  communities_summary %>% rename(urban_pool_size = 'urban_size_med') %>% dplyr::select(city_id, regional_pool_size, urban_pool_size) %>% mutate(is_urban_threshold = 'Medium'),
+  communities_summary %>% rename(urban_pool_size = 'urban_size_low') %>% dplyr::select(city_id, regional_pool_size, urban_pool_size) %>% mutate(is_urban_threshold = 'Low')
+)
+communities_summary_long
+```
+```{r}
+city_points = st_centroid(read_sf(filename(CITY_DATA_OUTPUT_DIR, 'city_selection.shp')))
+```
+
+```{r}
+community_data_metrics = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'community_assembly_metrics.csv')) %>%
+  dplyr::select(city_id, mntd_normalised, fd_normalised, urban_pool_size, is_urban_threshold) %>%
+  mutate(is_urban_threshold = factor(is_urban_threshold, levels = c('low', 'medium', 'high'), labels = c('Low', 'Medium', 'High'), ordered = T)) %>%
+  left_join(read_csv(filename(CITY_DATA_OUTPUT_DIR, 'realms.csv'))) %>%
+  left_join(communities_summary_long) %>%
+  left_join(city_points[,c('city_id', 'city_nm')]) %>%
+  rename(city_name='city_nm') %>%
+  arrange(city_id)
+
+community_data_metrics
+```
+
+Load trait data
+```{r}
+traits = read_csv(filename(TAXONOMY_OUTPUT_DIR, 'traits_jetz.csv'))
+head(traits)
+```
+Read in our phylogeny
+```{r}
+phylo_tree = read.tree(filename(TAXONOMY_OUTPUT_DIR, 'phylogeny.tre'))
+ggtree(phylo_tree, layout='circular')
+```
+
+Load resolve ecoregions
+```{r}
+resolve = read_resolve()
+```
+
+## Create helper functions
+```{r}
+to_species_matrix = function(filtered_communities) {
+  filtered_communities %>% 
+    dplyr::select(city_id, jetz_species_name) %>% 
+    distinct() %>%
+    mutate(present = TRUE) %>% 
+    pivot_wider(
+      names_from = jetz_species_name, 
+      values_from = "present", 
+      values_fill = list(present = F)
+    ) %>% 
+    tibble::column_to_rownames(var='city_id')
+}
+```
+
+```{r}
+community_nmds = function(filtered_communities) {
+  species_matrix = to_species_matrix(filtered_communities)
+  nmds <- metaMDS(species_matrix, k=2, trymax = 30)
+  nmds_result = data.frame(scores(nmds)$sites)
+  nmds_result$city_id = as.double(rownames(scores(nmds)$sites))
+  rownames(nmds_result) = NULL
+  
+  nmds_result
+}
+```
+
+https://www.datacamp.com/tutorial/k-means-clustering-r
+```{r}
+scree_plot = function(community_nmds_data) {
+  # Decide how many clusters to look at
+  n_clusters <- 10
+  
+  # Initialize total within sum of squares error: wss
+  wss <- numeric(n_clusters)
+  
+  set.seed(123)
+  
+  # Look over 1 to n possible clusters
+  for (i in 1:n_clusters) {
+    # Fit the model: km.out
+    km.out <- kmeans(community_nmds_data[,c('NMDS1','NMDS2')], centers = i, nstart = 20)
+    # Save the within cluster sum of squares
+    wss[i] <- km.out$tot.withinss
+  }
+  
+  # Produce a scree plot
+  wss_df <- tibble(clusters = 1:n_clusters, wss = wss)
+   
+  scree_plot <- ggplot(wss_df, aes(x = clusters, y = wss, group = 1)) +
+      geom_point(size = 4)+
+      geom_line() +
+      scale_x_continuous(breaks = c(2, 4, 6, 8, 10)) +
+      xlab('Number of clusters')
+  scree_plot
+}
+```
+
+
+## Nearctic
+```{r}
+nearctic_cities = community_data_metrics %>% filter(core_realm == 'Nearctic')
+nearctic_cities %>% dplyr::select(city_name) %>% distinct() %>% as.list()
+```
+
+```{r}
+nearctic_communities = community_nmds(communities %>% filter(city_id %in% nearctic_cities$city_id)) 
+nearctic_communities
+```
+
+```{r}
+scree_plot(nearctic_communities)
+```
+
+```{r}
+set.seed(123)
+nearctic_clusters <- kmeans(nearctic_communities[,c('NMDS1', 'NMDS2')], centers = 3, nstart = 20)
+nearctic_communities$cluster = nearctic_clusters$cluster
+nearctic_cities = nearctic_cities %>% left_join(nearctic_communities) %>% mutate(cluster = as.factor(cluster))
+```
+
+```{r}
+nearctic_cities %>% dplyr::select(city_id, city_name, NMDS1, NMDS2, cluster) %>% distinct() %>%
+  ggplot(aes(x = NMDS1, y = NMDS2, colour = cluster)) + geom_point() + geom_label_repel(aes(label = city_name))
+```
+
+```{r}
+nearctic_biomes = st_crop(resolve[resolve$REALM == 'Nearctic',c('BIOME_NAME')], xmin = -220, ymin = 0, xmax = 0, ymax = 70)
+plot(nearctic_biomes)
+```
+
+### Neartic Cluster 1
+```{r}
+nearctic_cities_cluster1 = nearctic_cities %>% filter(cluster == 1) %>% arrange(is_urban_threshold)
+```
+
+```{r}
+
+```
+
+```{r}
+species_df = communities %>% 
+  filter(city_id %in% nearctic_cities_cluster1$city_id) %>% 
+  group_by(jetz_species_name, city_name, present_urban_high, present_urban_med, present_urban_low) %>% 
+  summarise() %>%
+  mutate(present_score = present_urban_high + present_urban_med + present_urban_low)
+
+species_df$present_score = factor(species_df$present_score, levels = c(0, 1, 2, 3), labels = c('Regional Pool', 'Low Threshold', 'Medium Threshold', 'High Threshold'))
+
+tree_cropped <- ladderize(drop.tip(phylo_tree, setdiff(phylo_tree$tip.label, species_df$jetz_species_name)))
+  
+tr = ggtree(tree_cropped)
+
+pr = ggplot(species_df, aes(x=city_name, y=jetz_species_name)) + 
+    geom_tile(aes(fill=present_score)) + scale_fill_manual(values = c("green", "yellow", "orange", "red")) + 
+    theme_minimal() + xlab(NULL) + ylab(NULL) + 
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + 
+    labs(fill='Presence')
+
+pr %>% insert_left(tr)
+```
+  
+```{r, fig.width = 10, fig.height = 10}
+mntd = ggplot() + 
+    geom_sf(data = nearctic_biomes, aes(geometry = geometry)) +
+    geom_sf(data = nearctic_cities_cluster1, aes(geometry = geometry, colour = mntd_normalised)) +
+    normalised_colours_scale +
+    labs(title = 'MNTD', colour = 'Normalised\nResponse') + 
+    facet_wrap(~ is_urban_threshold) + 
+    theme_bw() + theme(legend.position = "bottom")
+
+fd = ggplot() + 
+    geom_sf(data = nearctic_biomes, aes(geometry = geometry)) +
+    geom_sf(data = nearctic_cities_cluster1, aes(geometry = geometry, colour = fd_normalised)) +
+    normalised_colours_scale +
+    labs(title = 'FD', colour = 'Normalised\nResponse') + 
+    facet_wrap(~ is_urban_threshold) + 
+    theme_bw() + theme(legend.position = "bottom")
+
+mntd_by_fd = ggplot() + geom_point(data = nearctic_cities_cluster1, aes(x = fd_normalised, y = mntd_normalised)) + 
+    facet_wrap(~ is_urban_threshold) + 
+    theme_bw() + theme(legend.position = "bottom") + xlab('FD') + ylab('MNTD')
+
+ggarrange(mntd, fd, mntd_by_fd, ncol = 1, common.legend = T)
+```
+
+### Neartic Cluster 2
+```{r}
+nearctic_cities_cluster2 = nearctic_cities %>% filter(cluster == 2)
+```
+
+```{r}
+ggplot() + 
+    geom_sf(data = nearctic_biomes, aes(geometry = geometry)) +
+    geom_sf(data = nearctic_cities_cluster2, aes(geometry = geometry, colour = mntd_normalised)) +
+    normalised_colours_scale +
+    labs(title = 'Nearctic Cluster 2', colour = 'Normalised\nResponse') + 
+    facet_wrap(~ is_urban_threshold) + 
+    theme_bw() + theme(legend.position = "bottom")
+```
+
+### Neartic Cluster 3
+```{r}
+nearctic_cities_cluster3 = nearctic_cities %>% filter(cluster == 3)
+```
+
+```{r}
+ggplot() + 
+    geom_sf(data = nearctic_biomes, aes(geometry = geometry)) +
+    geom_sf(data = nearctic_cities_cluster3, aes(geometry = geometry, colour = mntd_normalised)) +
+    normalised_colours_scale +
+    labs(title = 'Nearctic Cluster 1', colour = 'Normalised\nResponse') + 
+    facet_wrap(~ is_urban_threshold) + 
+    theme_bw() + theme(legend.position = "bottom")
+```
+
+## Neotropic
+
+
+## Palearctic
+
+## Afrotropic
+
+## Indomalayan
