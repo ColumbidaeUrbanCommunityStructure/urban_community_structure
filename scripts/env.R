@@ -16,6 +16,7 @@ library(fundiversity)
 library(GGally)
 library(ggtree)
 library(ggrepel)
+library(aplot)
 
 sf::sf_use_s2(FALSE)
 options(scipen=99999)
