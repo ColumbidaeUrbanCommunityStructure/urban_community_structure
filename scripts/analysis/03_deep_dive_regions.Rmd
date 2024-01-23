@@ -36,11 +36,11 @@ city_points = st_centroid(read_sf(filename(CITY_DATA_OUTPUT_DIR, 'city_selection
 ```{r}
 community_data_metrics = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'community_assembly_metrics.csv')) %>%
   dplyr::select(city_id, mntd_normalised, fd_normalised, urban_pool_size, is_urban_threshold) %>%
-  mutate(is_urban_threshold = factor(is_urban_threshold, levels = c('low', 'medium', 'high'), labels = c('Low', 'Medium', 'High'), ordered = T)) %>%
   left_join(read_csv(filename(CITY_DATA_OUTPUT_DIR, 'realms.csv'))) %>%
   left_join(communities_summary_long) %>%
   left_join(city_points[,c('city_id', 'city_nm')]) %>%
   rename(city_name='city_nm') %>%
+  mutate(is_urban_threshold = factor(is_urban_threshold, levels = c('low', 'medium', 'high'), labels = c('Low', 'Medium', 'High'), ordered = T)) %>%
   arrange(city_id)
 
 community_data_metrics
@@ -184,10 +184,30 @@ pr = ggplot(species_df, aes(x=city_name, y=jetz_species_name)) +
 
 pr %>% insert_left(tr)
 ```
-  
+```{r}
+regional_hull = traits %>% filter(jetz_species_name %in% species_df$jetz_species_name) %>% slice(chull(gape_width, mass))
+
+urban_nulls = bind_rows(
+  traits %>% filter(jetz_species_name %in% species_df$jetz_species_name[species_df$present_urban_high]) %>% slice(chull(gape_width, mass)) %>% mutate(is_urban_threshold = 'High'),
+  traits %>% filter(jetz_species_name %in% species_df$jetz_species_name[species_df$present_urban_med]) %>% slice(chull(gape_width, mass)) %>% mutate(is_urban_threshold = 'Medium'),
+  traits %>% filter(jetz_species_name %in% species_df$jetz_species_name[species_df$present_urban_low]) %>% slice(chull(gape_width, mass)) %>% mutate(is_urban_threshold = 'Low')
+)
+
+ggplot(data = species_df %>% left_join(traits), aes(x = gape_width, y = mass)) +
+  geom_polygon(data = regional_hull, alpha = 0.2, fill = "green", color="green") +
+  geom_polygon(data = urban_nulls, alpha = 0.4, fill = "red", color="red") +
+  geom_point(aes(color = present_score)) +
+  xlab('Gape Width') + ylab('Mass') + 
+  theme(legend.position="bottom") + 
+  facet_wrap(~ is_urban_threshold)
+```
+
+
 ```{r, fig.width = 10, fig.height = 10}
+nearctic_biomes_cluster1 = st_crop(nearctic_biomes, st_buffer(st_as_sfc(st_bbox(nearctic_cities_cluster1$geometry)), 10))
+
 mntd = ggplot() + 
-    geom_sf(data = nearctic_biomes, aes(geometry = geometry)) +
+    geom_sf(data = nearctic_biomes_cluster1, aes(geometry = geometry)) +
     geom_sf(data = nearctic_cities_cluster1, aes(geometry = geometry, colour = mntd_normalised)) +
     normalised_colours_scale +
     labs(title = 'MNTD', colour = 'Normalised\nResponse') + 
@@ -195,7 +215,7 @@ mntd = ggplot() +
     theme_bw() + theme(legend.position = "bottom")
 
 fd = ggplot() + 
-    geom_sf(data = nearctic_biomes, aes(geometry = geometry)) +
+    geom_sf(data = nearctic_biomes_cluster1, aes(geometry = geometry)) +
     geom_sf(data = nearctic_cities_cluster1, aes(geometry = geometry, colour = fd_normalised)) +
     normalised_colours_scale +
     labs(title = 'FD', colour = 'Normalised\nResponse') + 
