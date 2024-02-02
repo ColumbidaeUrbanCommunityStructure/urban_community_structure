@@ -157,7 +157,7 @@ plot_nmds_clusters = function(cluster_cities) {
 ```
 
 ```{r}
-plot_city_cluster = function(city_cluster_data_metrics) {
+plot_city_cluster = function(city_cluster_data_metrics, title) {
   species_in_cluster = communities %>% 
     filter(city_id %in% city_cluster_data_metrics$city_id) %>% 
     group_by(jetz_species_name, city_name, present_urban_high, present_urban_med, present_urban_low) %>% 
@@ -182,9 +182,11 @@ plot_city_cluster = function(city_cluster_data_metrics) {
   
   gg_cities_mntd = ggplot(city_cluster_data_metrics, aes(x = city_name, y = mntd_normalised, fill = is_urban_threshold)) + geom_bar(stat = "identity", position = position_dodge(preserve = "single")) + scale_fill_manual(values = c("yellow", "orange", "red"))  + theme_minimal() + theme(legend.position = "none", axis.text.x=element_blank()) + xlab(NULL) + ylab("MNTD")
   
-  gg_cities_fd = ggplot(city_cluster_data_metrics, aes(x = city_name, y = fd_normalised, fill = is_urban_threshold)) + geom_bar(stat = "identity", position = position_dodge(preserve = "single")) + scale_fill_manual(values = c("yellow", "orange", "red"))  + theme_minimal() + theme(legend.position = "none", axis.text.x=element_blank()) + xlab(NULL) + ylab("FD")
+  gg_cities_fd = ggplot(city_cluster_data_metrics, aes(x = city_name, y = fd_normalised, fill = is_urban_threshold)) + geom_bar(stat = "identity", position = position_dodge(preserve = "single")) + scale_fill_manual(values = c("yellow", "orange", "red")) + theme_minimal() + theme(legend.position = "none", axis.text.x=element_blank()) + xlab(NULL) + ylab("FD")
   
-  gg_presence %>% insert_top(gg_cities_mntd, height = 0.5) %>% insert_top(gg_cities_fd, height = 0.5) %>% insert_left(gg_tree, width = 0.75) %>% insert_right(gg_traits, width = 0.5)
+  gg_title = ggplot() + labs(title = title) + theme_minimal()
+  
+  gg_presence %>% insert_top(gg_cities_mntd, height = 0.5) %>% insert_top(gg_cities_fd, height = 0.5) %>% insert_left(gg_tree, width = 0.75) %>% insert_right(gg_traits, width = 0.5) %>% insert_top(gg_title, height = 0.06)
 }
 ```
 
@@ -221,17 +223,17 @@ ggplot() +
 
 ### Neartic Cluster 1
 ```{r}
-nearctic_cities %>% filter(cluster == 1) %>% plot_city_cluster()
+nearctic_cities %>% filter(cluster == 1) %>% plot_city_cluster('Neartic cluster 1')
 ```
 
 ### Neartic Cluster 2
 ```{r}
-nearctic_cities %>% filter(cluster == 2) %>% plot_city_cluster()
+nearctic_cities %>% filter(cluster == 2) %>% plot_city_cluster('Neartic cluster 2')
 ```
 
 ### Neartic Cluster 3
 ```{r}
-nearctic_cities %>% filter(cluster == 3) %>% plot_city_cluster()
+nearctic_cities %>% filter(cluster == 3) %>% plot_city_cluster('Neartic cluster 3')
 ```
 
 ## Neotropic
@@ -267,16 +269,16 @@ ggplot() +
 
 ### Neotropic Cluster 1
 ```{r, fig.width=12, fig.height=12}
-neotropic_cities %>% filter(cluster == 1) %>% plot_city_cluster()
+neotropic_cities %>% filter(cluster == 1) %>% plot_city_cluster('Neotropic cluster 1')
 ```
 ### Neotropic Cluster 2
 ```{r, fig.width=12, fig.height=12}
-neotropic_cities %>% filter(cluster == 2) %>% plot_city_cluster()
+neotropic_cities %>% filter(cluster == 2) %>% plot_city_cluster('Neotropic cluster 2')
 ```
 
 ### Neotropic Cluster 3
 ```{r, fig.width=12, fig.height=12}
-neotropic_cities %>% filter(cluster == 3) %>% plot_city_cluster()
+neotropic_cities %>% filter(cluster == 3) %>% plot_city_cluster('Neotropic cluster 3')
 ```
 
 ## Palearctic
@@ -312,22 +314,22 @@ ggplot() +
 
 ### Palearctic Cluster 1
 ```{r}
-palearctic_cities %>% filter(cluster == 1) %>% plot_city_cluster()
+palearctic_cities %>% filter(cluster == 1) %>% plot_city_cluster('Palearctic cluster 1')
 ```
 
 ### Palearctic Cluster 2
 ```{r}
-palearctic_cities %>% filter(cluster == 2) %>% plot_city_cluster()
+palearctic_cities %>% filter(cluster == 2) %>% plot_city_cluster('Palearctic cluster 2')
 ```
 
 ### Palearctic Cluster 3
 ```{r, fig.width=14, fig.height=6}
-palearctic_cities %>% filter(cluster == 3) %>% plot_city_cluster()
+palearctic_cities %>% filter(cluster == 3) %>% plot_city_cluster('Palearctic cluster 3')
 ```
 
 ### Palearctic Cluster 4
 ```{r}
-palearctic_cities %>% filter(cluster == 4) %>% plot_city_cluster()
+palearctic_cities %>% filter(cluster == 4) %>% plot_city_cluster('Palearctic cluster 4')
 ```
 
 ## Afrotropic
@@ -363,21 +365,21 @@ ggplot() +
 
 ### Afrotropic Cluster 1
 ```{r}
-afrotropic_cities %>% filter(cluster == 1) %>% plot_city_cluster()
+afrotropic_cities %>% filter(cluster == 1) %>% plot_city_cluster('Afrotropic cluster 1')
 ```
 
 ### Afrotropic Cluster 2
 ```{r}
-afrotropic_cities %>% filter(cluster == 2) %>% plot_city_cluster()
+afrotropic_cities %>% filter(cluster == 2) %>% plot_city_cluster('Afrotropic cluster 2')
 ```
 
 ### Afrotropic Cluster 3
 ```{r}
-afrotropic_cities %>% filter(cluster == 3) %>% plot_city_cluster()
+afrotropic_cities %>% filter(cluster == 3) %>% plot_city_cluster('Afrotropic cluster 3')
 ```
 ### Afrotropic Cluster 4
 ```{r}
-afrotropic_cities %>% filter(cluster == 4) %>% plot_city_cluster()
+afrotropic_cities %>% filter(cluster == 4) %>% plot_city_cluster('Afrotropic cluster 4')
 ```
 
 ## Indomalayan
@@ -413,19 +415,19 @@ ggplot() +
 
 ### Indomalayan Cluster 1
 ```{r, fig.width=12, fig.height=12}
-indomalayan_cities %>% filter(cluster == 1) %>% plot_city_cluster()
+indomalayan_cities %>% filter(cluster == 1) %>% plot_city_cluster('Indomalayan cluster 1')
 ```
 
 ### Indomalayan Cluster 2
 ```{r, fig.width=12, fig.height=12}
-indomalayan_cities %>% filter(cluster == 2) %>% plot_city_cluster()
+indomalayan_cities %>% filter(cluster == 2) %>% plot_city_cluster('Indomalayan cluster 2')
 ```
 
 ### Indomalayan Cluster 3
 ```{r, fig.width=15, fig.height=8}
-indomalayan_cities %>% filter(cluster == 3) %>% plot_city_cluster()
+indomalayan_cities %>% filter(cluster == 3) %>% plot_city_cluster('Indomalayan cluster 3')
 ```
 ### Indomalayan Cluster 4
 ```{r, fig.width=8, fig.height=5}
-indomalayan_cities %>% filter(cluster == 4) %>% plot_city_cluster()
+indomalayan_cities %>% filter(cluster == 4) %>% plot_city_cluster('Indomalayan cluster 4')
 ```
