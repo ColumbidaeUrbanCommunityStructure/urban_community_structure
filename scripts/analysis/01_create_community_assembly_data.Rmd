@@ -341,11 +341,7 @@ test_null_model_community_metrics = get_community_metrics(
 test_null_model_community_metrics
 ```
 # Compare Urban Communities to regional null models
-```{r normalise}
-normalise = function(actual_value, min_value, max_value) {
-  (actual_value - min_value) / (max_value - min_value)
-}
-
+```{r}
 normalise(1.5, 1, 2)
 ```
 
