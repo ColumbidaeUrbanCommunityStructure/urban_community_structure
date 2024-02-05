@@ -30,6 +30,10 @@ mkdir = function(mainDir, subDir) {
   filename(mainDir, subDir)
 }
 
+normalise = function(actual_value, min_value, max_value) { 
+  (actual_value - min_value) / (max_value - min_value) 
+}
+
 # Working directories - not stored in repo
 TMP_DIR = '/tmp'
 
@@ -61,6 +65,11 @@ normalised_colours_scale = scale_colour_gradient2(
   guide = "colourbar",
   aesthetics = "colour",
 )
+
+normalised_size_scale = scale_size_continuous( 
+  range = c(0, 1) 
+)
+
 
 # Third Party Data downloaded locally
 # ------------------------------------
