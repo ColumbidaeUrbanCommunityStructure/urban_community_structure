@@ -29,6 +29,7 @@ raw_data = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'jetz_all_recorded_species_wi
 raw_data_trimmed_to_accepted_cities = raw_data[raw_data$percentage_total_city_area_surveyed > 10,]
 length(unique(raw_data_trimmed_to_accepted_cities$city_id))
 ```
+
 Trim out species in cities but not regional pool data
 ```{r}
 pools = raw_data_trimmed_to_accepted_cities[!is.na(raw_data_trimmed_to_accepted_cities$seasonal),]
@@ -39,6 +40,8 @@ Assign to communities
 pools$present_urban_high = pools$percentage_surveyed_area > 40
 pools$present_urban_med = pools$percentage_surveyed_area > 15
 pools$present_urban_low = pools$percentage_surveyed_area > 3.5
+
+head(pools)
 ```
 
 ```{r}
@@ -52,8 +55,9 @@ write_csv(pools %>%
               origin,
               present_urban_high,
               present_urban_med,
-              present_urban_low
-            ), filename(COMMUNITY_OUTPUT_DIR, 'communities_for_analysis.csv'))
+              present_urban_low,
+              percentage_surveyed_area
+            ) %>% dplyr::rename(relative_abundance_proxy='percentage_surveyed_area'), filename(COMMUNITY_OUTPUT_DIR, 'communities_for_analysis.csv'))
 
 city_data = pools %>%
             dplyr::select(
@@ -108,6 +112,14 @@ The data comes from the eBird status and trends data sets and is calculated from
 abundance_data = read_csv(filename(EBIRD_WORKING_OUTPUT_DIR, 'ebird_trends_abundance_test_data.csv'))
 head(abundance_data)
 ```
+```{r}
+taxonomic_mapping = read_csv(filename(TAXONOMY_OUTPUT_DIR, 'taxonomy_mapping.csv'))
+test_species = unique(abundance_data$species)
+
+test_species_mapping = unique(taxonomic_mapping[taxonomic_mapping$ebird_species_name %in% test_species, c('ebird_species_name', 'jetz_species_name')])
+
+test_species_mapping[order(test_species_mapping$ebird_species_name),] %>% arrange(jetz_species_name)
+```
 
 ```{r}
 abundance_data_jetz = abundance_data %>% left_join(test_species_mapping, by=c('species' = 'ebird_species_name')) %>% dplyr::select(-c('species'))
@@ -116,7 +128,7 @@ abundance_data_jetz
 
 ```{r, echo = FALSE, warning = FALSE}
 abundance_data_jetz$max_mean_abundance = apply(abundance_data_jetz[,c('mean_breeding', 'mean_nonbreeding', 'mean_resident')], 1, max, na.rm = T)
-abundance_data_jetz$max_mean_abundance[abundance_data_regional$max_mean_abundance == -Inf] = NA
+abundance_data_jetz$max_mean_abundance[abundance_data_jetz$max_mean_abundance == -Inf] = NA
 ```
 
 ```{r}
@@ -124,6 +136,7 @@ analytical_pools = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'communities_for_anal
 comparison_data = inner_join(analytical_pools, abundance_data_jetz[,c('city_id', 'jetz_species_name', 'max_mean_abundance')])
 comparison_data
 ```
+
 ```{r}
 comparison_data$present_urban_never = !comparison_data$present_urban_low & !comparison_data$present_urban_med & !comparison_data$present_urban_high
 

@@ -1,5 +1,5 @@
 ---
-title: "Metrics for assessing community assembly processes - using thresholds"
+title: "Metrics for assessing community assembly processes - using relative abundance proxy"
 output: html_notebook
 bibliography: ../ref.bib  
 ---
@@ -34,7 +34,7 @@ Many metrics sensitive to species richness. Urban communities are governed by th
 
 # Load communities
 ```{r}
-communities = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'communities_for_analysis.csv')) %>% dplyr::select(-relative_abundance_proxy)
+communities = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'communities_for_analysis.csv')) %>% dplyr::select(-c(present_urban_high, present_urban_med, present_urban_low))
 head(communities)
 ```
 
@@ -44,16 +44,13 @@ community_summary = communities %>%
   group_by(city_id, city_name) %>% 
   summarise(
     regional_pool_size = n(), 
-    urban_pool_high_size = sum(present_urban_high), 
-    urban_pool_med_size = sum(present_urban_med), 
-    urban_pool_low_size = sum(present_urban_low))
+    urban_pool_size = sum(relative_abundance_proxy > 0))
 community_summary
 ```
 
 ```{r, echo=F}
-report_excluded_communities = function(community_size_param) {
-  df = community_summary[,c('city_name', 'regional_pool_size', community_size_param)]
-  names(df) = c('city_name', 'regional_pool_size', 'urban_pool_size')
+report_excluded_communities = function() {
+  df = community_summary[,c('city_name', 'regional_pool_size', 'urban_pool_size')]
   
   res1 = df$city_name[df$urban_pool_size == 0]
   cat(paste('\n\n**Urban communities with no pigeons:', length(res1), '**\n\n'))
@@ -63,37 +60,22 @@ report_excluded_communities = function(community_size_param) {
   cat(paste('\n\n**Urban communities single pigeon (but more in regional pool):', length(res2), '**\n\n'))
   print(res2)
   
-  res3 = df$city_name[df$urban_pool_size == df$regional_pool_size]
-  cat(paste('\n\n**Urban communities with all species in regional pool:', length(res3), '**\n\n'))
-  print(res3)
-  
-  total_excluded = length(unique(append(res1, append(res2, res3))))
+  total_excluded = length(unique(append(res1, res2)))
   cat(paste('\n\n**Total excluded cities from analysis:', total_excluded, '**\n\n'))
   cat(paste('**Cities remaining in analysis:', nrow(df) - total_excluded, '**\n\n'))
 }
 ```
 
 ```{r}
-get_valid_cities = function(community_size_param) {
-  df = community_summary[,c('city_id', 'city_name', 'regional_pool_size', community_size_param)]
-  names(df) = c('city_id', 'city_name', 'regional_pool_size', 'urban_pool_size')
-  df[df$urban_pool_size > 1 & df$urban_pool_size < df$regional_pool_size,]
+get_valid_cities = function() {
+  df = community_summary[,c('city_id', 'city_name', 'regional_pool_size', 'urban_pool_size')]
+  df[df$urban_pool_size > 1,]
 }
 ```
 
-## Report cities excluded with high threshold
+## Report cities excluded
 ```{r results='asis',echo=FALSE}
-report_excluded_communities('urban_pool_high_size')
-```
-
-## Report cities excluded with medium threshold
-```{r results='asis',echo=FALSE}
-report_excluded_communities('urban_pool_med_size')
-```
-
-## Report cities excluded with low threshold
-```{r results='asis',echo=FALSE}
-report_excluded_communities('urban_pool_low_size')
+report_excluded_communities()
 ```
 
 # Load trait data
@@ -101,6 +83,7 @@ report_excluded_communities('urban_pool_low_size')
 avonet_jetz = read_csv(filename(TAXONOMY_OUTPUT_DIR, 'traits_jetz.csv'))
 avonet_jetz
 ```
+
 ```{r}
 communities$jetz_species_name[!(communities$jetz_species_name %in% avonet_jetz$jetz_species_name)]
 ```
@@ -115,38 +98,23 @@ columbidae_tree <- read.tree(filename(TAXONOMY_OUTPUT_DIR, 'phylogeny.tre'))
 
 # Create community matrix
 ```{r}
-to_species_matrix = function(valid_city_ids, community_param) {
-  c = communities[communities$city_id %in% valid_city_ids, c('city_id', 'jetz_species_name', community_param)]
-  names(c) = c('city_id', 'jetz_species_name', 'present')
-  m = pivot_wider(c[c$present,c('jetz_species_name', 'present', 'city_id')], names_from = jetz_species_name, values_from = "present", values_fill = list(present = F))
+to_species_matrix_with_relative_abundance = function(valid_city_ids) {
+  c = communities[communities$city_id %in% valid_city_ids, c('city_id', 'jetz_species_name', 'relative_abundance_proxy')]
+  m = pivot_wider(c[, c('jetz_species_name', 'relative_abundance_proxy', 'city_id')], names_from = jetz_species_name, values_from = "relative_abundance_proxy", values_fill = list(relative_abundance_proxy = as.double(0.0)))
   tibble::column_to_rownames(m, var='city_id')
 }
 ```
 
-## High threshold
+## Matrix
 ```{r}
-valid_cities_high = get_valid_cities('urban_pool_high_size')
-species_m_high = to_species_matrix(valid_cities_high$city_id, 'present_urban_high')
-species_m_high
-```
-
-## Medium threshold
-```{r}
-valid_cities_med = get_valid_cities('urban_pool_med_size')
-species_m_med = to_species_matrix(valid_cities_med$city_id, 'present_urban_med')
-species_m_med
-```
-
-## Low threshold
-```{r}
-valid_cities_low = get_valid_cities('urban_pool_low_size')
-species_m_low = to_species_matrix(valid_cities_low$city_id, 'present_urban_low')
-species_m_low
+valid_cities = get_valid_cities()
+species_m = to_species_matrix_with_relative_abundance(valid_cities$city_id)
+species_m
 ```
 
 ## Test communities
 ```{r}
-test_communities = to_species_matrix(c(79, 624, 1786, 2059, 11536), 'present_urban_med')
+test_communities = to_species_matrix_with_relative_abundance(c(79, 624, 1786, 2059, 11536))
 test_communities
 ```
 
@@ -161,6 +129,12 @@ get_mntd_for_communities = function(communities, phydist_urban_columbidae = coph
 }
 
 get_mntd_for_communities(test_communities)
+```
+```{r}
+get_mntd_for_communities(to_species_matrix_with_relative_abundance(c(1786)))
+```
+```{r}
+get_mntd_for_communities(to_species_matrix_with_relative_abundance(communities$city_id))
 ```
 
 ## FD
@@ -194,6 +168,9 @@ get_fd_for_traits = function(required_traits_for_pd, communities, dentorgram = g
 
 get_fd_for_traits(analysis_all_traits, test_communities)
 ```
+```{r}
+get_fd_for_traits(analysis_all_traits, to_species_matrix_with_relative_abundance(communities$city_id))
+```
 
 ```{r}
 get_fd_for_traits(c('gape_width'), test_communities)
@@ -209,6 +186,14 @@ get_convex_hull = function(trait_names, communities) {
 }
 
 get_convex_hull(analysis_all_traits, test_communities)
+```
+
+```{r}
+fric_species_in_matrix = colnames(to_species_matrix_with_relative_abundance(communities$city_id))
+fric_species_in_traits_db = rownames(get_traits_data_frame(analysis_all_traits))
+
+fric_species_in_matrix[!fric_species_in_matrix %in% fric_species_in_traits_db]
+fric_species_in_traits_db[!fric_species_in_traits_db %in% fric_species_in_matrix]
 ```
 
 ## Single Trait Variance
@@ -286,8 +271,9 @@ get_community_metrics = function(communities, included_traits_for_multi_trait_me
 }
 ```
 
+
 ```{r}
-get_community_metrics(test_communities)
+get_community_metrics(to_species_matrix_with_relative_abundance(communities$city_id))
 ```
 
 # Calculate the null models
@@ -301,45 +287,45 @@ communities$jetz_species_name[communities$city_id == test_city_id]
 
 Find urban richness
 ```{r}
-community_summary$urban_pool_med_size[community_summary$city_id == test_city_id]
+community_summary$urban_pool_size[community_summary$city_id == test_city_id]
 ```
 
-Function to build every possible community
+Function to build every possible community from the species in the regional pool and the given relative abundances
 ```{r}
-create_null_model_communities = function(city_id, urban_richness, regional_species) {
+create_null_model_communities = function(city_id, urban_richness, regional_species, proxy_relative_abundance_values) {
   regional_richness = length(regional_species)
+  urban_richness = length(proxy_relative_abundance_values[proxy_relative_abundance_values > 0])
   
-  null_model_sites = expand.grid(rep(list(TRUE:FALSE), regional_richness))
-  null_model_sites_species_richness =  data.frame(species_richness = pmap_dbl(null_model_sites, sum))
-  null_model_sites = cbind(null_model_sites, null_model_sites_species_richness)
-  
-  null_model_sites = null_model_sites[null_model_sites$species_richness == urban_richness,1:regional_richness]
+  null_model_sites = expand.grid(rep(list(proxy_relative_abundance_values), regional_richness)) %>% mutate(richness = rowSums(. != 0))
+  null_model_sites = null_model_sites[null_model_sites$richness == urban_richness,]
   colnames(null_model_sites) = regional_species
-  null_model_sites
+  null_model_sites[,regional_species]
 }
 
-create_null_model_communities(
+test_null_model = create_null_model_communities(
   test_city_id, 
-  community_summary$urban_pool_med_size[community_summary$city_id == test_city_id], 
-  communities$jetz_species_name[communities$city_id == test_city_id]
+  community_summary$urban_pool_size[community_summary$city_id == test_city_id], 
+  communities$jetz_species_name[communities$city_id == test_city_id],
+  communities$relative_abundance_proxy[communities$city_id == test_city_id]
 )
-```
-
-What were the results for the actual urban community in Manchester?
-```{r}
-get_community_metrics(test_communities[3,])
+test_null_model
 ```
 
 Test creating community metrics for our null model
-```{r}
-test_null_model_community_metrics = get_community_metrics(
-  create_null_model_communities(
-    test_city_id, 
-    community_summary$urban_pool_med_size[community_summary$city_id == test_city_id], 
-    communities$jetz_species_name[communities$city_id == test_city_id]
-))
+```{r, warning=F}
+test_null_model_community_metrics = get_community_metrics(test_null_model)
 test_null_model_community_metrics
 ```
+```{r}
+test_null_model_city_1 = create_null_model_communities(
+  1, 
+  community_summary$urban_pool_size[community_summary$city_id == 1], 
+  communities$jetz_species_name[communities$city_id == 1],
+  communities$relative_abundance_proxy[communities$city_id == 1]
+)
+test_null_model_city_1
+```
+
 # Compare Urban Communities to regional null models
 ```{r}
 normalise(1.5, 1, 2)
@@ -371,9 +357,11 @@ compare_community_to_null_model = function(metric_name, actual_metric_value, nul
 }
 ```
 
+
 ```{r}
-compare_community_to_null_model('fd', 1215.4, test_null_model_community_metrics$fd)
+compare_community_to_null_model('fd', 1233.96, test_null_model_community_metrics$fd)
 ```
+
 The metrics we want to test:
 ```{r}
 test_community_metrics = get_community_metrics(test_communities)
@@ -383,8 +371,8 @@ all_metrics_to_test
 
 Compare the actual values to the null model values:
 ```{r}
-create_null_model_test_values = function(city_id, urban_richness, regional_species, actual_values) {
-  null_models = create_null_model_communities(city_id, urban_richness, regional_species)
+create_null_model_test_values = function(city_id, urban_richness, regional_species, relative_abundance_proxy_values, actual_values) {
+  null_models = create_null_model_communities(city_id, urban_richness, regional_species, relative_abundance_proxy_values)
   null_model_community_values = get_community_metrics(null_models)
   
   result = data.frame(city_id = city_id)
@@ -398,63 +386,49 @@ create_null_model_test_values = function(city_id, urban_richness, regional_speci
 
 create_null_model_test_values(
   test_city_id, 
-  community_summary$urban_pool_med_size[community_summary$city_id == test_city_id], 
+  community_summary$urban_pool_size[community_summary$city_id == test_city_id], 
   communities$jetz_species_name[communities$city_id == test_city_id],
+  communities$relative_abundance_proxy[communities$city_id == test_city_id],
   test_community_metrics[test_community_metrics$site == test_city_id,]
 )
 ```
 
 # Create analysis data
-```{r}
-create_analysis_data = function(urban_pool_size_param, urban_present_param) {
-  result = data.frame()
+```{r, warning=F}
+result = data.frame()
 
-  valid_cities = get_valid_cities(urban_pool_size_param)
-  cm = to_species_matrix(valid_cities$city_id, urban_present_param)
+valid_cities = get_valid_cities()
+cm = to_species_matrix_with_relative_abundance(valid_cities$city_id)
 
-  c = communities[communities$city_id %in% valid_cities$city_id, c('city_id', 'jetz_species_name', urban_present_param)]
-  names(c) = c('city_id', 'jetz_species_name', 'present')
-  
-  cv = get_community_metrics(cm)
-    
-  cs = community_summary[community_summary$city_id %in% valid_cities$city_id, c('city_id', urban_pool_size_param)]
-  names(cs) = c('city_id', 'urban_pool_size')
-  
-  for (loop_all_city_id in cs$city_id) {
-    single_city_result = create_null_model_test_values(
-      loop_all_city_id, 
-      cs$urban_pool_size[cs$city_id == loop_all_city_id],
-      c$jetz_species_name[c$city_id == loop_all_city_id],
-      cv[cv$site == loop_all_city_id,]
-    )
-  
-   result = rbind(result, single_city_result)
-  }
+c = communities[communities$city_id %in% valid_cities$city_id, c('city_id', 'jetz_species_name', 'relative_abundance_proxy')]
 
-  right_join(result, cs)
+cv = get_community_metrics(cm)
+  
+cs = community_summary[community_summary$city_id %in% valid_cities$city_id, c('city_id', 'urban_pool_size')]
+
+for (loop_all_city_id in cs$city_id) {
+  print(paste('metrics for city',loop_all_city_id, sep = ' '))
+  single_city_result = create_null_model_test_values(
+    loop_all_city_id, 
+    cs$urban_pool_size[cs$city_id == loop_all_city_id],
+    c$jetz_species_name[c$city_id == loop_all_city_id],
+    c$relative_abundance_proxy[c$city_id == loop_all_city_id],
+    cv[cv$site == loop_all_city_id,]
+  )
+
+  result = rbind(result, single_city_result)
 }
+
+right_join(result, cs)
 ```
     
 
 ```{r, warning=FALSE, message = FALSE}
-high_threshold_result = create_analysis_data('urban_pool_high_size', 'present_urban_high')
-high_threshold_result$is_urban_threshold = 'high'
-```
-    
-```{r, warning=FALSE, message = FALSE}
-med_threshold_result = create_analysis_data('urban_pool_med_size', 'present_urban_med')
-med_threshold_result$is_urban_threshold = 'medium'
-```
-
-```{r, warning=FALSE, message = FALSE}
-low_threshold_result = create_analysis_data('urban_pool_low_size', 'present_urban_low')
-low_threshold_result$is_urban_threshold = 'low'
+result
 ```
 
 ```{r}
 write_csv(bind_rows(
-  high_threshold_result,
-  med_threshold_result,
-  low_threshold_result
-), filename(COMMUNITY_OUTPUT_DIR, 'community_assembly_metrics.csv'))
+  result
+), filename(COMMUNITY_OUTPUT_DIR, 'community_assembly_metrics_using_relative_abundance.csv'))
 ```
