@@ -114,7 +114,7 @@ species_m
 
 ## Test communities
 ```{r}
-test_communities = to_species_matrix_with_relative_abundance(c(79, 624, 1786, 2059, 11536))
+test_communities = to_species_matrix_with_relative_abundance(c(79, 624, 1786, 2059, 11536, 65))
 test_communities
 ```
 
@@ -290,14 +290,33 @@ Find urban richness
 community_summary$urban_pool_size[community_summary$city_id == test_city_id]
 ```
 
+
+Create function to generate every combination of values from a vector.
+```{r}
+combinations = function(v) {
+  if (length(v) == 2) {
+    data.frame(x = c(v[1], v[2]), y = c(v[2],v[1])) 
+  } else {
+    foreach(i = 1:length(v), .combine = 'rbind') %do% {
+      left = v[i]
+      right = v[-i]
+      cbind(left, combinations(right))
+    }
+  }
+}
+
+combinations(c(1, 2, 3))
+combinations(c(1, 2, 3, 4))
+```
+
 Function to build every possible community from the species in the regional pool and the given relative abundances
 ```{r}
 create_null_model_communities = function(city_id, urban_richness, regional_species, proxy_relative_abundance_values) {
   regional_richness = length(regional_species)
   urban_richness = length(proxy_relative_abundance_values[proxy_relative_abundance_values > 0])
+  actual_total_relative_abundance = sum(proxy_relative_abundance_values)
   
-  null_model_sites = expand.grid(rep(list(proxy_relative_abundance_values), regional_richness)) %>% mutate(richness = rowSums(. != 0))
-  null_model_sites = null_model_sites[null_model_sites$richness == urban_richness,]
+  null_model_sites = unique(combinations(proxy_relative_abundance_values))
   colnames(null_model_sites) = regional_species
   null_model_sites[,regional_species]
 }
@@ -311,19 +330,37 @@ test_null_model = create_null_model_communities(
 test_null_model
 ```
 
-Test creating community metrics for our null model
-```{r, warning=F}
-test_null_model_community_metrics = get_community_metrics(test_null_model)
-test_null_model_community_metrics
-```
 ```{r}
-test_null_model_city_1 = create_null_model_communities(
+create_null_model_communities(
+  65, 
+  community_summary$urban_pool_size[community_summary$city_id == 65], 
+  communities$jetz_species_name[communities$city_id == 65],
+  communities$relative_abundance_proxy[communities$city_id == 65]
+)
+```
+
+```{r}
+create_null_model_communities(
   1, 
   community_summary$urban_pool_size[community_summary$city_id == 1], 
   communities$jetz_species_name[communities$city_id == 1],
   communities$relative_abundance_proxy[communities$city_id == 1]
 )
-test_null_model_city_1
+```
+
+```{r}
+create_null_model_communities(
+  122, 
+  community_summary$urban_pool_size[community_summary$city_id == 122],  
+  communities$jetz_species_name[communities$city_id == 122], 
+  communities$relative_abundance_proxy[communities$city_id == 122]
+)
+```
+
+Test creating community metrics for our null model
+```{r, warning=F}
+test_null_model_community_metrics = get_community_metrics(test_null_model)
+test_null_model_community_metrics
 ```
 
 # Compare Urban Communities to regional null models
@@ -377,11 +414,9 @@ create_null_model_test_values = function(city_id, urban_richness, regional_speci
   
   result = data.frame(city_id = city_id)
   
-  for (metric in all_metrics_to_test) {
-    result = cbind(result, 
-                   compare_community_to_null_model(metric, actual_values[,c(metric)], null_model_community_values[,c(metric)]))
+  foreach(metric = all_metrics_to_test, .combine = 'cbind') %do% {
+      compare_community_to_null_model(metric, actual_values[,c(metric)], null_model_community_values[,c(metric)])
   }
-  result
 }
 
 create_null_model_test_values(
@@ -390,6 +425,16 @@ create_null_model_test_values(
   communities$jetz_species_name[communities$city_id == test_city_id],
   communities$relative_abundance_proxy[communities$city_id == test_city_id],
   test_community_metrics[test_community_metrics$site == test_city_id,]
+)
+```
+
+```{r}
+create_null_model_test_values(
+  122, 
+  community_summary$urban_pool_size[community_summary$city_id == 122], 
+  communities$jetz_species_name[communities$city_id == 122],
+  communities$relative_abundance_proxy[communities$city_id == 122],
+  test_community_metrics[test_community_metrics$site == 122,]
 )
 ```
 
@@ -406,7 +451,7 @@ cv = get_community_metrics(cm)
   
 cs = community_summary[community_summary$city_id %in% valid_cities$city_id, c('city_id', 'urban_pool_size')]
 
-for (loop_all_city_id in cs$city_id) {
+foreach(loop_all_city_id = cs$city_id, .combine = 'rbind') %do% {
   print(paste('metrics for city',loop_all_city_id, sep = ' '))
   single_city_result = create_null_model_test_values(
     loop_all_city_id, 
@@ -415,8 +460,6 @@ for (loop_all_city_id in cs$city_id) {
     c$relative_abundance_proxy[c$city_id == loop_all_city_id],
     cv[cv$site == loop_all_city_id,]
   )
-
-  result = rbind(result, single_city_result)
 }
 
 right_join(result, cs)
