@@ -309,6 +309,26 @@ combinations(c(1, 2, 3))
 combinations(c(1, 2, 3, 4))
 ```
 
+```{r}
+POPULATION_SAMPLE_SIZE = 3000
+
+to_possible_populations = function(proxy_relative_abundance_values) {
+  new_cols = paste('col', 1:length(proxy_relative_abundance_values))
+  all_pops = unique(combinations(proxy_relative_abundance_values))
+  colnames(all_pops) = new_cols
+  
+  if (nrow(all_pops) > POPULATION_SAMPLE_SIZE) {
+    pops = all_pops[sample(1:nrow(all_pops), POPULATION_SAMPLE_SIZE),]
+    unique(rbind(pops, proxy_relative_abundance_values))
+    pops
+  } else {
+    all_pops
+  }
+}
+
+to_possible_populations(communities$relative_abundance_proxy[communities$city_id == test_city_id])
+```
+
 Function to build every possible community from the species in the regional pool and the given relative abundances
 ```{r}
 create_null_model_communities = function(city_id, urban_richness, regional_species, proxy_relative_abundance_values) {
@@ -316,7 +336,7 @@ create_null_model_communities = function(city_id, urban_richness, regional_speci
   urban_richness = length(proxy_relative_abundance_values[proxy_relative_abundance_values > 0])
   actual_total_relative_abundance = sum(proxy_relative_abundance_values)
   
-  null_model_sites = unique(combinations(proxy_relative_abundance_values))
+  null_model_sites = to_possible_populations(proxy_relative_abundance_values)
   colnames(null_model_sites) = regional_species
   null_model_sites[,regional_species]
 }
@@ -348,14 +368,6 @@ create_null_model_communities(
 )
 ```
 
-```{r}
-create_null_model_communities(
-  122, 
-  community_summary$urban_pool_size[community_summary$city_id == 122],  
-  communities$jetz_species_name[communities$city_id == 122], 
-  communities$relative_abundance_proxy[communities$city_id == 122]
-)
-```
 
 Test creating community metrics for our null model
 ```{r, warning=F}
@@ -425,16 +437,6 @@ create_null_model_test_values(
   communities$jetz_species_name[communities$city_id == test_city_id],
   communities$relative_abundance_proxy[communities$city_id == test_city_id],
   test_community_metrics[test_community_metrics$site == test_city_id,]
-)
-```
-
-```{r}
-create_null_model_test_values(
-  122, 
-  community_summary$urban_pool_size[community_summary$city_id == 122], 
-  communities$jetz_species_name[communities$city_id == 122],
-  communities$relative_abundance_proxy[communities$city_id == 122],
-  test_community_metrics[test_community_metrics$site == 122,]
 )
 ```
 
