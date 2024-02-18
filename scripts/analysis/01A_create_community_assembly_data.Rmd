@@ -306,23 +306,32 @@ combinations = function(v) {
 }
 
 combinations(c(1, 2, 3))
-combinations(c(1, 2, 3, 4))
+combinations(c(1, 2, 3, 4, 5, 6))
+combinations(c(1, 2, 3, 4, 5, 6, 7))
 ```
 
 ```{r}
-POPULATION_SAMPLE_SIZE = 3000
+POPULATION_SAMPLE_SIZE = 5040
+REGIONAL_POOL_SIZE_FOR_MAX_POP = 7
 
 to_possible_populations = function(proxy_relative_abundance_values) {
-  new_cols = paste('col', 1:length(proxy_relative_abundance_values))
-  all_pops = unique(combinations(proxy_relative_abundance_values))
-  colnames(all_pops) = new_cols
-  
-  if (nrow(all_pops) > POPULATION_SAMPLE_SIZE) {
-    pops = all_pops[sample(1:nrow(all_pops), POPULATION_SAMPLE_SIZE),]
-    unique(rbind(pops, proxy_relative_abundance_values))
-    pops
-  } else {
+  if (length(proxy_relative_abundance_values) <= REGIONAL_POOL_SIZE_FOR_MAX_POP) {
+    new_cols = paste('col', 1:length(proxy_relative_abundance_values))
+    all_pops = unique(combinations(proxy_relative_abundance_values))
+    colnames(all_pops) = new_cols
     all_pops
+  } else {
+    sample_pops = rbind(proxy_relative_abundance_values, data.frame())
+    
+    repeat {
+      sample_pops = unique(rbind(sample(proxy_relative_abundance_values), sample_pops))
+      
+      if (nrow(sample_pops) >= POPULATION_SAMPLE_SIZE) {
+        break;
+      }
+    }
+    
+    sample_pops
   }
 }
 
@@ -365,6 +374,15 @@ create_null_model_communities(
   community_summary$urban_pool_size[community_summary$city_id == 1], 
   communities$jetz_species_name[communities$city_id == 1],
   communities$relative_abundance_proxy[communities$city_id == 1]
+)
+```
+
+```{r}
+create_null_model_communities(
+  122, 
+  community_summary$urban_pool_size[community_summary$city_id == 122], 
+  communities$jetz_species_name[communities$city_id == 122],
+  communities$relative_abundance_proxy[communities$city_id == 122]
 )
 ```
 
