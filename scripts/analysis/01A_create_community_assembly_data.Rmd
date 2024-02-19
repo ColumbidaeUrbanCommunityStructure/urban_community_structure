@@ -124,15 +124,21 @@ test_communities
 Calculate MNTD for each community using @Kembel2010
 ```{r}
 get_mntd_for_communities = function(communities, phydist_urban_columbidae = cophenetic(columbidae_tree)) {
-  urban_community_mntd_result = mntd(as.matrix(communities), phydist_urban_columbidae)
+  urban_community_mntd_result = mntd(as.matrix(communities), phydist_urban_columbidae, abundance.weighted=TRUE)
   data.frame(site = rownames(communities), mntd = urban_community_mntd_result)
 }
 
 get_mntd_for_communities(test_communities)
 ```
+
 ```{r}
-get_mntd_for_communities(to_species_matrix_with_relative_abundance(c(1786)))
+community_1786 = to_species_matrix_with_relative_abundance(c(1786))
+get_mntd_for_communities(community_1786)
+community_1786[1,] = c(50.23238	, 50.23238	, 50.23238	, 50.23238	, 0)
+get_mntd_for_communities(community_1786)
 ```
+
+
 ```{r}
 get_mntd_for_communities(to_species_matrix_with_relative_abundance(communities$city_id))
 ```
@@ -159,15 +165,34 @@ dentro = get_dentrogram_for_traits(analysis_all_traits)
 plot(dentro)
 ```
 
+```{r}
+get_comparative_object = function(required_traits_for_pd, communities, dentorgram = get_dentrogram_for_traits(required_traits_for_pd)) {
+  pez::comparative.comm(
+    phy = as.phylo(dentorgram),
+    comm = as.matrix(communities)
+  )
+}
+```
+
 Using @PetcheyAndGaston2002
 ```{r}
-get_fd_for_traits = function(required_traits_for_pd, communities, dentorgram = get_dentrogram_for_traits(required_traits_for_pd)) {
-  result = pd(communities, as.phylo(dentorgram))
-  data.frame(site = rownames(result), fd = result$PD)
+get_fd_for_traits = function(required_traits_for_pd, communities) {
+  result = pez::.pd(get_comparative_object(required_traits_for_pd, communities), abundance.weighted = TRUE)
+  output = data.frame(result)
+  output$site = rownames(communities)
+  output
 }
 
 get_fd_for_traits(analysis_all_traits, test_communities)
 ```
+
+```{r}
+community_1786 = to_species_matrix_with_relative_abundance(c(1786, 79))
+get_fd_for_traits(analysis_all_traits, community_1786)
+community_1786[1,] = c(50.23238	, 50.23238	, 50.23238	, 50.23238	, 0)
+get_fd_for_traits(analysis_all_traits, community_1786)
+```
+
 ```{r}
 get_fd_for_traits(analysis_all_traits, to_species_matrix_with_relative_abundance(communities$city_id))
 ```
@@ -176,95 +201,28 @@ get_fd_for_traits(analysis_all_traits, to_species_matrix_with_relative_abundance
 get_fd_for_traits(c('gape_width'), test_communities)
 ```
 
-## FRic - Convex Hull of all traits
-Using fundiversity package @Grenie2022
-
-```{r}
-get_convex_hull = function(trait_names, communities) {
-  analysis_trait_values = get_traits_data_frame(trait_names)
-  fd_fric(analysis_trait_values, communities)
-}
-
-get_convex_hull(analysis_all_traits, test_communities)
-```
-
-```{r}
-fric_species_in_matrix = colnames(to_species_matrix_with_relative_abundance(communities$city_id))
-fric_species_in_traits_db = rownames(get_traits_data_frame(analysis_all_traits))
-
-fric_species_in_matrix[!fric_species_in_matrix %in% fric_species_in_traits_db]
-fric_species_in_traits_db[!fric_species_in_traits_db %in% fric_species_in_matrix]
-```
-
-## Single Trait Variance
-```{r}
-trait_values = function(trait, community_row) {
-  species_names_in_community = names(community_row)[which(community_row == 1, arr.ind=T)[, "col"]]
-  traits_for_species_in_community = avonet_jetz[avonet_jetz$jetz_species_name %in% species_names_in_community, ]
-  traits_for_species_in_community[[c(trait)]]
-}
-
-single_trait_variance = function(trait, communities) {
-  variance_of_trait = data.frame()
-  for(row in rownames(communities)) {
-    community_row = communities[c(row),]
-    species_names_in_community = names(community_row)[which(community_row == 1, arr.ind=T)[, "col"]]
-    
-    result = data.frame(site = row, variance = var(trait_values(trait, community_row)))
-    variance_of_trait = rbind(variance_of_trait, result)
-  }
-  
-  variance_of_trait
-}
-
-single_trait_variance('mass', test_communities)
-single_trait_variance('gape_width', test_communities)
-```
-
-## SDNDr
-Standard deviation of distances between neighbouring species along a single trait axis, divided by the trait range of the community.
-
-```{r}
-SDNDr = function(trait, communities) {
-  sdndr_of_trait = data.frame()
-  for(row in rownames(communities)) {
-    community_row = communities[c(row),]
-    
-    sorted_trait_values = sort(trait_values(trait, community_row))
-    
-    sdndr_value = sd(diff(sorted_trait_values)) / (max(sorted_trait_values) - min(sorted_trait_values))
-    
-    sdndr_of_trait = rbind(sdndr_of_trait, data.frame(site = row, sdndr = sdndr_value))
-  }
-  
-  sdndr_of_trait
-}
-
-SDNDr('locomotory_trait', test_communities)
-```
 
 ## Function to create all metrics
 ```{r get_community_metrics}
 get_community_metrics = function(communities, included_traits_for_multi_trait_metrics = analysis_all_traits, included_traits_for_single_trait_metrics = analysis_single_traits) {
 
   mntd_result = get_mntd_for_communities(communities)
-  fd_all_traits = get_fd_for_traits(included_traits_for_multi_trait_metrics, communities)
-  convex_hull = get_convex_hull(included_traits_for_multi_trait_metrics, communities)
+  fd_all_traits = get_fd_for_traits(included_traits_for_multi_trait_metrics, communities) %>%
+      dplyr::select('pd', 'site') %>%
+      rename(fd='pd')
   
-  result = right_join(mntd_result, right_join(fd_all_traits, convex_hull))
+  result = right_join(mntd_result, fd_all_traits)
   
   for (trait in included_traits_for_single_trait_metrics) {
-    col_name = function(value) {
-      paste(trait, value, sep = '_')
+    fd_col_name = function(value) {
+      paste(trait, 'fd', sep = '_')
     }
   
-    fd_single_trait = get_fd_for_traits(trait, communities)
-    var_single_trait = single_trait_variance(trait, communities)
-    sdndr_single_trait = SDNDr(trait, communities)
+    fd_single_trait = get_fd_for_traits(trait, communities) %>%
+      dplyr::select('pd', 'site') %>%
+      rename_with(fd_col_name, 'pd')
     
-    single_trait_result = right_join(right_join(fd_single_trait, var_single_trait), sdndr_single_trait)
-    names(single_trait_result) = c('site', col_name('fd'), col_name('var'), col_name('sdndr'))
-    result = right_join(result, single_trait_result)
+    result = right_join(result, fd_single_trait)
   }
   
   result
@@ -323,10 +281,18 @@ to_possible_populations = function(proxy_relative_abundance_values) {
   } else {
     sample_pops = rbind(proxy_relative_abundance_values, data.frame())
     
+    attempts = 0
+    
     repeat {
       sample_pops = unique(rbind(sample(proxy_relative_abundance_values), sample_pops))
+      attempts = attempts + 1
       
       if (nrow(sample_pops) >= POPULATION_SAMPLE_SIZE) {
+        break;
+      }
+      
+      if (attempts > (2 * POPULATION_SAMPLE_SIZE)) {
+        print(paste('Failed to find', POPULATION_SAMPLE_SIZE, 'samples, only found', nrow(sample_pops), sep = ' '))
         break;
       }
     }
@@ -442,11 +408,9 @@ create_null_model_test_values = function(city_id, urban_richness, regional_speci
   null_models = create_null_model_communities(city_id, urban_richness, regional_species, relative_abundance_proxy_values)
   null_model_community_values = get_community_metrics(null_models)
   
-  result = data.frame(city_id = city_id)
-  
   foreach(metric = all_metrics_to_test, .combine = 'cbind') %do% {
       compare_community_to_null_model(metric, actual_values[,c(metric)], null_model_community_values[,c(metric)])
-  }
+  } %>% mutate(city_id = city_id)
 }
 
 create_null_model_test_values(
@@ -460,8 +424,6 @@ create_null_model_test_values(
 
 # Create analysis data
 ```{r, warning=F}
-result = data.frame()
-
 valid_cities = get_valid_cities()
 cm = to_species_matrix_with_relative_abundance(valid_cities$city_id)
 
@@ -471,7 +433,7 @@ cv = get_community_metrics(cm)
   
 cs = community_summary[community_summary$city_id %in% valid_cities$city_id, c('city_id', 'urban_pool_size')]
 
-foreach(loop_all_city_id = cs$city_id, .combine = 'rbind') %do% {
+result = foreach(loop_all_city_id = cs$city_id, .combine = 'rbind') %do% {
   print(paste('metrics for city',loop_all_city_id, sep = ' '))
   single_city_result = create_null_model_test_values(
     loop_all_city_id, 
