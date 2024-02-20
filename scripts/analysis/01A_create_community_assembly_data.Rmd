@@ -138,6 +138,10 @@ community_1786[1,] = c(50.23238	, 50.23238	, 50.23238	, 50.23238	, 0)
 get_mntd_for_communities(community_1786)
 ```
 
+```{r}
+community_13183 = to_species_matrix_with_relative_abundance(c(13183))
+get_mntd_for_communities(community_13183)
+```
 
 ```{r}
 get_mntd_for_communities(to_species_matrix_with_relative_abundance(communities$city_id))
@@ -187,10 +191,17 @@ get_fd_for_traits(analysis_all_traits, test_communities)
 ```
 
 ```{r}
-community_1786 = to_species_matrix_with_relative_abundance(c(1786, 79))
-get_fd_for_traits(analysis_all_traits, community_1786)
-community_1786[1,] = c(50.23238	, 50.23238	, 50.23238	, 50.23238	, 0)
-get_fd_for_traits(analysis_all_traits, community_1786)
+community_1786a = to_species_matrix_with_relative_abundance(c(1786))
+community_1786b = community_1786a
+community_1786c = community_1786a
+community_1786b[1,] = c(1, 1, 1, 1, 0)
+community_1786c[1,] = c(50.23238, 50.23238, 50.23238, 50.23238, 0)
+get_fd_for_traits(analysis_all_traits, rbind(community_1786a, community_1786b, community_1786c))
+```
+
+```{r}
+community_13183 = to_species_matrix_with_relative_abundance(c(13183, 79))
+get_fd_for_traits(analysis_all_traits, community_13183)
 ```
 
 ```{r}
@@ -273,12 +284,14 @@ POPULATION_SAMPLE_SIZE = 5040
 REGIONAL_POOL_SIZE_FOR_MAX_POP = 7
 
 to_possible_populations = function(proxy_relative_abundance_values) {
+  new_cols = paste('Var', 1:length(proxy_relative_abundance_values), sep='')
+    
   if (length(proxy_relative_abundance_values) <= REGIONAL_POOL_SIZE_FOR_MAX_POP) {
-    new_cols = paste('col', 1:length(proxy_relative_abundance_values))
     all_pops = unique(combinations(proxy_relative_abundance_values))
     colnames(all_pops) = new_cols
     all_pops
   } else {
+    # include actual population as first row
     sample_pops = rbind(proxy_relative_abundance_values, data.frame())
     
     attempts = 0
@@ -297,11 +310,23 @@ to_possible_populations = function(proxy_relative_abundance_values) {
       }
     }
     
+    colnames(sample_pops) = new_cols
     sample_pops
   }
 }
 
 to_possible_populations(communities$relative_abundance_proxy[communities$city_id == test_city_id])
+```
+
+```{r}
+to_all_equal_abundance_communities = function(urban_richness, regional_richness) {
+  null_model_sites = expand.grid(rep(list(TRUE:FALSE), regional_richness))
+  null_model_sites_species_richness =  data.frame(species_richness = pmap_dbl(null_model_sites, sum))
+  null_model_sites = cbind(null_model_sites, null_model_sites_species_richness)
+  null_model_sites[null_model_sites$species_richness == urban_richness, 1:regional_richness]
+}
+
+to_all_equal_abundance_communities(2, 3)
 ```
 
 Function to build every possible community from the species in the regional pool and the given relative abundances
@@ -311,8 +336,14 @@ create_null_model_communities = function(city_id, urban_richness, regional_speci
   urban_richness = length(proxy_relative_abundance_values[proxy_relative_abundance_values > 0])
   actual_total_relative_abundance = sum(proxy_relative_abundance_values)
   
-  null_model_sites = to_possible_populations(proxy_relative_abundance_values)
+  null_model_sites = rbind(
+    to_all_equal_abundance_communities(urban_richness, regional_richness),
+    to_possible_populations(proxy_relative_abundance_values)
+  )
+  
   colnames(null_model_sites) = regional_species
+  rownames(null_model_sites) = 1:nrow(null_model_sites)
+  
   null_model_sites[,regional_species]
 }
 
@@ -322,6 +353,7 @@ test_null_model = create_null_model_communities(
   communities$jetz_species_name[communities$city_id == test_city_id],
   communities$relative_abundance_proxy[communities$city_id == test_city_id]
 )
+
 test_null_model
 ```
 
@@ -425,11 +457,14 @@ create_null_model_test_values(
 # Create analysis data
 ```{r, warning=F}
 valid_cities = get_valid_cities()
-cm = to_species_matrix_with_relative_abundance(valid_cities$city_id)
 
 c = communities[communities$city_id %in% valid_cities$city_id, c('city_id', 'jetz_species_name', 'relative_abundance_proxy')]
 
-cv = get_community_metrics(cm)
+cv = foreach(loop_all_city_id = valid_cities$city_id, .combine = 'rbind') %do% {
+  community_matrix = to_species_matrix_with_relative_abundance(c(loop_all_city_id))
+  metrics = get_community_metrics(rbind(community_matrix, community_matrix))
+  metrics[1,]
+}
   
 cs = community_summary[community_summary$city_id %in% valid_cities$city_id, c('city_id', 'urban_pool_size')]
 
@@ -456,4 +491,16 @@ result
 write_csv(bind_rows(
   result
 ), filename(COMMUNITY_OUTPUT_DIR, 'community_assembly_metrics_using_relative_abundance.csv'))
+```
+
+
+```{r}
+community_matrix_14a = to_species_matrix_with_relative_abundance(c(14))
+community_matrix_14b = community_matrix_14a
+community_matrix_14b[1,] = c(1, 1, 1, 1, 1, 1)
+
+get_community_metrics(rbind(community_matrix_14a, community_matrix_14b))
+
+
+get_fd_for_traits(analysis_all_traits, rbind(community_matrix_14a, community_matrix_14b))
 ```
