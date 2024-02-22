@@ -1,5 +1,5 @@
 ---
-title: "Deep dive regional communities"
+title: "Deep dive regional communities - using presence only"
 output: html_notebook
 bibliography: ../ref.bib  
 ---

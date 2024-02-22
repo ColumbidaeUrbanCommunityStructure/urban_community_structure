@@ -1,0 +1,507 @@
+---
+title: "Deep dive regional communities - using relative abundance prox"
+output: html_notebook
+bibliography: ../ref.bib  
+---
+
+```{r}
+source('../env.R')
+```
+
+# Species in communities
+It seems reasonable to expect that cities with simialr regional pools will have similar species entering the city, and thus a similar response to urbanisation.
+
+## Load data
+```{r}
+communities = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'communities_for_analysis.csv'))
+
+communities_summary = communities %>% group_by(city_id) %>% summarise(
+  regional_pool_size = n(), 
+  urban_pool_size = sum(relative_abundance_proxy > 0)
+)
+```
+
+```{r}
+ggplot(communities %>% filter(relative_abundance_proxy > 0), aes(x = relative_abundance_proxy)) + geom_bar(stat = "bin")
+```
+
+```{r}
+city_points = st_centroid(read_sf(filename(CITY_DATA_OUTPUT_DIR, 'city_selection.shp')))
+```
+
+```{r}
+community_data_metrics = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'community_assembly_metrics_using_relative_abundance.csv')) %>%
+  dplyr::select(city_id, mntd_normalised, fdiv_normalised, mass_fdiv_normalised, locomotory_trait_fdiv_normalised, trophic_trait_fdiv_normalised, gape_width_fdiv_normalised) %>%
+  left_join(read_csv(filename(CITY_DATA_OUTPUT_DIR, 'realms.csv'))) %>%
+  left_join(communities_summary) %>%
+  left_join(city_points[,c('city_id', 'city_nm')]) %>%
+  rename(city_name='city_nm') %>%
+  na.omit() %>%
+  arrange(city_id)
+
+community_data_metrics
+```
+
+Load trait data
+```{r}
+traits = read_csv(filename(TAXONOMY_OUTPUT_DIR, 'traits_jetz.csv'))
+head(traits)
+```
+
+```{r}
+fetch_normalised_traits = function(required_species_list) {
+  required_traits = traits %>% filter(jetz_species_name %in% required_species_list)
+  
+  required_traits$gape_width_normalised = normalise(required_traits$gape_width, min(required_traits$gape_width), max(required_traits$gape_width))
+  required_traits$trophic_trait_normalised = normalise(required_traits$trophic_trait, min(required_traits$trophic_trait), max(required_traits$trophic_trait))
+  required_traits$locomotory_trait_normalised = normalise(required_traits$locomotory_trait, min(required_traits$locomotory_trait), max(required_traits$locomotory_trait))
+  required_traits$mass_normalised = normalise(required_traits$mass, min(required_traits$mass), max(required_traits$mass))
+  
+  traits_normalised_long = required_traits %>% pivot_longer(cols = c('gape_width_normalised', 'trophic_trait_normalised', 'locomotory_trait_normalised', 'mass_normalised'), names_to = 'trait', values_to = 'normalised_value') %>% dplyr::select(jetz_species_name, trait, normalised_value)
+  traits_normalised_long$trait = factor(traits_normalised_long$trait, levels = c('gape_width_normalised', 'trophic_trait_normalised', 'locomotory_trait_normalised', 'mass_normalised'), labels = c('Gape Width', 'Trophic Trait', 'Locomotory Trait', 'Mass'))
+  
+  traits_normalised_long
+}
+
+fetch_normalised_traits(c('Aplopelia_larvata', 'Chalcophaps_indica', 'Caloenas_nicobarica'))
+```
+
+
+Read in our phylogeny
+```{r}
+phylo_tree = read.tree(filename(TAXONOMY_OUTPUT_DIR, 'phylogeny.tre'))
+ggtree(phylo_tree, layout='circular')
+```
+
+Load resolve ecoregions
+```{r}
+resolve = read_resolve()
+```
+
+## Create helper functions
+```{r}
+to_species_matrix = function(filtered_communities) {
+  filtered_communities %>% 
+    dplyr::select(city_id, jetz_species_name) %>% 
+    distinct() %>%
+    mutate(present = TRUE) %>% 
+    pivot_wider(
+      names_from = jetz_species_name, 
+      values_from = "present", 
+      values_fill = list(present = F)
+    ) %>% 
+    tibble::column_to_rownames(var='city_id')
+}
+```
+
+```{r}
+community_nmds = function(filtered_communities) {
+  species_matrix = to_species_matrix(filtered_communities)
+  nmds <- metaMDS(species_matrix, k=2, trymax = 30)
+  nmds_result = data.frame(scores(nmds)$sites)
+  nmds_result$city_id = as.double(rownames(nmds_result))
+  rownames(nmds_result) = NULL
+  nmds_result
+}
+```
+
+https://www.datacamp.com/tutorial/k-means-clustering-r
+```{r}
+scree_plot = function(community_nmds_data) {
+  # Decide how many clusters to look at
+  n_clusters <- min(10, nrow(community_nmds_data) - 1)
+  
+  # Initialize total within sum of squares error: wss
+  wss <- numeric(n_clusters)
+  
+  set.seed(123)
+  
+  # Look over 1 to n possible clusters
+  for (i in 1:n_clusters) {
+    # Fit the model: km.out
+    km.out <- kmeans(community_nmds_data[,c('NMDS1','NMDS2')], centers = i, nstart = 20)
+    # Save the within cluster sum of squares
+    wss[i] <- km.out$tot.withinss
+  }
+  
+  # Produce a scree plot
+  wss_df <- tibble(clusters = 1:n_clusters, wss = wss)
+   
+  scree_plot <- ggplot(wss_df, aes(x = clusters, y = wss, group = 1)) +
+      geom_point(size = 4) +
+      geom_line() +
+      geom_hline(linetype="dashed", color = "orange", yintercept = wss) +
+      scale_x_continuous(breaks = c(2, 4, 6, 8, 10)) +
+      xlab('Number of clusters')
+  scree_plot
+}
+```
+
+```{r}
+cluster_cities = function(city_nmds, cities_community_data, centers) {
+  set.seed(123)
+  kmeans_clusters <- kmeans(city_nmds[,c('NMDS1', 'NMDS2')], centers = centers, nstart = 20)
+  city_nmds$cluster = kmeans_clusters$cluster
+  cities_community_data %>% left_join(city_nmds) %>% mutate(cluster = as.factor(cluster))
+}
+```
+
+```{r}
+plot_nmds_clusters = function(cluster_cities) {
+  cluster_cities %>% dplyr::select(city_id, city_name, NMDS1, NMDS2, cluster) %>% distinct() %>%
+  ggplot(aes(x = NMDS1, y = NMDS2, colour = cluster)) + geom_point() + geom_label_repel(aes(label = city_name))
+}
+```
+
+```{r}
+plot_city_cluster = function(city_cluster_data_metrics, title) {
+  species_in_cluster = communities %>% 
+    filter(city_id %in% city_cluster_data_metrics$city_id) %>% 
+    dplyr::select(jetz_species_name, city_name, relative_abundance_proxy)
+
+  
+  tree_cropped <- ladderize(drop.tip(phylo_tree, setdiff(phylo_tree$tip.label, species_in_cluster$jetz_species_name)))
+    
+  gg_tree = ggtree(tree_cropped)
+  
+  gg_presence = ggplot(species_in_cluster, aes(x=city_name, y=jetz_species_name)) + 
+          geom_tile(aes(fill=relative_abundance_proxy)) + 
+          scale_fill_gradientn(colours=c("#98FB98", "#FFFFE0", "yellow", "orange", "#FF4500", "red", "red"), values=c(0, 0.00000000001, 0.1, 0.25, 0.5, 0.75, 1), na.value = "transparent") +
+          theme_minimal() + xlab(NULL) + ylab(NULL) + 
+          theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + 
+          labs(fill='Urban Proxy Abundance')
+  
+  species_in_cluster_traits = fetch_normalised_traits(species_in_cluster$jetz_species_name)
+  
+  gg_traits = ggplot(species_in_cluster_traits, aes(x = trait, y = jetz_species_name, size = normalised_value)) + geom_point() + theme_minimal() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), axis.text.y=element_blank()) + xlab(NULL) + ylab(NULL) + labs(size = "Normalised Value")
+  
+  gg_cities_mntd = ggplot(city_cluster_data_metrics, aes(x = city_name, y = mntd_normalised)) + geom_bar(stat = "identity") + theme_minimal() + theme(legend.position = "none", axis.text.x=element_blank()) + xlab(NULL) + ylab("MNTD") + ylim(0, 1)
+  
+  gg_cities_fd = ggplot(city_cluster_data_metrics, aes(x = city_name, y = fdiv_normalised)) + geom_bar(stat = "identity") + theme_minimal() + theme(legend.position = "none", axis.text.x=element_blank()) + xlab(NULL) + ylab("FDiv") + ylim(0, 1)
+  
+  gg_title = ggplot() + labs(title = title) + theme_minimal()
+  
+  gg_presence %>% insert_top(gg_cities_mntd, height = 0.5) %>% insert_top(gg_cities_fd, height = 0.5) %>% insert_left(gg_tree, width = 0.75) %>% insert_right(gg_traits, width = 0.5) %>% insert_top(gg_title, height = 0.06)
+}
+```
+
+```{r}
+REGION_DEEP_DIVE_FIGURES_OUTPUT = mkdir(FIGURES_OUTPUT_DIR, 'appendix_regional_deep_dive_using_abundance')
+```
+
+## Nearctic
+```{r}
+nearctic_cities_community_data = community_data_metrics %>% filter(core_realm == 'Nearctic')
+nearctic_cities_community_data %>% dplyr::select(city_name) %>% distinct() %>% as.list()
+```
+
+```{r}
+nearctic_cities_nmds = community_nmds(communities %>% filter(city_id %in% nearctic_cities_community_data$city_id)) 
+nearctic_cities_nmds
+```
+
+```{r}
+scree_plot(nearctic_cities_nmds)
+```
+
+```{r}
+nearctic_cities = cluster_cities(city_nmds = nearctic_cities_nmds, cities_community_data = nearctic_cities_community_data, centers = 5)
+```
+
+```{r}
+plot_nmds_clusters(nearctic_cities)
+```
+
+```{r}
+nearctic_biomes = st_crop(resolve[resolve$REALM == 'Nearctic',c('REALM')], xmin = -220, ymin = 0, xmax = 0, ymax = 70)
+ 
+ggplot() + 
+  geom_sf(data = nearctic_biomes, aes(geometry = geometry)) + 
+  geom_sf(data = nearctic_cities, aes(geometry = geometry, color = cluster))
+
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neartic_clusters.jpg'))
+```
+
+### Neartic Cluster 1`
+```{r}
+nearctic_cities %>% filter(cluster == 1) %>% plot_city_cluster('Neartic cluster 1')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neartic_cluster1.jpg'))
+```
+
+### Neartic Cluster 2
+```{r}
+nearctic_cities %>% filter(cluster == 2) %>% plot_city_cluster('Neartic cluster 2')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neartic_cluster2.jpg'))
+```
+
+### Neartic Cluster 3
+```{r}
+nearctic_cities %>% filter(cluster == 3) %>% plot_city_cluster('Neartic cluster 3')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neartic_cluster3.jpg'))
+```
+### Neartic Cluster 4
+```{r}
+nearctic_cities %>% filter(cluster == 4) %>% plot_city_cluster('Neartic cluster 4')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neartic_cluster4.jpg'))
+```
+
+### Neartic Cluster 5
+```{r}
+nearctic_cities %>% filter(cluster == 5) %>% plot_city_cluster('Neartic cluster 5')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neartic_cluster5.jpg'))
+```
+
+## Neotropic
+```{r}
+neotropic_cities_community_data = community_data_metrics %>% filter(core_realm == 'Neotropic')
+neotropic_cities_community_data %>% dplyr::select(city_name) %>% distinct() %>% as.list()
+```
+
+```{r}
+neotropic_cities_nmds = community_nmds(communities %>% filter(city_id %in% neotropic_cities_community_data$city_id)) 
+neotropic_cities_nmds
+```
+
+```{r}
+scree_plot(neotropic_cities_nmds)
+```
+
+```{r}
+neotropic_cities = cluster_cities(city_nmds = neotropic_cities_nmds, cities_community_data = neotropic_cities_community_data, centers = 5)
+```
+
+```{r}
+plot_nmds_clusters(neotropic_cities)
+```
+
+```{r}
+neotropic_biomes = resolve[resolve$REALM == 'Neotropic',c('REALM')]
+ 
+ggplot() + 
+  geom_sf(data = neotropic_biomes, aes(geometry = geometry)) + 
+  geom_sf(data = neotropic_cities, aes(geometry = geometry, color = cluster))
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neotropic_clusters.jpg'))
+```
+
+### Neotropic Cluster 1
+```{r}
+neotropic_cities %>% filter(cluster == 1) %>% plot_city_cluster('Neotropic cluster 1')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neotropic_cluster1.jpg'))
+```
+
+### Neotropic Cluster 2
+```{r}
+neotropic_cities %>% filter(cluster == 2) %>% plot_city_cluster('Neotropic cluster 2')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neotropic_cluster2.jpg'))
+```
+
+### Neotropic Cluster 3
+```{r}
+neotropic_cities %>% filter(cluster == 3) %>% plot_city_cluster('Neotropic cluster 3')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neotropic_cluster3.jpg'))
+```
+
+### Neotropic Cluster 4
+```{r}
+neotropic_cities %>% filter(cluster == 4) %>% plot_city_cluster('Neotropic cluster 4')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neotropic_cluster4.jpg'))
+```
+
+### Neotropic Cluster 5
+```{r}
+neotropic_cities %>% filter(cluster == 5) %>% plot_city_cluster('Neotropic cluster 5')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neotropic_cluster5.jpg'))
+```
+
+## Palearctic
+```{r}
+palearctic_cities_community_data = community_data_metrics %>% filter(core_realm == 'Palearctic')
+palearctic_cities_community_data %>% dplyr::select(city_name) %>% distinct() %>% as.list()
+```
+
+```{r}
+palearctic_cities_nmds = community_nmds(communities %>% filter(city_id %in% palearctic_cities_community_data$city_id)) 
+palearctic_cities_nmds
+```
+
+```{r}
+scree_plot(palearctic_cities_nmds)
+```
+
+```{r}
+palearctic_cities = cluster_cities(city_nmds = palearctic_cities_nmds, cities_community_data = palearctic_cities_community_data, centers = 6)
+```
+
+```{r}
+plot_nmds_clusters(palearctic_cities)
+```
+
+```{r}
+palearctic_biomes = resolve[resolve$REALM == 'Palearctic',c('REALM')]
+ 
+ggplot() + 
+  geom_sf(data = palearctic_biomes, aes(geometry = geometry)) + 
+  geom_sf(data = palearctic_cities, aes(geometry = geometry, color = cluster))
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'palearctic_clusters.jpg'))
+```
+
+### Palearctic Cluster 1
+```{r}
+palearctic_cities %>% filter(cluster == 1) %>% plot_city_cluster('Palearctic cluster 1')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'palearctic_cluster1.jpg'))
+```
+
+### Palearctic Cluster 2
+```{r}
+palearctic_cities %>% filter(cluster == 2) %>% plot_city_cluster('Palearctic cluster 2')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'palearctic_cluster2.jpg'))
+```
+
+### Palearctic Cluster 3
+```{r, fig.width=14, fig.height=6}
+palearctic_cities %>% filter(cluster == 3) %>% plot_city_cluster('Palearctic cluster 3')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'palearctic_cluster3.jpg'))
+```
+
+### Palearctic Cluster 4
+```{r}
+palearctic_cities %>% filter(cluster == 4) %>% plot_city_cluster('Palearctic cluster 4')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'palearctic_cluster4.jpg'))
+```
+
+### Palearctic Cluster 5
+```{r}
+palearctic_cities %>% filter(cluster == 5) %>% plot_city_cluster('Palearctic cluster 5')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'palearctic_cluster5.jpg'))
+```
+
+### Palearctic Cluster 6
+```{r}
+palearctic_cities %>% filter(cluster == 6) %>% plot_city_cluster('Palearctic cluster 6')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'palearctic_cluster6.jpg'))
+```
+
+## Afrotropic
+```{r}
+afrotropic_cities_community_data = community_data_metrics %>% filter(core_realm == 'Afrotropic')
+afrotropic_cities_community_data %>% dplyr::select(city_name) %>% distinct() %>% as.list()
+```
+
+```{r}
+afrotropic_cities_nmds = community_nmds(communities %>% filter(city_id %in% afrotropic_cities_community_data$city_id)) 
+afrotropic_cities_nmds
+```
+
+```{r}
+scree_plot(afrotropic_cities_nmds)
+```
+
+```{r}
+afrotropic_cities = cluster_cities(city_nmds = afrotropic_cities_nmds, cities_community_data = afrotropic_cities_community_data, centers = 4)
+```
+
+```{r}
+plot_nmds_clusters(afrotropic_cities)
+```
+
+```{r}
+afrotropic_biomes = resolve[resolve$REALM == 'Afrotropic',c('REALM')]
+ 
+ggplot() + 
+  geom_sf(data = afrotropic_biomes, aes(geometry = geometry)) + 
+  geom_sf(data = afrotropic_cities, aes(geometry = geometry, color = cluster))
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'afrotropic_clusters.jpg'))
+```
+
+### Afrotropic Cluster 1
+```{r}
+afrotropic_cities %>% filter(cluster == 1) %>% plot_city_cluster('Afrotropic cluster 1')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'afrotropic_cluster1.jpg'))
+```
+
+### Afrotropic Cluster 2
+```{r}
+afrotropic_cities %>% filter(cluster == 2) %>% plot_city_cluster('Afrotropic cluster 2')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'afrotropic_cluster2.jpg'))
+```
+
+### Afrotropic Cluster 3
+```{r}
+afrotropic_cities %>% filter(cluster == 3) %>% plot_city_cluster('Afrotropic cluster 3')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'afrotropic_cluster3.jpg'))
+```
+
+### Afrotropic Cluster 4
+```{r}
+afrotropic_cities %>% filter(cluster == 4) %>% plot_city_cluster('Afrotropic cluster 4')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'afrotropic_cluster4.jpg'))
+```
+
+## Indomalayan
+```{r}
+indomalayan_cities_community_data = community_data_metrics %>% filter(core_realm == 'Indomalayan')
+indomalayan_cities_community_data %>% dplyr::select(city_name) %>% distinct() %>% as.list()
+```
+
+```{r}
+indomalayan_cities_nmds = community_nmds(communities %>% filter(city_id %in% indomalayan_cities_community_data$city_id)) 
+indomalayan_cities_nmds
+```
+
+```{r}
+scree_plot(indomalayan_cities_nmds)
+```
+
+```{r}
+indomalayan_cities = cluster_cities(city_nmds = indomalayan_cities_nmds, cities_community_data = indomalayan_cities_community_data, centers = 6)
+```
+
+```{r}
+plot_nmds_clusters(indomalayan_cities)
+```
+
+```{r}
+indomalayan_biomes = resolve[resolve$REALM == 'Indomalayan',c('REALM')]
+ 
+ggplot() + 
+  geom_sf(data = indomalayan_biomes, aes(geometry = geometry)) + 
+  geom_sf(data = indomalayan_cities, aes(geometry = geometry, color = cluster))
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'indomalayan_clusters.jpg'))
+```
+
+### Indomalayan Cluster 1
+```{r}
+indomalayan_cities %>% filter(cluster == 1) %>% plot_city_cluster('Indomalayan cluster 1')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'indomalayan_cluster1.jpg'))
+```
+
+### Indomalayan Cluster 2
+```{r}
+indomalayan_cities %>% filter(cluster == 2) %>% plot_city_cluster('Indomalayan cluster 2')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'indomalayan_cluster2.jpg'))
+```
+
+### Indomalayan Cluster 3
+```{r}
+indomalayan_cities %>% filter(cluster == 3) %>% plot_city_cluster('Indomalayan cluster 3')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'indomalayan_cluster3.jpg'))
+```
+
+### Indomalayan Cluster 4
+```{r}
+indomalayan_cities %>% filter(cluster == 4) %>% plot_city_cluster('Indomalayan cluster 4')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'indomalayan_cluster4.jpg'))
+```
+
+### Indomalayan Cluster 5
+```{r}
+indomalayan_cities %>% filter(cluster == 5) %>% plot_city_cluster('Indomalayan cluster 5')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'indomalayan_cluster5.jpg'))
+```
+
+### Indomalayan Cluster 6
+```{r}
+indomalayan_cities %>% filter(cluster == 6) %>% plot_city_cluster('Indomalayan cluster 6')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'indomalayan_cluster6.jpg'))
+```
+
