@@ -18,7 +18,7 @@ library(ggtree)
 library(ggrepel)
 library(aplot)
 library(foreach)
-library(pez)
+library(fundiversity)
 
 sf::sf_use_s2(FALSE)
 options(scipen=99999)

@@ -148,8 +148,7 @@ get_mntd_for_communities(to_species_matrix_with_relative_abundance(communities$c
 ```
 
 ## FD
-Create dentrogram
-```{r, fig.height=4}
+```{r}
 analysis_all_traits = c('mass', 'locomotory_trait', 'trophic_trait')
 analysis_single_traits = c('mass', 'locomotory_trait', 'trophic_trait', 'gape_width')
 
@@ -160,31 +159,8 @@ get_traits_data_frame = function(trait_names) {
   traits
 }
 
-get_dentrogram_for_traits = function(required_traits_for_dentro) {
-  traits = get_traits_data_frame(required_traits_for_dentro)
-  hclust(dist(traits,method="euclidean"), method="average")
-}
-
-dentro = get_dentrogram_for_traits(analysis_all_traits)
-plot(dentro)
-```
-
-```{r}
-get_comparative_object = function(required_traits_for_pd, communities, dentorgram = get_dentrogram_for_traits(required_traits_for_pd)) {
-  pez::comparative.comm(
-    phy = as.phylo(dentorgram),
-    comm = as.matrix(communities)
-  )
-}
-```
-
-Using @PetcheyAndGaston2002
-```{r}
-get_fd_for_traits = function(required_traits_for_pd, communities) {
-  result = pez::.pd(get_comparative_object(required_traits_for_pd, communities), abundance.weighted = TRUE)
-  output = data.frame(result)
-  output$site = rownames(communities)
-  output
+get_fd_for_traits = function(required_traits_for_fd, communities) {
+  fd_fdiv(traits = get_traits_data_frame(required_traits_for_fd), sp_com = communities)
 }
 
 get_fd_for_traits(analysis_all_traits, test_communities)
@@ -212,26 +188,25 @@ get_fd_for_traits(analysis_all_traits, to_species_matrix_with_relative_abundance
 get_fd_for_traits(c('gape_width'), test_communities)
 ```
 
-
 ## Function to create all metrics
 ```{r get_community_metrics}
 get_community_metrics = function(communities, included_traits_for_multi_trait_metrics = analysis_all_traits, included_traits_for_single_trait_metrics = analysis_single_traits) {
 
   mntd_result = get_mntd_for_communities(communities)
   fd_all_traits = get_fd_for_traits(included_traits_for_multi_trait_metrics, communities) %>%
-      dplyr::select('pd', 'site') %>%
-      rename(fd='pd')
+      dplyr::select('site', 'FDiv') %>%
+      rename(fdiv='FDiv')
   
   result = right_join(mntd_result, fd_all_traits)
   
   for (trait in included_traits_for_single_trait_metrics) {
     fd_col_name = function(value) {
-      paste(trait, 'fd', sep = '_')
+      paste(trait, 'fdiv', sep = '_')
     }
   
     fd_single_trait = get_fd_for_traits(trait, communities) %>%
-      dplyr::select('pd', 'site') %>%
-      rename_with(fd_col_name, 'pd')
+      dplyr::select('site', 'FDiv') %>%
+      rename_with(fd_col_name, 'FDiv')
     
     result = right_join(result, fd_single_trait)
   }
@@ -493,14 +468,3 @@ write_csv(bind_rows(
 ), filename(COMMUNITY_OUTPUT_DIR, 'community_assembly_metrics_using_relative_abundance.csv'))
 ```
 
-
-```{r}
-community_matrix_14a = to_species_matrix_with_relative_abundance(c(14))
-community_matrix_14b = community_matrix_14a
-community_matrix_14b[1,] = c(1, 1, 1, 1, 1, 1)
-
-get_community_metrics(rbind(community_matrix_14a, community_matrix_14b))
-
-
-get_fd_for_traits(analysis_all_traits, rbind(community_matrix_14a, community_matrix_14b))
-```
