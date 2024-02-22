@@ -98,7 +98,7 @@ to_species_matrix = function(filtered_communities) {
 community_nmds = function(filtered_communities) {
   species_matrix = to_species_matrix(filtered_communities)
   nmds <- metaMDS(species_matrix, k=2, trymax = 30)
-  nmds_result = data.frame(scores(nmds)$sites)
+  nmds_result = data.frame(vegan::scores(nmds)$sites)
   nmds_result$city_id = as.double(rownames(nmds_result))
   rownames(nmds_result) = NULL
   nmds_result
@@ -154,11 +154,38 @@ plot_nmds_clusters = function(cluster_cities) {
 ```
 
 ```{r}
+get_presence_cell_width = function(city_cluster_data_metrics) {
+  10 * length(unique(city_cluster_data_metrics$city_id))
+}
+
+get_presence_cell_height = function(city_cluster_data_metrics) {
+  species = species_in_cluster = communities %>% 
+    filter(city_id %in% city_cluster_data_metrics$city_id) %>% 
+    dplyr::select(jetz_species_name) %>% 
+    distinct()
+  
+  10 * nrow(species)
+}
+
+city_metric_height = 30
+traits_width = 50
+phylo_tree_width = 125
+title_height = 3
+
+get_image_height = function(city_cluster_data_metrics) {
+  get_presence_cell_height(city_cluster_data_metrics) + (2 * city_metric_height) + title_height
+}
+
+get_image_width = function(city_cluster_data_metrics) {
+  get_presence_cell_width(city_cluster_data_metrics) + traits_width + phylo_tree_width
+}
+```
+                      
+```{r}
 plot_city_cluster = function(city_cluster_data_metrics, title) {
   species_in_cluster = communities %>% 
     filter(city_id %in% city_cluster_data_metrics$city_id) %>% 
     dplyr::select(jetz_species_name, city_name, relative_abundance_proxy)
-
   
   tree_cropped <- ladderize(drop.tip(phylo_tree, setdiff(phylo_tree$tip.label, species_in_cluster$jetz_species_name)))
     
@@ -181,7 +208,10 @@ plot_city_cluster = function(city_cluster_data_metrics, title) {
   
   gg_title = ggplot() + labs(title = title) + theme_minimal()
   
-  gg_presence %>% insert_top(gg_cities_mntd, height = 0.5) %>% insert_top(gg_cities_fd, height = 0.5) %>% insert_left(gg_tree, width = 0.75) %>% insert_right(gg_traits, width = 0.5) %>% insert_top(gg_title, height = 0.06)
+  gg_presence_height = get_presence_cell_height(city_cluster_data_metrics)
+  gg_presence_width = get_presence_cell_width(city_cluster_data_metrics)
+  
+  gg_presence %>% insert_top(gg_cities_mntd, height = (city_metric_height / gg_presence_height)) %>% insert_top(gg_cities_fd, height = (city_metric_height / gg_presence_height)) %>% insert_left(gg_tree, width = (phylo_tree_width / gg_presence_width)) %>% insert_right(gg_traits, width = (traits_width / gg_presence_width)) %>% insert_top(gg_title, height = (title_height / gg_presence_height))
 }
 ```
 
@@ -205,7 +235,7 @@ scree_plot(nearctic_cities_nmds)
 ```
 
 ```{r}
-nearctic_cities = cluster_cities(city_nmds = nearctic_cities_nmds, cities_community_data = nearctic_cities_community_data, centers = 5)
+nearctic_cities = cluster_cities(city_nmds = nearctic_cities_nmds, cities_community_data = nearctic_cities_community_data, centers = 4)
 ```
 
 ```{r}
@@ -224,31 +254,30 @@ ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neartic_clusters.jpg'))
 
 ### Neartic Cluster 1`
 ```{r}
-nearctic_cities %>% filter(cluster == 1) %>% plot_city_cluster('Neartic cluster 1')
-ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neartic_cluster1.jpg'))
+nearactic_cluster1 = nearctic_cities %>% filter(cluster == 1)
+plot_city_cluster(nearactic_cluster1, 'Neartic cluster 1')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neartic_cluster1.jpg'), width = get_image_width(nearactic_cluster1), height = get_image_height(nearactic_cluster1), units = "mm")
 ```
 
 ### Neartic Cluster 2
 ```{r}
-nearctic_cities %>% filter(cluster == 2) %>% plot_city_cluster('Neartic cluster 2')
-ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neartic_cluster2.jpg'))
+nearactic_cluster2 = nearctic_cities %>% filter(cluster == 2)
+plot_city_cluster(nearactic_cluster2, 'Neartic cluster 2')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neartic_cluster2.jpg'), width = get_image_width(nearactic_cluster2), height = get_image_height(nearactic_cluster2), units = "mm")
 ```
 
 ### Neartic Cluster 3
 ```{r}
-nearctic_cities %>% filter(cluster == 3) %>% plot_city_cluster('Neartic cluster 3')
-ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neartic_cluster3.jpg'))
-```
-### Neartic Cluster 4
-```{r}
-nearctic_cities %>% filter(cluster == 4) %>% plot_city_cluster('Neartic cluster 4')
-ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neartic_cluster4.jpg'))
+nearactic_cluster3 = nearctic_cities %>% filter(cluster == 3)
+plot_city_cluster(nearactic_cluster3, 'Neartic cluster 3')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neartic_cluster3.jpg'), width = get_image_width(nearactic_cluster3), height = get_image_height(nearactic_cluster3), units = "mm")
 ```
 
-### Neartic Cluster 5
+### Neartic Cluster 4
 ```{r}
-nearctic_cities %>% filter(cluster == 5) %>% plot_city_cluster('Neartic cluster 5')
-ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neartic_cluster5.jpg'))
+nearactic_cluster4 = nearctic_cities %>% filter(cluster == 4)
+plot_city_cluster(nearactic_cluster4, 'Neartic cluster 4')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neartic_cluster4.jpg'), width = get_image_width(nearactic_cluster4), height = get_image_height(nearactic_cluster4), units = "mm")
 ```
 
 ## Neotropic
@@ -285,32 +314,37 @@ ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neotropic_clusters.jpg'))
 
 ### Neotropic Cluster 1
 ```{r}
-neotropic_cities %>% filter(cluster == 1) %>% plot_city_cluster('Neotropic cluster 1')
-ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neotropic_cluster1.jpg'))
+neotropic_cluster1 = neotropic_cities %>% filter(cluster == 1)
+plot_city_cluster(neotropic_cluster1, 'Neotropic cluster 1')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neotropic_cluster1.jpg'), width = get_image_width(neotropic_cluster1), height = get_image_height(neotropic_cluster1), units = "mm")
 ```
 
 ### Neotropic Cluster 2
 ```{r}
-neotropic_cities %>% filter(cluster == 2) %>% plot_city_cluster('Neotropic cluster 2')
-ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neotropic_cluster2.jpg'))
+neotropic_cluster2 = neotropic_cities %>% filter(cluster == 2)
+plot_city_cluster(neotropic_cluster2, 'Neotropic cluster 2')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neotropic_cluster2.jpg'), width = get_image_width(neotropic_cluster2), height = get_image_height(neotropic_cluster2), units = "mm")
 ```
 
 ### Neotropic Cluster 3
 ```{r}
-neotropic_cities %>% filter(cluster == 3) %>% plot_city_cluster('Neotropic cluster 3')
-ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neotropic_cluster3.jpg'))
+neotropic_cluster3 = neotropic_cities %>% filter(cluster == 3)
+plot_city_cluster(neotropic_cluster3, 'Neotropic cluster 3')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neotropic_cluster3.jpg'), width = get_image_width(neotropic_cluster3), height = get_image_height(neotropic_cluster3), units = "mm")
 ```
 
 ### Neotropic Cluster 4
 ```{r}
-neotropic_cities %>% filter(cluster == 4) %>% plot_city_cluster('Neotropic cluster 4')
-ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neotropic_cluster4.jpg'))
+neotropic_cluster4 = neotropic_cities %>% filter(cluster == 4)
+plot_city_cluster(neotropic_cluster4, 'Neotropic cluster 4')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neotropic_cluster4.jpg'), width = get_image_width(neotropic_cluster4), height = get_image_height(neotropic_cluster4), units = "mm")
 ```
 
 ### Neotropic Cluster 5
 ```{r}
-neotropic_cities %>% filter(cluster == 5) %>% plot_city_cluster('Neotropic cluster 5')
-ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neotropic_cluster5.jpg'))
+neotropic_cluster5 = neotropic_cities %>% filter(cluster == 5)
+plot_city_cluster(neotropic_cluster5, 'Neotropic cluster 5')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neotropic_cluster5.jpg'), width = get_image_width(neotropic_cluster5), height = get_image_height(neotropic_cluster5), units = "mm")
 ```
 
 ## Palearctic
@@ -329,7 +363,7 @@ scree_plot(palearctic_cities_nmds)
 ```
 
 ```{r}
-palearctic_cities = cluster_cities(city_nmds = palearctic_cities_nmds, cities_community_data = palearctic_cities_community_data, centers = 6)
+palearctic_cities = cluster_cities(city_nmds = palearctic_cities_nmds, cities_community_data = palearctic_cities_community_data, centers = 7)
 ```
 
 ```{r}
@@ -347,38 +381,51 @@ ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'palearctic_clusters.jpg'))
 
 ### Palearctic Cluster 1
 ```{r}
-palearctic_cities %>% filter(cluster == 1) %>% plot_city_cluster('Palearctic cluster 1')
-ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'palearctic_cluster1.jpg'))
+palearctic_cluster1 = palearctic_cities %>% filter(cluster == 1)
+plot_city_cluster(palearctic_cluster1, 'Palearctic cluster 1')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'palearctic_cluster1.jpg'), width = get_image_width(palearctic_cluster1), height = get_image_height(palearctic_cluster1), units = "mm")
 ```
 
 ### Palearctic Cluster 2
 ```{r}
-palearctic_cities %>% filter(cluster == 2) %>% plot_city_cluster('Palearctic cluster 2')
-ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'palearctic_cluster2.jpg'))
+palearctic_cluster2 = palearctic_cities %>% filter(cluster == 2)
+plot_city_cluster(palearctic_cluster2, 'Palearctic cluster 2')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'palearctic_cluster2.jpg'), width = get_image_width(palearctic_cluster2), height = get_image_height(palearctic_cluster2), units = "mm")
 ```
 
 ### Palearctic Cluster 3
-```{r, fig.width=14, fig.height=6}
-palearctic_cities %>% filter(cluster == 3) %>% plot_city_cluster('Palearctic cluster 3')
-ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'palearctic_cluster3.jpg'))
+```{r}
+palearctic_cluster3 = palearctic_cities %>% filter(cluster == 3)
+plot_city_cluster(palearctic_cluster3, 'Palearctic cluster 3')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'palearctic_cluster3.jpg'), width = get_image_width(palearctic_cluster3), height = get_image_height(palearctic_cluster3), units = "mm")
 ```
 
 ### Palearctic Cluster 4
 ```{r}
-palearctic_cities %>% filter(cluster == 4) %>% plot_city_cluster('Palearctic cluster 4')
-ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'palearctic_cluster4.jpg'))
+palearctic_cluster4 = palearctic_cities %>% filter(cluster == 4)
+plot_city_cluster(palearctic_cluster4, 'Palearctic cluster 4')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'palearctic_cluster4.jpg'), width = get_image_width(palearctic_cluster4), height = get_image_height(palearctic_cluster4), units = "mm")
 ```
 
 ### Palearctic Cluster 5
 ```{r}
-palearctic_cities %>% filter(cluster == 5) %>% plot_city_cluster('Palearctic cluster 5')
-ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'palearctic_cluster5.jpg'))
+palearctic_cluster5 = palearctic_cities %>% filter(cluster == 5)
+plot_city_cluster(palearctic_cluster5, 'Palearctic cluster 5')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'palearctic_cluster5.jpg'), width = get_image_width(palearctic_cluster5), height = get_image_height(palearctic_cluster5), units = "mm")
 ```
 
 ### Palearctic Cluster 6
 ```{r}
-palearctic_cities %>% filter(cluster == 6) %>% plot_city_cluster('Palearctic cluster 6')
-ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'palearctic_cluster6.jpg'))
+palearctic_cluster6 = palearctic_cities %>% filter(cluster == 6)
+plot_city_cluster(palearctic_cluster6, 'Palearctic cluster 6')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'palearctic_cluster6.jpg'), width = get_image_width(palearctic_cluster6), height = get_image_height(palearctic_cluster6), units = "mm")
+```
+
+### Palearctic Cluster 7
+```{r}
+palearctic_cluster7 = palearctic_cities %>% filter(cluster == 7)
+plot_city_cluster(palearctic_cluster7, 'Palearctic cluster 7')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'palearctic_cluster7.jpg'), width = get_image_width(palearctic_cluster7), height = get_image_height(palearctic_cluster7), units = "mm")
 ```
 
 ## Afrotropic
@@ -397,7 +444,7 @@ scree_plot(afrotropic_cities_nmds)
 ```
 
 ```{r}
-afrotropic_cities = cluster_cities(city_nmds = afrotropic_cities_nmds, cities_community_data = afrotropic_cities_community_data, centers = 4)
+afrotropic_cities = cluster_cities(city_nmds = afrotropic_cities_nmds, cities_community_data = afrotropic_cities_community_data, centers = 2)
 ```
 
 ```{r}
@@ -415,26 +462,16 @@ ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'afrotropic_clusters.jpg'))
 
 ### Afrotropic Cluster 1
 ```{r}
-afrotropic_cities %>% filter(cluster == 1) %>% plot_city_cluster('Afrotropic cluster 1')
-ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'afrotropic_cluster1.jpg'))
+afrotropic_cluster1 = afrotropic_cities %>% filter(cluster == 1)
+plot_city_cluster(afrotropic_cluster1, 'Afrotropic cluster 1')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'afrotropic_cluster1.jpg'), width = get_image_width(afrotropic_cluster1), height = get_image_height(afrotropic_cluster1), units = "mm")
 ```
 
 ### Afrotropic Cluster 2
 ```{r}
-afrotropic_cities %>% filter(cluster == 2) %>% plot_city_cluster('Afrotropic cluster 2')
-ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'afrotropic_cluster2.jpg'))
-```
-
-### Afrotropic Cluster 3
-```{r}
-afrotropic_cities %>% filter(cluster == 3) %>% plot_city_cluster('Afrotropic cluster 3')
-ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'afrotropic_cluster3.jpg'))
-```
-
-### Afrotropic Cluster 4
-```{r}
-afrotropic_cities %>% filter(cluster == 4) %>% plot_city_cluster('Afrotropic cluster 4')
-ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'afrotropic_cluster4.jpg'))
+afrotropic_cluster2 = afrotropic_cities %>% filter(cluster == 2)
+plot_city_cluster(afrotropic_cluster2, 'Afrotropic cluster 2')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'afrotropic_cluster2.jpg'), width = get_image_width(afrotropic_cluster2), height = get_image_height(afrotropic_cluster2), units = "mm")
 ```
 
 ## Indomalayan
@@ -453,7 +490,7 @@ scree_plot(indomalayan_cities_nmds)
 ```
 
 ```{r}
-indomalayan_cities = cluster_cities(city_nmds = indomalayan_cities_nmds, cities_community_data = indomalayan_cities_community_data, centers = 6)
+indomalayan_cities = cluster_cities(city_nmds = indomalayan_cities_nmds, cities_community_data = indomalayan_cities_community_data, centers = 5)
 ```
 
 ```{r}
@@ -471,37 +508,36 @@ ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'indomalayan_clusters.jpg'))
 
 ### Indomalayan Cluster 1
 ```{r}
-indomalayan_cities %>% filter(cluster == 1) %>% plot_city_cluster('Indomalayan cluster 1')
-ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'indomalayan_cluster1.jpg'))
+indomalayan_cluster1 = indomalayan_cities %>% filter(cluster == 1)
+plot_city_cluster(afrotropic_cluster2, 'Indomalayan cluster 1')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'indomalayan_cluster1.jpg'), width = get_image_width(indomalayan_cluster1), height = get_image_height(indomalayan_cluster1), units = "mm")
 ```
 
 ### Indomalayan Cluster 2
 ```{r}
-indomalayan_cities %>% filter(cluster == 2) %>% plot_city_cluster('Indomalayan cluster 2')
-ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'indomalayan_cluster2.jpg'))
+indomalayan_cluster2 = indomalayan_cities %>% filter(cluster == 2)
+plot_city_cluster(afrotropic_cluster2, 'Indomalayan cluster 2')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'indomalayan_cluster2.jpg'), width = get_image_width(indomalayan_cluster2), height = get_image_height(indomalayan_cluster2), units = "mm")
 ```
 
 ### Indomalayan Cluster 3
 ```{r}
-indomalayan_cities %>% filter(cluster == 3) %>% plot_city_cluster('Indomalayan cluster 3')
-ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'indomalayan_cluster3.jpg'))
+indomalayan_cluster3 = indomalayan_cities %>% filter(cluster == 3)
+plot_city_cluster(afrotropic_cluster2, 'Indomalayan cluster 3')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'indomalayan_cluster3.jpg'), width = get_image_width(indomalayan_cluster3), height = get_image_height(indomalayan_cluster3), units = "mm")
 ```
 
 ### Indomalayan Cluster 4
 ```{r}
-indomalayan_cities %>% filter(cluster == 4) %>% plot_city_cluster('Indomalayan cluster 4')
-ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'indomalayan_cluster4.jpg'))
+indomalayan_cluster4 = indomalayan_cities %>% filter(cluster == 4)
+plot_city_cluster(afrotropic_cluster2, 'Indomalayan cluster 4')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'indomalayan_cluster4.jpg'), width = get_image_width(indomalayan_cluster4), height = get_image_height(indomalayan_cluster4), units = "mm")
 ```
 
 ### Indomalayan Cluster 5
 ```{r}
-indomalayan_cities %>% filter(cluster == 5) %>% plot_city_cluster('Indomalayan cluster 5')
-ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'indomalayan_cluster5.jpg'))
-```
-
-### Indomalayan Cluster 6
-```{r}
-indomalayan_cities %>% filter(cluster == 6) %>% plot_city_cluster('Indomalayan cluster 6')
-ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'indomalayan_cluster6.jpg'))
+indomalayan_cluster5 = indomalayan_cities %>% filter(cluster == 5)
+plot_city_cluster(afrotropic_cluster2, 'Indomalayan cluster 5')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'indomalayan_cluster5.jpg'), width = get_image_width(indomalayan_cluster5), height = get_image_height(indomalayan_cluster5), units = "mm")
 ```
 
