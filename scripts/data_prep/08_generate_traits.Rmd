@@ -22,6 +22,7 @@ birdlife_jetz_mapping
 avonet_birdlife = read_csv(DL_AVONET)
 avonet_birdlife
 ```
+
 ### Avonet Columbidae traits
 ```{r}
 avonet_columbidae = avonet_birdlife[avonet_birdlife$Order1 == 'Columbiformes',]
@@ -67,6 +68,7 @@ avonet_jetz = avonet_columbidae %>%
 
 avonet_jetz
 ```
+
 Check we have just one row per species
 ```{r}
 length(unique(avonet_jetz$JetzSpeciesName)) == nrow(avonet_jetz)
@@ -84,10 +86,12 @@ avonet_jetz[
   c('JetzSpeciesName', 'habitat', 'habitat_density', 'migration', 'trophic_level', 'trophic_niche', 'primary_lifestyle')
 ]
 ```
+
 Species that are migratory and year round residents
 ```{r}
 avonet_jetz[avonet_jetz$JetzSpeciesName %in% c('Columba_palumbus', 'Patagioenas_fasciata'),]
 ```
+
 ```{r}
 avonet_jetz$migration[avonet_jetz$JetzSpeciesName %in% c('Macropygia_amboinensis', 'Treron_calvus')] = '1'
 ```
@@ -130,6 +134,7 @@ These traits are namely:
 
 ## Trophic trait
 ```{r}
+set.seed(778899)
 trophic_trait_pca = rda(avonet_jetz[,c('beak_length_culmen', 'beak_width', 'beak_depth')])
 ```
 
@@ -193,6 +198,7 @@ avonet_jetz %>%
     theme(legend.position = "none") +
     labs(title = "Trophic PC1")
 ```
+
 ```{r}
 avonet_jetz %>% 
   ggplot(aes(x = trophic_niche, y = trophic_pc2, fill = trophic_niche)) +
@@ -209,7 +215,6 @@ ggarrange(ncol = 2, nrow = 2, common.legend = T,
           ggplot(avonet_jetz, aes(y = trophic_pc3, x = trophic_pc2, color = trophic_niche)) + geom_point()
 )
 ```
-
 
 Is PC1 correlated to mass?
 ```{r}
@@ -228,6 +233,7 @@ cor(avonet_jetz$trophic_pc3, avonet_jetz$mass)
 
 ## Locomotory trait
 ```{r}
+set.seed(778899)
 loco_trait_pca = rda(avonet_jetz[,c('tarsus_length', 'wing_length', 'tail_length')])
 summary(loco_trait_pca)
 ```
@@ -301,6 +307,7 @@ avonet_jetz %>%
     theme(legend.position = "none") +
     labs(title = "Locomotory PC2")
 ```
+
 ```{r}
 avonet_jetz %>% 
   pivot_longer(cols = c('locomotory_pc1', 'locomotory_pc2', 'locomotory_pc3'), names_to = 'axis') %>% 
@@ -350,6 +357,8 @@ cor(avonet_jetz$locomotory_pc3, avonet_jetz$mass)
 ```
 
 # Store our new trait data
+Here we select the second axis of each trait PCA.
+
 ```{r}
 trait_database = avonet_jetz %>%
   dplyr::select(JetzSpeciesName, beak_width, trophic_pc2, locomotory_pc2, mass) %>%
