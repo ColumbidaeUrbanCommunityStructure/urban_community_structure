@@ -13,12 +13,17 @@ It seems reasonable to expect that cities with simialr regional pools will have 
 
 ## Load data
 ```{r}
+city_effort = read_csv(filename(CITY_DATA_OUTPUT_DIR, 'city_effort.csv'))
+city_effort
+```
+
+```{r}
 communities = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'communities_for_analysis.csv'))
 
 communities_summary = communities %>% group_by(city_id) %>% summarise(
   regional_pool_size = n(), 
   urban_pool_size = sum(relative_abundance_proxy > 0)
-)
+) %>% left_join(city_effort %>% dplyr::select(city_id, percentage_total_city_area_surveyed))
 ```
 
 ```{r}
@@ -170,7 +175,7 @@ get_presence_cell_height = function(city_cluster_data_metrics) {
 city_metric_height = 30
 traits_width = 50
 phylo_tree_width = 125
-title_height = 3
+title_height = 8
 
 get_image_height = function(city_cluster_data_metrics) {
   get_presence_cell_height(city_cluster_data_metrics) + (2 * city_metric_height) + title_height
@@ -180,7 +185,20 @@ get_image_width = function(city_cluster_data_metrics) {
   get_presence_cell_width(city_cluster_data_metrics) + traits_width + phylo_tree_width
 }
 ```
-                      
+         
+```{r}
+test_value = function(name, normalised_list) {
+  wilcox_test_result = wilcox.test(normalised_list, mu = 0.5)
+  
+  significance = ifelse(wilcox_test_result$p.value < 0.0001, '***', 
+                        ifelse(wilcox_test_result$p.value < 0.001, '**', 
+                               ifelse(wilcox_test_result$p.value < 0.01, '*', '')))
+  m = mean(normalised_list)
+  
+  paste(name, 'mean', round(m, 2), significance)
+}
+```
+
 ```{r}
 plot_city_cluster = function(city_cluster_data_metrics, title) {
   species_in_cluster = communities %>% 
@@ -206,7 +224,13 @@ plot_city_cluster = function(city_cluster_data_metrics, title) {
   
   gg_cities_fd = ggplot(city_cluster_data_metrics, aes(x = city_name, y = fdiv_normalised)) + geom_bar(stat = "identity") + theme_minimal() + theme(legend.position = "none", axis.text.x=element_blank()) + xlab(NULL) + ylab("FDiv") + ylim(0, 1)
   
-  gg_title = ggplot() + labs(title = title) + theme_minimal()
+  gg_title = ggplot() + labs(title = title, subtitle = paste(
+    test_value('MNTD', city_cluster_data_metrics$mntd_normalised),
+    test_value('FDiv', city_cluster_data_metrics$fdiv_normalised),
+    test_value('Locomotory trait', city_cluster_data_metrics$locomotory_trait_fdiv_normalised),
+    test_value('Gape width', city_cluster_data_metrics$gape_width_fdiv_normalised),
+    sep = '\n'
+  )) + theme_minimal() + theme(plot.subtitle=element_text(size=8, hjust=0, color="#444444"))
   
   gg_presence_height = get_presence_cell_height(city_cluster_data_metrics)
   gg_presence_width = get_presence_cell_width(city_cluster_data_metrics)
@@ -251,6 +275,7 @@ ggplot() +
 
 ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neartic_clusters.jpg'))
 ```
+
 
 ### Neartic Cluster 1`
 ```{r}
@@ -371,7 +396,7 @@ plot_nmds_clusters(palearctic_cities)
 ```
 
 ```{r}
-palearctic_biomes = resolve[resolve$REALM == 'Palearctic',c('REALM')]
+palearctic_biomes = st_crop(resolve[resolve$REALM == 'Palearctic',c('REALM')], xmin = -30, ymin = 20, xmax = 80, ymax = 65)
  
 ggplot() + 
   geom_sf(data = palearctic_biomes, aes(geometry = geometry)) + 
