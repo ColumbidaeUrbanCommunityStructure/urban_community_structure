@@ -19,6 +19,7 @@ library(ggrepel)
 library(aplot)
 library(foreach)
 library(fundiversity)
+library(scales)
 
 sf::sf_use_s2(FALSE)
 options(scipen=99999)
@@ -39,7 +40,7 @@ normalise = function(actual_value, min_value, max_value) {
 # Working directories - not stored in repo
 TMP_DIR = '/tmp'
 
-WORKING_OUTPUT_DIR = mkdir('/Users/james/Projects', 'urban_community_structure_wrk')
+WORKING_OUTPUT_DIR = mkdir('/Users/jamese.richardson/PhD', 'urban_community_structure_wrk')
 GEO_WORKING_OUTPUT_DIR = mkdir(WORKING_OUTPUT_DIR, 'geo')
 EBIRD_WORKING_OUTPUT_DIR = mkdir(WORKING_OUTPUT_DIR, 'ebird')
 BIRDLIFE_WORKING_OUTPUT_DIR = mkdir(WORKING_OUTPUT_DIR, 'birdlife')
@@ -86,7 +87,7 @@ DL_AVONET = '/Users/james/Dropbox/PhD/Avonet/TraitData/AVONET1_BirdLife.csv'
 
 # The country boundandaries can be downloaded from the world bank here:
 # https://datacatalog.worldbank.org/search/dataset/0038272/World-Bank-Official-Boundaries
-DL_COUNTRY_BOUNDARIES = '/Users/james/Dropbox/PhD/WorldBank_countries_Admin0_10m/WB_countries_Admin0_10m.shp'
+DL_COUNTRY_BOUNDARIES = '/Users/jamese.richardson/Downloads/WorldBank_countries_Admin0_10m/WB_countries_Admin0_10m.shp'
 
 read_country_boundaries = function() {
   st_simplify(st_read(DL_COUNTRY_BOUNDARIES), dTolerance = 0.02)
@@ -94,7 +95,7 @@ read_country_boundaries = function() {
 
 # A download of the birdlife distributions can be requested from here:
 # https://datazone.birdlife.org/species/requestdis
-DL_BIRDLIFE_DISTRIBUTIONS = '/Users/james/Dropbox/PhD/BirdLife/Distribution/SppDataRequest_columbidae/SppDataRequest.shp'
+DL_BIRDLIFE_DISTRIBUTIONS = '/Users/jamese.richardson/Downloads//SppDataRequest_columbidae/SppDataRequest.shp'
 
 # The taxonomy can be downloaded here:
 # https://datazone.birdlife.org/species/taxonomy
@@ -102,7 +103,7 @@ DL_BIRDLIFE_TAXONOMY = '/Users/james/Dropbox/PhD/BirdLife/Taxonomy/Handbook of t
 
 # These have been exported to a shape file using google earth engine.
 # https://developers.google.com/earth-engine/datasets/catalog/RESOLVE_ECOREGIONS_2017
-DL_RESOLVE = '/Users/james/Dropbox/PhD/Ecoregions2017/Ecoregions2017.shp'
+DL_RESOLVE = '/Users/jamese.richardson/Downloads/Ecoregions2017/Ecoregions2017.shp'
 
 read_resolve = function() {
   st_simplify(st_buffer(read_sf(DL_RESOLVE), 0), dTolerance = 0.02)
