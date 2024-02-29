@@ -1777,9 +1777,179 @@ processes - using relative abundance proxy</h1>
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc291cmNlKCcuLi9lbnYuUicpXG5gYGAifQ== -->
-<pre class="r"><code>source(&#39;../env.R&#39;)</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc291cmNlKCcuLi9lbnYuUicpXG5cbmBgYCJ9 -->
+<pre class="r"><code>source(&#39;../env.R&#39;)
+</code></pre>
 <!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiTGlua2luZyB0byBHRU9TIDMuMTEuMCwgR0RBTCAzLjUuMywgUFJPSiA5LjEuMDsgc2ZfdXNlX3MyKCkgaXMgVFJVRVxu4pSA4pSAIEF0dGFjaGluZyBjb3JlIHRpZHl2ZXJzZSBwYWNrYWdlcyDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAgdGlkeXZlcnNlIDIuMC4wIOKUgOKUgFxu4pyUIGRwbHlyICAgICAxLjEuNCAgICAg4pyUIHJlYWRyICAgICAyLjEuNVxu4pyUIGZvcmNhdHMgICAxLjAuMCAgICAg4pyUIHN0cmluZ3IgICAxLjUuMVxu4pyUIGdncGxvdDIgICAzLjQuNCAgICAg4pyUIHRpYmJsZSAgICAzLjIuMVxu4pyUIGx1YnJpZGF0ZSAxLjkuMyAgICAg4pyUIHRpZHlyICAgICAxLjMuMVxu4pyUIHB1cnJyICAgICAxLjAuMiAgICAg4pSA4pSAIENvbmZsaWN0cyDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAgdGlkeXZlcnNlX2NvbmZsaWN0cygpIOKUgOKUgFxu4pyWIGRwbHlyOjpmaWx0ZXIoKSBtYXNrcyBzdGF0czo6ZmlsdGVyKClcbuKcliBkcGx5cjo6bGFnKCkgICAgbWFza3Mgc3RhdHM6OmxhZygpXG7ihLkgVXNlIHRoZSBcdTAwMWJdODs7aHR0cDovL2NvbmZsaWN0ZWQuci1saWIub3JnL1x1MDAwN2NvbmZsaWN0ZWQgcGFja2FnZVx1MDAxYl04OztcdTAwMDcgdG8gZm9yY2UgYWxsIGNvbmZsaWN0cyB0byBiZWNvbWUgZXJyb3JzUmVnaXN0ZXJlZCBTMyBtZXRob2RzIG92ZXJ3cml0dGVuIGJ5ICdkYnBseXInOlxuICBtZXRob2QgICAgICAgICBmcm9tXG4gIHByaW50LnRibF9sYXp5ICAgICBcbiAgcHJpbnQudGJsX3NxbCAgICAgIFxuXG5BdHRhY2hpbmcgcGFja2FnZTog4oCYZGJwbHly4oCZXG5cblRoZSBmb2xsb3dpbmcgb2JqZWN0cyBhcmUgbWFza2VkIGZyb20g4oCYcGFja2FnZTpkcGx5cuKAmTpcblxuICAgIGlkZW50LCBzcWxcblxuTG9hZGluZyByZXF1aXJlZCBwYWNrYWdlOiBhcGVcblxuQXR0YWNoaW5nIHBhY2thZ2U6IOKAmGFwZeKAmVxuXG5UaGUgZm9sbG93aW5nIG9iamVjdCBpcyBtYXNrZWQgZnJvbSDigJhwYWNrYWdlOmRwbHly4oCZOlxuXG4gICAgd2hlcmVcblxuTG9hZGluZyByZXF1aXJlZCBwYWNrYWdlOiBtYXBzXG5cbkF0dGFjaGluZyBwYWNrYWdlOiDigJhtYXBz4oCZXG5cblRoZSBmb2xsb3dpbmcgb2JqZWN0IGlzIG1hc2tlZCBmcm9tIOKAmHBhY2thZ2U6cHVycnLigJk6XG5cbiAgICBtYXBcblxuUGxlYXNlIGNpdGUgdGhlIGVCaXJkIFN0YXR1cyBhbmQgVHJlbmRzIGRhdGEgdXNpbmc6IFxuICBGaW5rLCBELiwgVC4gQXVlciwgQS4gSm9obnN0b24sIE0uIFN0cmltYXMtTWFja2V5LCBTLiBMaWdvY2tpLCBPLiBSb2JpbnNvbiwgXG4gIFcuIEhvY2hhY2hrYSwgTC4gSmFyb21jenlrLCBDLiBDcm93bGV5LCBLLiBEdW5oYW0sIEEuIFN0aWxsbWFuLCBJLiBEYXZpZXMsIFxuICBBLiBSb2Rld2FsZCwgVi4gUnVpei1HdXRpZXJyZXosIEMuIFdvb2QuIDIwMjMuXG4gIGVCaXJkIFN0YXR1cyBhbmQgVHJlbmRzLCBEYXRhIFZlcnNpb246IDIwMjI7IFJlbGVhc2VkOiAyMDIzLiBDb3JuZWxsIExhYiBvZlxuICBPcm5pdGhvbG9neSwgSXRoYWNhLCBOZXcgWW9yay4gaHR0cHM6Ly9kb2kub3JnLzEwLjIxNzMvZWJpcmRzdC4yMDIyXG5cblRoaXMgdmVyc2lvbiBvZiB0aGUgcGFja2FnZSBwcm92aWRlcyBhY2Nlc3MgdG8gdGhlIDIwMjIgdmVyc2lvbiBvZiB0aGUgZUJpcmRcblN0YXR1cyBhbmQgVHJlbmRzIERhdGEgUHJvZHVjdHMuIEFjY2VzcyB0byB0aGUgMjAyMiBkYXRhIHdpbGwgYmUgcHJvdmlkZWQgXG51bnRpbCBOb3ZlbWJlciAyMDI0IHdoZW4gaXQgd2lsbCBiZSByZXBsYWNlZCBieSB0aGUgMjAyMyBkYXRhLiBBdCB0aGF0IFxucG9pbnQsIHlvdSB3aWxsIGJlIHJlcXVpcmVkIHRvIHVwZGF0ZSB0aGlzIFIgcGFja2FnZSBhbmQgdHJhbnNpdGlvbiB0byB1c2luZyBcbnRoZSBuZXcgZGF0YS5cbnRlcnJhIDEuNy43MVxuXG5BdHRhY2hpbmcgcGFja2FnZTog4oCYdGVycmHigJlcblxuVGhlIGZvbGxvd2luZyBvYmplY3QgaXMgbWFza2VkIGZyb20g4oCYcGFja2FnZTpwaHl0b29sc+KAmTpcblxuICAgIHJlc2NhbGVcblxuVGhlIGZvbGxvd2luZyBvYmplY3RzIGFyZSBtYXNrZWQgZnJvbSDigJhwYWNrYWdlOmFwZeKAmTpcblxuICAgIHJvdGF0ZSwgdHJhbnMsIHpvb21cblxuVGhlIGZvbGxvd2luZyBvYmplY3QgaXMgbWFza2VkIGZyb20g4oCYcGFja2FnZTp0aWR5cuKAmTpcblxuICAgIGV4dHJhY3RcblxuTG9hZGluZyByZXF1aXJlZCBwYWNrYWdlOiBwZXJtdXRlXG5Mb2FkaW5nIHJlcXVpcmVkIHBhY2thZ2U6IGxhdHRpY2VcblRoaXMgaXMgdmVnYW4gMi42LTRcblxuQXR0YWNoaW5nIHBhY2thZ2U6IOKAmHZlZ2Fu4oCZXG5cblRoZSBmb2xsb3dpbmcgb2JqZWN0IGlzIG1hc2tlZCBmcm9tIOKAmHBhY2thZ2U6cGh5dG9vbHPigJk6XG5cbiAgICBzY29yZXNcblxuTG9hZGluZyByZXF1aXJlZCBwYWNrYWdlOiBtdnRub3JtXG5Mb2FkaW5nIHJlcXVpcmVkIHBhY2thZ2U6IHN1cnZpdmFsXG5Mb2FkaW5nIHJlcXVpcmVkIHBhY2thZ2U6IFRILmRhdGFcbkxvYWRpbmcgcmVxdWlyZWQgcGFja2FnZTogTUFTU1xuXG5BdHRhY2hpbmcgcGFja2FnZTog4oCYTUFTU+KAmVxuXG5UaGUgZm9sbG93aW5nIG9iamVjdCBpcyBtYXNrZWQgZnJvbSDigJhwYWNrYWdlOnRlcnJh4oCZOlxuXG4gICAgYXJlYVxuXG5UaGUgZm9sbG93aW5nIG9iamVjdCBpcyBtYXNrZWQgZnJvbSDigJhwYWNrYWdlOmRwbHly4oCZOlxuXG4gICAgc2VsZWN0XG5cblxuQXR0YWNoaW5nIHBhY2thZ2U6IOKAmFRILmRhdGHigJlcblxuVGhlIGZvbGxvd2luZyBvYmplY3QgaXMgbWFza2VkIGZyb20g4oCYcGFja2FnZTpNQVNT4oCZOlxuXG4gICAgZ2V5c2VyXG5cblxuQXR0YWNoaW5nIHBhY2thZ2U6IOKAmGdncHVicuKAmVxuXG5UaGUgZm9sbG93aW5nIG9iamVjdCBpcyBtYXNrZWQgZnJvbSDigJhwYWNrYWdlOnRlcnJh4oCZOlxuXG4gICAgcm90YXRlXG5cblRoZSBmb2xsb3dpbmcgb2JqZWN0IGlzIG1hc2tlZCBmcm9tIOKAmHBhY2thZ2U6YXBl4oCZOlxuXG4gICAgcm90YXRlXG5cbkxvYWRpbmcgcmVxdWlyZWQgcGFja2FnZTogbmxtZVxuXG5BdHRhY2hpbmcgcGFja2FnZTog4oCYbmxtZeKAmVxuXG5UaGUgZm9sbG93aW5nIG9iamVjdCBpcyBtYXNrZWQgZnJvbSDigJhwYWNrYWdlOmRwbHly4oCZOlxuXG4gICAgY29sbGFwc2VcblxuUmVnaXN0ZXJlZCBTMyBtZXRob2Qgb3ZlcndyaXR0ZW4gYnkgJ0dHYWxseSc6XG4gIG1ldGhvZCBmcm9tICAgXG4gICsuZ2cgICBnZ3Bsb3QyXG5cbkF0dGFjaGluZyBwYWNrYWdlOiDigJhHR2FsbHnigJlcblxuVGhlIGZvbGxvd2luZyBvYmplY3QgaXMgbWFza2VkIGZyb20g4oCYcGFja2FnZTp0ZXJyYeKAmTpcblxuICAgIHdyYXBcblxuZ2d0cmVlIHYzLjEwLjAgRm9yIGhlbHA6IGh0dHBzOi8veXVsYWItc211LnRvcC90cmVlZGF0YS1ib29rL1xuXG5JZiB5b3UgdXNlIHRoZSBnZ3RyZWUgcGFja2FnZSBzdWl0ZSBpbiBwdWJsaXNoZWQgcmVzZWFyY2gsIHBsZWFzZSBjaXRlIHRoZSBhcHByb3ByaWF0ZSBwYXBlcihzKTpcblxuR3VhbmdjaHVhbmcgWXUsIERhdmlkIFNtaXRoLCBIdWFjaGVuIFpodSwgWWkgR3VhbiwgVG9tbXkgVHNhbi1ZdWsgTGFtLiBnZ3RyZWU6IGFuIFIgcGFja2FnZSBmb3IgdmlzdWFsaXphdGlvbiBhbmQgYW5ub3RhdGlvbiBvZiBwaHlsb2dlbmV0aWNcbnRyZWVzIHdpdGggdGhlaXIgY292YXJpYXRlcyBhbmQgb3RoZXIgYXNzb2NpYXRlZCBkYXRhLiBNZXRob2RzIGluIEVjb2xvZ3kgYW5kIEV2b2x1dGlvbi4gMjAxNywgOCgxKToyOC0zNi4gZG9pOjEwLjExMTEvMjA0MS0yMTBYLjEyNjI4XG5cbkd1YW5nY2h1YW5nIFl1LiBVc2luZyBnZ3RyZWUgdG8gdmlzdWFsaXplIGRhdGEgb24gdHJlZS1saWtlIHN0cnVjdHVyZXMuIEN1cnJlbnQgUHJvdG9jb2xzIGluIEJpb2luZm9ybWF0aWNzLiAyMDIwLCA2OTplOTYuIGRvaToxMC4xMDAyL2NwYmkuOTZcblxuR3VhbmdjaHVhbmcgWXUuICBEYXRhIEludGVncmF0aW9uLCBNYW5pcHVsYXRpb24gYW5kIFZpc3VhbGl6YXRpb24gb2YgUGh5bG9nZW5ldGljIFRyZWVzICgxc3QgZWRpdGlvbikuIENoYXBtYW4gYW5kIEhhbGwvQ1JDLiAyMDIyLFxuZG9pOjEwLjEyMDEvOTc4MTAwMzI3OTI0MiBcblxuQXR0YWNoaW5nIHBhY2thZ2U6IOKAmGdndHJlZeKAmVxuXG5UaGUgZm9sbG93aW5nIG9iamVjdCBpcyBtYXNrZWQgZnJvbSDigJhwYWNrYWdlOm5sbWXigJk6XG5cbiAgICBjb2xsYXBzZVxuXG5UaGUgZm9sbG93aW5nIG9iamVjdCBpcyBtYXNrZWQgZnJvbSDigJhwYWNrYWdlOmdncHVicuKAmTpcblxuICAgIHJvdGF0ZVxuXG5UaGUgZm9sbG93aW5nIG9iamVjdHMgYXJlIG1hc2tlZCBmcm9tIOKAmHBhY2thZ2U6dGVycmHigJk6XG5cbiAgICBmbGlwLCBpbnNldCwgcm90YXRlXG5cblRoZSBmb2xsb3dpbmcgb2JqZWN0IGlzIG1hc2tlZCBmcm9tIOKAmHBhY2thZ2U6YXBl4oCZOlxuXG4gICAgcm90YXRlXG5cblRoZSBmb2xsb3dpbmcgb2JqZWN0IGlzIG1hc2tlZCBmcm9tIOKAmHBhY2thZ2U6dGlkeXLigJk6XG5cbiAgICBleHBhbmRcblxuXG5BdHRhY2hpbmcgcGFja2FnZTog4oCYZm9yZWFjaOKAmVxuXG5UaGUgZm9sbG93aW5nIG9iamVjdHMgYXJlIG1hc2tlZCBmcm9tIOKAmHBhY2thZ2U6cHVycnLigJk6XG5cbiAgICBhY2N1bXVsYXRlLCB3aGVuXG5cblNwaGVyaWNhbCBnZW9tZXRyeSAoczIpIHN3aXRjaGVkIG9mZlxuIn0= -->
+<pre><code>Linking to GEOS 3.11.0, GDAL 3.5.3, PROJ 9.1.0; sf_use_s2() is TRUE
+── Attaching core tidyverse packages ────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 2.0.0 ──
+✔ dplyr     1.1.4     ✔ readr     2.1.5
+✔ forcats   1.0.0     ✔ stringr   1.5.1
+✔ ggplot2   3.4.4     ✔ tibble    3.2.1
+✔ lubridate 1.9.3     ✔ tidyr     1.3.1
+✔ purrr     1.0.2     ── Conflicts ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+ℹ Use the ]8;;http://conflicted.r-lib.org/conflicted package]8;; to force all conflicts to become errorsRegistered S3 methods overwritten by &#39;dbplyr&#39;:
+  method         from
+  print.tbl_lazy     
+  print.tbl_sql      
+
+Attaching package: ‘dbplyr’
+
+The following objects are masked from ‘package:dplyr’:
+
+    ident, sql
+
+Loading required package: ape
+
+Attaching package: ‘ape’
+
+The following object is masked from ‘package:dplyr’:
+
+    where
+
+Loading required package: maps
+
+Attaching package: ‘maps’
+
+The following object is masked from ‘package:purrr’:
+
+    map
+
+Please cite the eBird Status and Trends data using: 
+  Fink, D., T. Auer, A. Johnston, M. Strimas-Mackey, S. Ligocki, O. Robinson, 
+  W. Hochachka, L. Jaromczyk, C. Crowley, K. Dunham, A. Stillman, I. Davies, 
+  A. Rodewald, V. Ruiz-Gutierrez, C. Wood. 2023.
+  eBird Status and Trends, Data Version: 2022; Released: 2023. Cornell Lab of
+  Ornithology, Ithaca, New York. https://doi.org/10.2173/ebirdst.2022
+
+This version of the package provides access to the 2022 version of the eBird
+Status and Trends Data Products. Access to the 2022 data will be provided 
+until November 2024 when it will be replaced by the 2023 data. At that 
+point, you will be required to update this R package and transition to using 
+the new data.
+terra 1.7.71
+
+Attaching package: ‘terra’
+
+The following object is masked from ‘package:phytools’:
+
+    rescale
+
+The following objects are masked from ‘package:ape’:
+
+    rotate, trans, zoom
+
+The following object is masked from ‘package:tidyr’:
+
+    extract
+
+Loading required package: permute
+Loading required package: lattice
+This is vegan 2.6-4
+
+Attaching package: ‘vegan’
+
+The following object is masked from ‘package:phytools’:
+
+    scores
+
+Loading required package: mvtnorm
+Loading required package: survival
+Loading required package: TH.data
+Loading required package: MASS
+
+Attaching package: ‘MASS’
+
+The following object is masked from ‘package:terra’:
+
+    area
+
+The following object is masked from ‘package:dplyr’:
+
+    select
+
+
+Attaching package: ‘TH.data’
+
+The following object is masked from ‘package:MASS’:
+
+    geyser
+
+
+Attaching package: ‘ggpubr’
+
+The following object is masked from ‘package:terra’:
+
+    rotate
+
+The following object is masked from ‘package:ape’:
+
+    rotate
+
+Loading required package: nlme
+
+Attaching package: ‘nlme’
+
+The following object is masked from ‘package:dplyr’:
+
+    collapse
+
+Registered S3 method overwritten by &#39;GGally&#39;:
+  method from   
+  +.gg   ggplot2
+
+Attaching package: ‘GGally’
+
+The following object is masked from ‘package:terra’:
+
+    wrap
+
+ggtree v3.10.0 For help: https://yulab-smu.top/treedata-book/
+
+If you use the ggtree package suite in published research, please cite the appropriate paper(s):
+
+Guangchuang Yu, David Smith, Huachen Zhu, Yi Guan, Tommy Tsan-Yuk Lam. ggtree: an R package for visualization and annotation of phylogenetic
+trees with their covariates and other associated data. Methods in Ecology and Evolution. 2017, 8(1):28-36. doi:10.1111/2041-210X.12628
+
+Guangchuang Yu. Using ggtree to visualize data on tree-like structures. Current Protocols in Bioinformatics. 2020, 69:e96. doi:10.1002/cpbi.96
+
+Guangchuang Yu.  Data Integration, Manipulation and Visualization of Phylogenetic Trees (1st edition). Chapman and Hall/CRC. 2022,
+doi:10.1201/9781003279242 
+
+Attaching package: ‘ggtree’
+
+The following object is masked from ‘package:nlme’:
+
+    collapse
+
+The following object is masked from ‘package:ggpubr’:
+
+    rotate
+
+The following objects are masked from ‘package:terra’:
+
+    flip, inset, rotate
+
+The following object is masked from ‘package:ape’:
+
+    rotate
+
+The following object is masked from ‘package:tidyr’:
+
+    expand
+
+
+Attaching package: ‘foreach’
+
+The following objects are masked from ‘package:purrr’:
+
+    accumulate, when
+
+Spherical geometry (s2) switched off</code></pre>
+<!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <div id="introduction" class="section level1">

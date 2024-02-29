@@ -24,6 +24,7 @@ The data comes from the eBird status and trends data sets and is calculated from
 abundance_data = read_csv(filename(EBIRD_WORKING_OUTPUT_DIR, 'ebird_trends_abundance_test_data.csv'))
 head(abundance_data)
 ```
+
 These are the species available for our test
 ```{r}
 test_species = unique(abundance_data$species)
@@ -56,6 +57,7 @@ Load data
 pool_data = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'jetz_all_recorded_species.csv'))
 pool_data
 ```
+
 Map taxonomy to eBird
 ```{r}
 regional_pool_data = pool_data %>% 

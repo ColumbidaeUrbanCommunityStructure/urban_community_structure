@@ -45,7 +45,15 @@ head(pools)
 ```
 
 ```{r}
-write_csv(pools %>% 
+distances = read_csv(filename(GEO_WORKING_OUTPUT_DIR, 'distance_to_range_edge_v2.csv'))
+nrow(pools)
+nrow(pools %>% left_join(distances))
+```
+          
+```{r}
+write_csv(pools %>%
+            left_join(distances) %>% 
+            mutate(distance_to_range_edge_km = distance / 1000) %>%
             dplyr::select(
               city_id,
               city_name,
@@ -53,6 +61,7 @@ write_csv(pools %>%
               seasonal,
               presence,
               origin,
+              distance_to_range_edge_km,
               present_urban_high,
               present_urban_med,
               present_urban_low,
@@ -112,6 +121,7 @@ The data comes from the eBird status and trends data sets and is calculated from
 abundance_data = read_csv(filename(EBIRD_WORKING_OUTPUT_DIR, 'ebird_trends_abundance_test_data.csv'))
 head(abundance_data)
 ```
+
 ```{r}
 taxonomic_mapping = read_csv(filename(TAXONOMY_OUTPUT_DIR, 'taxonomy_mapping.csv'))
 test_species = unique(abundance_data$species)
@@ -155,4 +165,18 @@ comparison_data %>%
     theme(legend.position = "none")
 
 ggsave(filename(FIGURES_OUTPUT_DIR, 'thresholds_to_ebird_trends_and_status_abundance_data.jpg'))
+```
+
+
+```{r}
+comparison_data %>% 
+  ggplot(aes(x = relative_abundance_proxy, y = sqrt(max_mean_abundance))) +
+    geom_point() +
+    xlab('Abundance Proxy') + 
+    ylab('Mean abundance across cities (sqrt)') +
+    labs(title = 'Abundance proxy vs eBird relative abundance estimate', subtitle='eBird Status & Trends abundance data') +
+    theme_bw() +
+    theme(legend.position = "none")
+
+ggsave(filename(FIGURES_OUTPUT_DIR, 'abundance_proxy_to_ebird_trends_and_status_abundance_data.jpg'))
 ```

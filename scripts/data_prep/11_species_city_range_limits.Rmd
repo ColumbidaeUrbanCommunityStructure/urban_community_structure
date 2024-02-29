@@ -1,0 +1,115 @@
+---
+title: "Range limits"
+output: html_notebook
+---
+
+```{r}
+source('../env.R')
+```
+
+Here we wish to find out how close each city is to a species range limits.
+
+# Load data
+```{r}
+initial_city_selection = st_read(filename(mkdir(GEO_WORKING_OUTPUT_DIR, 'cities'), 'initial_selection.shp'))
+st_crs(initial_city_selection)
+```
+
+```{r}
+birdlife = st_read(DL_BIRDLIFE_DISTRIBUTIONS)
+st_crs(birdlife)
+```
+
+
+```{r}
+pools = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'jetz_all_recorded_species.csv'))
+pools
+```
+
+## Calculate distance
+```{r}
+city = initial_city_selection[initial_city_selection$city_id == 10,]
+species = birdlife[birdlife$SCI_NAME == 'Columbina passerina',]
+
+range_buffer = st_buffer(species, dist = 0.2)
+range_edge = st_difference(range_buffer, species)
+
+ggplot() +  
+  geom_sf(data = range_edge, aes(geometry = geometry), colour = "blue") +
+  geom_sf(data = city, aes(geometry = geometry), colour = "red")
+
+
+min(st_distance(range_edge, city))
+```
+
+```{r}
+city = initial_city_selection[initial_city_selection$city_id == 624,]
+species = birdlife[230,]
+
+range_buffer = st_buffer(species, dist = 0.2)
+range_edge = st_difference(range_buffer, species)
+
+ggplot() +  
+  geom_sf(data = range_edge, aes(geometry = geometry), colour = "blue") +
+  geom_sf(data = city, aes(geometry = geometry), colour = "red")
+
+
+min(st_distance(range_edge, city))
+```
+```{r, warning=F}
+range_edges = foreach(species = 1:nrow(birdlife), .combine = 'rbind') %do% {
+  range = birdlife[species,]
+  range_buffer = st_buffer(range, dist = 0.2)
+  range_diff = st_difference(range_buffer, range)
+  range_diff
+}
+```
+
+
+```{r}
+min(st_distance(range_edges[230,], initial_city_selection[initial_city_selection$city_id == 624,]))
+```
+
+```{r}
+for(index in 1:nrow(pools)) {
+  row = pools[index,]
+  species_name = str_replace(row$jetz_species_name, '_', ' ')
+  distance = min(st_distance(range_edges[range_edges$SCI_NAME %in% species_name,], initial_city_selection[initial_city_selection$city_id %in% row$city_id,]))
+  write_csv(data.frame(city_id = row$city_id, jetz_species_name = row$jetz_species_name, range_edge_distance = distance), filename(GEO_WORKING_OUTPUT_DIR, 'distance_to_range_edge.csv'), append = TRUE)
+}
+```
+
+
+```{r}
+distances = read_csv(filename(GEO_WORKING_OUTPUT_DIR, 'distance_to_range_edge.csv'), col_names = FALSE)
+colnames(distances) = c('city_id', 'jetz_species_name', 'distance')
+distances
+```
+```{r}
+species_needing_mapping = unique(distances$jetz_species_name[distances$distance == Inf])
+species_needing_mapping
+```
+
+```{r}
+taxonomic_mapping = read_csv(filename(TAXONOMY_OUTPUT_DIR, 'taxonomy_mapping.csv'))
+taxonomic_mapping[taxonomic_mapping$jetz_species_name %in% species_needing_mapping, c('species_name', 'jetz_species_name')]
+```
+
+```{r}
+write_csv(distances[distances$distance != Inf,], filename(GEO_WORKING_OUTPUT_DIR, 'distance_to_range_edge_v2.csv'))
+
+for (jetz_species_name in species_needing_mapping) {
+  birdlife_names = taxonomic_mapping[taxonomic_mapping$jetz_species_name == jetz_species_name, c('species_name')]
+  species_range_edges = st_union(range_edges[range_edges$SCI_NAME %in% birdlife_names$species_name, c('geometry')])
+  
+  cities_to_update = distances$city_id[distances$jetz_species_name == jetz_species_name]
+  
+  for (city_id in cities_to_update) {
+    distance = min(st_distance(species_range_edges, initial_city_selection[initial_city_selection$city_id == city_id,]))
+  
+    write_csv(data.frame(city_id = city_id, jetz_species_name = jetz_species_name, range_edge_distance = distance), filename(GEO_WORKING_OUTPUT_DIR, 'distance_to_range_edge_v2.csv'), append = TRUE)
+  }
+}
+```
+
+
