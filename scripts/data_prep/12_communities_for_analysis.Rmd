@@ -45,15 +45,17 @@ head(pools)
 ```
 
 ```{r}
-distances = read_csv(filename(GEO_WORKING_OUTPUT_DIR, 'distance_to_range_edge_v2.csv'))
+distances = read_csv(filename(GEO_WORKING_OUTPUT_DIR, 'distance_to_range_edge.csv'))
 nrow(pools)
 nrow(pools %>% left_join(distances))
+
+pools %>% left_join(distances) %>% filter(distance_to_northern_edge == Inf)
 ```
           
 ```{r}
 write_csv(pools %>%
             left_join(distances) %>% 
-            mutate(distance_to_range_edge_km = distance / 1000) %>%
+            mutate(distance_to_northern_edge_km = distance_to_northern_edge / 1000, distance_to_southern_edge_km = distance_to_southern_edge / 1000) %>%
             dplyr::select(
               city_id,
               city_name,
@@ -61,7 +63,8 @@ write_csv(pools %>%
               seasonal,
               presence,
               origin,
-              distance_to_range_edge_km,
+              distance_to_northern_edge_km,
+              distance_to_southern_edge_km,
               present_urban_high,
               present_urban_med,
               present_urban_low,
