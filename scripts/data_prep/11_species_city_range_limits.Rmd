@@ -31,60 +31,92 @@ pools
 city = initial_city_selection[initial_city_selection$city_id == 10,]
 species = birdlife[birdlife$SCI_NAME == 'Columbina passerina',]
 
-range_buffer = st_buffer(species, dist = 0.2)
-range_edge = st_difference(range_buffer, species)
+range_bbox = st_bbox(species)
+
+range_southern_limit = st_bbox(c(xmin = as.double(range_bbox['xmin']), xmax = as.double(range_bbox['xmax']), ymax = as.double(range_bbox['ymin']), ymin = as.double(range_bbox['ymin']) - 0.1), crs = st_crs(range_bbox))
+range_southern_limit_sf = st_as_sfc(range_southern_limit)
+
+range_northern_limit = st_bbox(c(xmin = as.double(range_bbox['xmin']), xmax = as.double(range_bbox['xmax']), ymax = as.double(range_bbox['ymax']) + 0.1, ymin = as.double(range_bbox['ymax']) - 0.1), crs = st_crs(range_bbox))
+range_northern_limit_sf = st_as_sfc(range_northern_limit)
 
 ggplot() +  
-  geom_sf(data = range_edge, aes(geometry = geometry), colour = "blue") +
+  geom_sf(data = range_southern_limit_sf, aes(geometry = geometry), colour = "blue") +
+  geom_sf(data = range_northern_limit_sf, aes(geometry = geometry), colour = "green") +
   geom_sf(data = city, aes(geometry = geometry), colour = "red")
 
 
-min(st_distance(range_edge, city))
+distance_to_southern_limit = st_distance(range_southern_limit_sf, city)
+distance_to_northern_limit = st_distance(range_northern_limit_sf, city)
 ```
 
 ```{r}
 city = initial_city_selection[initial_city_selection$city_id == 624,]
 species = birdlife[230,]
 
-range_buffer = st_buffer(species, dist = 0.2)
-range_edge = st_difference(range_buffer, species)
+range_bbox = st_bbox(species)
+
+range_southern_limit = st_bbox(c(xmin = as.double(range_bbox['xmin']), xmax = as.double(range_bbox['xmax']), ymax = as.double(range_bbox['ymin']), ymin = as.double(range_bbox['ymin']) - 0.1), crs = st_crs(range_bbox))
+range_southern_limit_sf = st_as_sfc(range_southern_limit)
+
+range_northern_limit = st_bbox(c(xmin = as.double(range_bbox['xmin']), xmax = as.double(range_bbox['xmax']), ymax = as.double(range_bbox['ymax']) + 0.1, ymin = as.double(range_bbox['ymax']) - 0.1), crs = st_crs(range_bbox))
+range_northern_limit_sf = st_as_sfc(range_northern_limit)
 
 ggplot() +  
-  geom_sf(data = range_edge, aes(geometry = geometry), colour = "blue") +
+  geom_sf(data = range_southern_limit_sf, aes(geometry = geometry), colour = "blue") +
+  geom_sf(data = range_northern_limit_sf, aes(geometry = geometry), colour = "green") +
   geom_sf(data = city, aes(geometry = geometry), colour = "red")
 
 
-min(st_distance(range_edge, city))
+distance_to_southern_limit = st_distance(range_southern_limit_sf, city)
+distance_to_northern_limit = st_distance(range_northern_limit_sf, city)
+
+st_crs(range_northern_limit_sf)
 ```
 ```{r, warning=F}
-range_edges = foreach(species = 1:nrow(birdlife), .combine = 'rbind') %do% {
-  range = birdlife[species,]
-  range_buffer = st_buffer(range, dist = 0.2)
-  range_diff = st_difference(range_buffer, range)
-  range_diff
+birdlife_species_names = unique(birdlife$SCI_NAME)
+
+southern_range_edges = foreach(bl_species_name = birdlife_species_names, .combine = 'rbind') %do% {
+  range = birdlife[birdlife$SCI_NAME == bl_species_name,]
+  range_bbox = st_bbox(range)
+
+  range_southern_limit = st_bbox(c(xmin = as.double(range_bbox['xmin']), xmax = as.double(range_bbox['xmax']), ymax = as.double(range_bbox['ymin']), ymin = as.double(range_bbox['ymin']) - 0.1), crs = st_crs(range_bbox))
+ result = st_sf(geometry = st_as_sfc(range_southern_limit))
+ result$SCI_NAME = bl_species_name
+ result
+}
+
+northern_range_edges = foreach(bl_species_name = birdlife_species_names, .combine = 'rbind') %do% {
+  range = birdlife[birdlife$SCI_NAME == bl_species_name,]
+  range_bbox = st_bbox(range)
+
+  range_northern_limit = st_bbox(c(xmin = as.double(range_bbox['xmin']), xmax = as.double(range_bbox['xmax']), ymax = as.double(range_bbox['ymax']) + 0.1, ymin = as.double(range_bbox['ymax']) - 0.1), crs = st_crs(range_bbox))
+  result = st_sf(geometry = st_as_sfc(range_northern_limit))
+  result$SCI_NAME = bl_species_name
+  result
 }
 ```
 
-
 ```{r}
-min(st_distance(range_edges[230,], initial_city_selection[initial_city_selection$city_id == 624,]))
+northern_range_edges[northern_range_edges$SCI_NAME %in% c('Columba livia'),]
 ```
 
-```{r}
+```{r, warning = false}
 for(index in 1:nrow(pools)) {
   row = pools[index,]
   species_name = str_replace(row$jetz_species_name, '_', ' ')
-  distance = min(st_distance(range_edges[range_edges$SCI_NAME %in% species_name,], initial_city_selection[initial_city_selection$city_id %in% row$city_id,]))
-  write_csv(data.frame(city_id = row$city_id, jetz_species_name = row$jetz_species_name, range_edge_distance = distance), filename(GEO_WORKING_OUTPUT_DIR, 'distance_to_range_edge.csv'), append = TRUE)
+  distance_to_northern_edge = min(st_distance(northern_range_edges[northern_range_edges$SCI_NAME %in% species_name,], initial_city_selection[initial_city_selection$city_id %in% row$city_id,]))
+  distance_to_southern_edge = min(st_distance(southern_range_edges[southern_range_edges$SCI_NAME %in% species_name,], initial_city_selection[initial_city_selection$city_id %in% row$city_id,]))
+  write_csv(data.frame(city_id = row$city_id, jetz_species_name = row$jetz_species_name, distance_to_northern_edge = distance_to_northern_edge, distance_to_southern_edge = distance_to_southern_edge), filename(GEO_WORKING_OUTPUT_DIR, 'distance_to_range_edge.csv'), append = TRUE)
 }
 ```
 
 
 ```{r}
 distances = read_csv(filename(GEO_WORKING_OUTPUT_DIR, 'distance_to_range_edge.csv'), col_names = FALSE)
-colnames(distances) = c('city_id', 'jetz_species_name', 'distance')
+colnames(distances) = c('city_id', 'jetz_species_name', 'distance_to_northern_edge', 'distance_to_southern_edge')
 distances
 ```
+
 ```{r}
 species_needing_mapping = unique(distances$jetz_species_name[distances$distance == Inf])
 species_needing_mapping
@@ -95,16 +127,26 @@ taxonomic_mapping = read_csv(filename(TAXONOMY_OUTPUT_DIR, 'taxonomy_mapping.csv
 taxonomic_mapping[taxonomic_mapping$jetz_species_name %in% species_needing_mapping, c('species_name', 'jetz_species_name')]
 ```
 
+Spilopelia chinensis
+```{r}
+northern_range_edges[range_edges$SCI_NAME %in% c('Spilopelia chinensis'), c('geometry')]
+```
+
 ```{r}
 write_csv(distances[distances$distance != Inf,], filename(GEO_WORKING_OUTPUT_DIR, 'distance_to_range_edge_v2.csv'))
 
 for (jetz_species_name in species_needing_mapping) {
   birdlife_names = taxonomic_mapping[taxonomic_mapping$jetz_species_name == jetz_species_name, c('species_name')]
-  species_range_edges = st_union(range_edges[range_edges$SCI_NAME %in% birdlife_names$species_name, c('geometry')])
+  species_northern_range_edges = st_union(northern_range_edges[range_edges$SCI_NAME %in% birdlife_names$species_name, c('geometry')])
+  species_southern_range_edges = st_union(southern_range_edges[range_edges$SCI_NAME %in% birdlife_names$species_name, c('geometry')])
   
   cities_to_update = distances$city_id[distances$jetz_species_name == jetz_species_name]
   
   for (city_id in cities_to_update) {
+  distance_to_northern_edge = min(st_distance(species_northern_range_edges, initial_city_selection[initial_city_selection$city_id %in% row$city_id,]))
+  distance_to_southern_edge = min(st_distance(southern_range_edges[range_edges$SCI_NAME %in% species_name,], initial_city_selection[initial_city_selection$city_id %in% row$city_id,]))
+  write_csv(data.frame(city_id = row$city_id, jetz_species_name = row$jetz_species_name, distance_to_northern_edge = distance_to_northern_edge, distance_to_southern_edge = distance_to_southern_edge), filename(GEO_WORKING_OUTPUT_DIR, 'distance_to_range_edge.csv'), append = TRUE)
+  
     distance = min(st_distance(species_range_edges, initial_city_selection[initial_city_selection$city_id == city_id,]))
   
     write_csv(data.frame(city_id = city_id, jetz_species_name = jetz_species_name, range_edge_distance = distance), filename(GEO_WORKING_OUTPUT_DIR, 'distance_to_range_edge_v2.csv'), append = TRUE)
