@@ -47,6 +47,25 @@ community_data_metrics = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'community_asse
 community_data_metrics
 ```
 
+```{r}
+test_value = function(name, normalised_list) {
+  wilcox_test_result = wilcox.test(normalised_list, mu = 0.5)
+  
+  significance = ifelse(wilcox_test_result$p.value < 0.0001, '***', 
+                        ifelse(wilcox_test_result$p.value < 0.001, '**', 
+                               ifelse(wilcox_test_result$p.value < 0.01, '*', '')))
+  m = mean(normalised_list)
+  
+  paste(name, 'mean', round(m, 2), significance)
+}
+```
+
+```{r}
+test_value('Global MNTD', community_data_metrics$mntd_normalised)
+test_value('Global beak gape', community_data_metrics$gape_width_fdiv_normalised)
+test_value('Global locomotory trait', community_data_metrics$locomotory_trait_fdiv_normalised)
+```
+
 Load trait data
 ```{r}
 traits = read_csv(filename(TAXONOMY_OUTPUT_DIR, 'traits_jetz.csv'))
@@ -178,39 +197,42 @@ phylo_tree_width = 125
 title_height = 8
 
 get_image_height = function(city_cluster_data_metrics) {
-  get_presence_cell_height(city_cluster_data_metrics) + (2 * city_metric_height) + title_height
+  get_presence_cell_height(city_cluster_data_metrics) + (3 * city_metric_height) + title_height
 }
 
 get_image_width = function(city_cluster_data_metrics) {
   get_presence_cell_width(city_cluster_data_metrics) + traits_width + phylo_tree_width
 }
 ```
-         
+
 ```{r}
-test_value = function(name, normalised_list) {
-  wilcox_test_result = wilcox.test(normalised_list, mu = 0.5)
-  
-  significance = ifelse(wilcox_test_result$p.value < 0.0001, '***', 
-                        ifelse(wilcox_test_result$p.value < 0.001, '**', 
-                               ifelse(wilcox_test_result$p.value < 0.01, '*', '')))
-  m = mean(normalised_list)
-  
-  paste(name, 'mean', round(m, 2), significance)
+species_in_city_label = function(species) {
+  paste(
+    ifelse(species$seasonal == 'Resident', '', substring(species$seasonal, 0, 1)),
+    ifelse(species$origin == 'Native', '', substring(species$origin, 0, 1)),
+    ifelse(species$distance_to_northern_edge_km > 200, '', paste('NRL', round(species$distance_to_northern_edge_km), sep = ' ')),
+    ifelse(species$distance_to_southern_edge_km > 200, '', paste('SRL', round(species$distance_to_northern_edge_km), sep = ' ')),
+    sep = '\n'
+  )
 }
+
+species_in_city_label(head(communities))
 ```
 
 ```{r}
 plot_city_cluster = function(city_cluster_data_metrics, title) {
   species_in_cluster = communities %>% 
     filter(city_id %in% city_cluster_data_metrics$city_id) %>% 
-    dplyr::select(jetz_species_name, city_name, relative_abundance_proxy)
+    dplyr::select(jetz_species_name, city_name, relative_abundance_proxy, seasonal, origin, distance_to_northern_edge_km, distance_to_southern_edge_km)
   
+  species_in_cluster$label = species_in_city_label(species_in_cluster)
   tree_cropped <- ladderize(drop.tip(phylo_tree, setdiff(phylo_tree$tip.label, species_in_cluster$jetz_species_name)))
     
   gg_tree = ggtree(tree_cropped)
   
   gg_presence = ggplot(species_in_cluster, aes(x=city_name, y=jetz_species_name)) + 
           geom_tile(aes(fill=relative_abundance_proxy)) + 
+          geom_text(aes(label=label), size=0.75) +
           scale_fill_gradientn(colours=c("#98FB98", "#FFFFE0", "yellow", "orange", "#FF4500", "red", "red"), values=c(0, 0.00000000001, 0.1, 0.25, 0.5, 0.75, 1), na.value = "transparent") +
           theme_minimal() + xlab(NULL) + ylab(NULL) + 
           theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + 
@@ -222,7 +244,9 @@ plot_city_cluster = function(city_cluster_data_metrics, title) {
   
   gg_cities_mntd = ggplot(city_cluster_data_metrics, aes(x = city_name, y = mntd_normalised)) + geom_bar(stat = "identity") + theme_minimal() + theme(legend.position = "none", axis.text.x=element_blank()) + xlab(NULL) + ylab("MNTD") + ylim(0, 1)
   
-  gg_cities_fd = ggplot(city_cluster_data_metrics, aes(x = city_name, y = fdiv_normalised)) + geom_bar(stat = "identity") + theme_minimal() + theme(legend.position = "none", axis.text.x=element_blank()) + xlab(NULL) + ylab("FDiv") + ylim(0, 1)
+  gg_cities_gape_fd = ggplot(city_cluster_data_metrics, aes(x = city_name, y = gape_width_fdiv_normalised)) + geom_bar(stat = "identity") + theme_minimal() + theme(legend.position = "none", axis.text.x=element_blank()) + xlab(NULL) + ylab("Gape") + ylim(0, 1)
+  
+  gg_cities_loco_fd = ggplot(city_cluster_data_metrics, aes(x = city_name, y = locomotory_trait_fdiv_normalised)) + geom_bar(stat = "identity") + theme_minimal() + theme(legend.position = "none", axis.text.x=element_blank()) + xlab(NULL) + ylab("Loco.") + ylim(0, 1)
   
   gg_title = ggplot() + labs(title = title, subtitle = paste(
     test_value('MNTD', city_cluster_data_metrics$mntd_normalised),
@@ -235,7 +259,7 @@ plot_city_cluster = function(city_cluster_data_metrics, title) {
   gg_presence_height = get_presence_cell_height(city_cluster_data_metrics)
   gg_presence_width = get_presence_cell_width(city_cluster_data_metrics)
   
-  gg_presence %>% insert_top(gg_cities_mntd, height = (city_metric_height / gg_presence_height)) %>% insert_top(gg_cities_fd, height = (city_metric_height / gg_presence_height)) %>% insert_left(gg_tree, width = (phylo_tree_width / gg_presence_width)) %>% insert_right(gg_traits, width = (traits_width / gg_presence_width)) %>% insert_top(gg_title, height = (title_height / gg_presence_height))
+  gg_presence %>% insert_top(gg_cities_loco_fd, height = (city_metric_height / gg_presence_height)) %>% insert_top(gg_cities_gape_fd, height = (city_metric_height / gg_presence_height)) %>% insert_top(gg_cities_mntd, height = (city_metric_height / gg_presence_height)) %>% insert_left(gg_tree, width = (phylo_tree_width / gg_presence_width)) %>% insert_right(gg_traits, width = (traits_width / gg_presence_width)) %>% insert_top(gg_title, height = (title_height / gg_presence_height))
 }
 ```
 
@@ -274,6 +298,11 @@ ggplot() +
   geom_sf(data = nearctic_cities, aes(geometry = geometry, color = cluster))
 
 ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neartic_clusters.jpg'))
+```
+```{r}
+test_value('Nearctic MNTD', nearctic_cities$mntd_normalised)
+test_value('Nearctic beak gape', nearctic_cities$gape_width_fdiv_normalised)
+test_value('Nearctic locomotory trait', nearctic_cities$locomotory_trait_fdiv_normalised)
 ```
 
 
@@ -335,6 +364,12 @@ ggplot() +
   geom_sf(data = neotropic_biomes, aes(geometry = geometry)) + 
   geom_sf(data = neotropic_cities, aes(geometry = geometry, color = cluster))
 ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neotropic_clusters.jpg'))
+```
+
+```{r}
+test_value('Neotropic MNTD', neotropic_cities$mntd_normalised)
+test_value('Neotropic beak gape', neotropic_cities$gape_width_fdiv_normalised)
+test_value('Neotropic locomotory trait', neotropic_cities$locomotory_trait_fdiv_normalised)
 ```
 
 ### Neotropic Cluster 1
@@ -402,6 +437,12 @@ ggplot() +
   geom_sf(data = palearctic_biomes, aes(geometry = geometry)) + 
   geom_sf(data = palearctic_cities, aes(geometry = geometry, color = cluster))
 ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'palearctic_clusters.jpg'))
+```
+
+```{r}
+test_value('Palearctic MNTD', palearctic_cities$mntd_normalised)
+test_value('Palearctic beak gape', palearctic_cities$gape_width_fdiv_normalised)
+test_value('Palearctic locomotory trait', palearctic_cities$locomotory_trait_fdiv_normalised)
 ```
 
 ### Palearctic Cluster 1
@@ -485,6 +526,12 @@ ggplot() +
 ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'afrotropic_clusters.jpg'))
 ```
 
+```{r}
+test_value('Afrotropic MNTD', afrotropic_cities$mntd_normalised)
+test_value('Afrotropic beak gape', afrotropic_cities$gape_width_fdiv_normalised)
+test_value('Afrotropic locomotory trait', afrotropic_cities$locomotory_trait_fdiv_normalised)
+```
+
 ### Afrotropic Cluster 1
 ```{r}
 afrotropic_cluster1 = afrotropic_cities %>% filter(cluster == 1)
@@ -531,38 +578,44 @@ ggplot() +
 ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'indomalayan_clusters.jpg'))
 ```
 
+```{r}
+test_value('Indomalayan MNTD', indomalayan_cities$mntd_normalised)
+test_value('Indomalayan beak gape', indomalayan_cities$gape_width_fdiv_normalised)
+test_value('Indomalayan locomotory trait', indomalayan_cities$locomotory_trait_fdiv_normalised)
+```
+
 ### Indomalayan Cluster 1
 ```{r}
 indomalayan_cluster1 = indomalayan_cities %>% filter(cluster == 1)
-plot_city_cluster(afrotropic_cluster2, 'Indomalayan cluster 1')
+plot_city_cluster(indomalayan_cluster1, 'Indomalayan cluster 1')
 ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'indomalayan_cluster1.jpg'), width = get_image_width(indomalayan_cluster1), height = get_image_height(indomalayan_cluster1), units = "mm")
 ```
 
 ### Indomalayan Cluster 2
 ```{r}
 indomalayan_cluster2 = indomalayan_cities %>% filter(cluster == 2)
-plot_city_cluster(afrotropic_cluster2, 'Indomalayan cluster 2')
+plot_city_cluster(indomalayan_cluster2, 'Indomalayan cluster 2')
 ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'indomalayan_cluster2.jpg'), width = get_image_width(indomalayan_cluster2), height = get_image_height(indomalayan_cluster2), units = "mm")
 ```
 
 ### Indomalayan Cluster 3
 ```{r}
 indomalayan_cluster3 = indomalayan_cities %>% filter(cluster == 3)
-plot_city_cluster(afrotropic_cluster2, 'Indomalayan cluster 3')
+plot_city_cluster(indomalayan_cluster3, 'Indomalayan cluster 3')
 ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'indomalayan_cluster3.jpg'), width = get_image_width(indomalayan_cluster3), height = get_image_height(indomalayan_cluster3), units = "mm")
 ```
 
 ### Indomalayan Cluster 4
 ```{r}
 indomalayan_cluster4 = indomalayan_cities %>% filter(cluster == 4)
-plot_city_cluster(afrotropic_cluster2, 'Indomalayan cluster 4')
+plot_city_cluster(indomalayan_cluster4, 'Indomalayan cluster 4')
 ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'indomalayan_cluster4.jpg'), width = get_image_width(indomalayan_cluster4), height = get_image_height(indomalayan_cluster4), units = "mm")
 ```
 
 ### Indomalayan Cluster 5
 ```{r}
 indomalayan_cluster5 = indomalayan_cities %>% filter(cluster == 5)
-plot_city_cluster(afrotropic_cluster2, 'Indomalayan cluster 5')
+plot_city_cluster(indomalayan_cluster5, 'Indomalayan cluster 5')
 ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'indomalayan_cluster5.jpg'), width = get_image_width(indomalayan_cluster5), height = get_image_height(indomalayan_cluster5), units = "mm")
 ```
 

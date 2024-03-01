@@ -42,6 +42,7 @@ city_to_single_realm = cities_in_realms %>%
   arrange(number_of_realms)
 head(city_to_single_realm)
 ```
+
 ```{r}
 write_csv(city_to_single_realm[,c('city_id', 'core_realm')], filename(CITY_DATA_OUTPUT_DIR, 'realms.csv'))
 ```
