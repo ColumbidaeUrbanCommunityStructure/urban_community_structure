@@ -77,8 +77,7 @@ fetch_normalised_traits = function(required_species_list) {
   required_traits = traits %>% filter(jetz_species_name %in% required_species_list)
   
   required_traits$gape_width_normalised = normalise(required_traits$gape_width, min(required_traits$gape_width), max(required_traits$gape_width))
-  required_traits$trophic_trait_normalised = normalise(required_traits$trophic_trait, min(required_traits$trophic_trait), max(required_traits$trophic_trait))
-  required_traits$locomotory_trait_normalised = normalise(required_traits$locomotory_trait, min(required_traits$locomotory_trait), max(required_traits$locomotory_trait))
+  required_traits$kipps_distance_fdiv_normalised = normalise(required_traits$kipps_distance, min(required_traits$kipps_distance), max(required_traits$kipps_distance))
   required_traits$mass_normalised = normalise(required_traits$mass, min(required_traits$mass), max(required_traits$mass))
   
   traits_normalised_long = required_traits %>% pivot_longer(cols = c('gape_width_normalised', 'kipps_distance_fdiv_normalised', 'mass_normalised'), names_to = 'trait', values_to = 'normalised_value') %>% dplyr::select(jetz_species_name, trait, normalised_value)
