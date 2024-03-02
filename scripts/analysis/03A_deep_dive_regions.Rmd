@@ -36,7 +36,7 @@ city_points = st_centroid(read_sf(filename(CITY_DATA_OUTPUT_DIR, 'city_selection
 
 ```{r}
 community_data_metrics = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'community_assembly_metrics_using_relative_abundance.csv')) %>%
-  dplyr::select(city_id, mntd_normalised, fdiv_normalised, mass_fdiv_normalised, locomotory_trait_fdiv_normalised, trophic_trait_fdiv_normalised, gape_width_fdiv_normalised) %>%
+  dplyr::select(city_id, mntd_normalised, fdiv_normalised, mass_fdiv_normalised, kipps_distance_fdiv_normalised, trophic_trait_fdiv_normalised, gape_width_fdiv_normalised) %>%
   left_join(read_csv(filename(CITY_DATA_OUTPUT_DIR, 'realms.csv'))) %>%
   left_join(communities_summary) %>%
   left_join(city_points[,c('city_id', 'city_nm')]) %>%
@@ -63,7 +63,7 @@ test_value = function(name, normalised_list) {
 ```{r}
 test_value('Global MNTD', community_data_metrics$mntd_normalised)
 test_value('Global beak gape', community_data_metrics$gape_width_fdiv_normalised)
-test_value('Global locomotory trait', community_data_metrics$locomotory_trait_fdiv_normalised)
+test_value('Global kipps distance', community_data_metrics$kipps_distance_fdiv_normalised)
 ```
 
 Load trait data
@@ -81,8 +81,8 @@ fetch_normalised_traits = function(required_species_list) {
   required_traits$locomotory_trait_normalised = normalise(required_traits$locomotory_trait, min(required_traits$locomotory_trait), max(required_traits$locomotory_trait))
   required_traits$mass_normalised = normalise(required_traits$mass, min(required_traits$mass), max(required_traits$mass))
   
-  traits_normalised_long = required_traits %>% pivot_longer(cols = c('gape_width_normalised', 'trophic_trait_normalised', 'locomotory_trait_normalised', 'mass_normalised'), names_to = 'trait', values_to = 'normalised_value') %>% dplyr::select(jetz_species_name, trait, normalised_value)
-  traits_normalised_long$trait = factor(traits_normalised_long$trait, levels = c('gape_width_normalised', 'trophic_trait_normalised', 'locomotory_trait_normalised', 'mass_normalised'), labels = c('Gape Width', 'Trophic Trait', 'Locomotory Trait', 'Mass'))
+  traits_normalised_long = required_traits %>% pivot_longer(cols = c('gape_width_normalised', 'kipps_distance_fdiv_normalised', 'mass_normalised'), names_to = 'trait', values_to = 'normalised_value') %>% dplyr::select(jetz_species_name, trait, normalised_value)
+  traits_normalised_long$trait = factor(traits_normalised_long$trait, levels = c('gape_width_normalised', 'kipps_distance_fdiv_normalised', 'mass_normalised'), labels = c('Gape Width', 'Kipps Distance', 'Mass'))
   
   traits_normalised_long
 }
@@ -246,12 +246,12 @@ plot_city_cluster = function(city_cluster_data_metrics, title) {
   
   gg_cities_gape_fd = ggplot(city_cluster_data_metrics, aes(x = city_name, y = gape_width_fdiv_normalised)) + geom_bar(stat = "identity") + theme_minimal() + theme(legend.position = "none", axis.text.x=element_blank()) + xlab(NULL) + ylab("Gape") + ylim(0, 1)
   
-  gg_cities_loco_fd = ggplot(city_cluster_data_metrics, aes(x = city_name, y = locomotory_trait_fdiv_normalised)) + geom_bar(stat = "identity") + theme_minimal() + theme(legend.position = "none", axis.text.x=element_blank()) + xlab(NULL) + ylab("Loco.") + ylim(0, 1)
+  gg_cities_loco_fd = ggplot(city_cluster_data_metrics, aes(x = city_name, y = kipps_distance_fdiv_normalised)) + geom_bar(stat = "identity") + theme_minimal() + theme(legend.position = "none", axis.text.x=element_blank()) + xlab(NULL) + ylab("Kipps") + ylim(0, 1)
   
   gg_title = ggplot() + labs(title = title, subtitle = paste(
     test_value('MNTD', city_cluster_data_metrics$mntd_normalised),
     test_value('FDiv', city_cluster_data_metrics$fdiv_normalised),
-    test_value('Locomotory trait', city_cluster_data_metrics$locomotory_trait_fdiv_normalised),
+    test_value('Kipps distance', city_cluster_data_metrics$kipps_distance_fdiv_normalised),
     test_value('Gape width', city_cluster_data_metrics$gape_width_fdiv_normalised),
     sep = '\n'
   )) + theme_minimal() + theme(plot.subtitle=element_text(size=8, hjust=0, color="#444444"))
@@ -302,7 +302,7 @@ ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neartic_clusters.jpg'))
 ```{r}
 test_value('Nearctic MNTD', nearctic_cities$mntd_normalised)
 test_value('Nearctic beak gape', nearctic_cities$gape_width_fdiv_normalised)
-test_value('Nearctic locomotory trait', nearctic_cities$locomotory_trait_fdiv_normalised)
+test_value('Nearctic Kipps distance', nearctic_cities$kipps_distance_fdiv_normalised)
 ```
 
 
@@ -369,7 +369,7 @@ ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neotropic_clusters.jpg'))
 ```{r}
 test_value('Neotropic MNTD', neotropic_cities$mntd_normalised)
 test_value('Neotropic beak gape', neotropic_cities$gape_width_fdiv_normalised)
-test_value('Neotropic locomotory trait', neotropic_cities$locomotory_trait_fdiv_normalised)
+test_value('Neotropic kipps distance', neotropic_cities$kipps_distance_fdiv_normalised)
 ```
 
 ### Neotropic Cluster 1
@@ -442,7 +442,7 @@ ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'palearctic_clusters.jpg'))
 ```{r}
 test_value('Palearctic MNTD', palearctic_cities$mntd_normalised)
 test_value('Palearctic beak gape', palearctic_cities$gape_width_fdiv_normalised)
-test_value('Palearctic locomotory trait', palearctic_cities$locomotory_trait_fdiv_normalised)
+test_value('Palearctic kipps distance', palearctic_cities$kipps_distance_fdiv_normalised)
 ```
 
 ### Palearctic Cluster 1
@@ -529,7 +529,7 @@ ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'afrotropic_clusters.jpg'))
 ```{r}
 test_value('Afrotropic MNTD', afrotropic_cities$mntd_normalised)
 test_value('Afrotropic beak gape', afrotropic_cities$gape_width_fdiv_normalised)
-test_value('Afrotropic locomotory trait', afrotropic_cities$locomotory_trait_fdiv_normalised)
+test_value('Afrotropic kipps distance', afrotropic_cities$kipps_distance_fdiv_normalised)
 ```
 
 ### Afrotropic Cluster 1
@@ -581,7 +581,7 @@ ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'indomalayan_clusters.jpg'))
 ```{r}
 test_value('Indomalayan MNTD', indomalayan_cities$mntd_normalised)
 test_value('Indomalayan beak gape', indomalayan_cities$gape_width_fdiv_normalised)
-test_value('Indomalayan locomotory trait', indomalayan_cities$locomotory_trait_fdiv_normalised)
+test_value('Indomalayan kipps distance', indomalayan_cities$kipps_distance_fdiv_normalised)
 ```
 
 ### Indomalayan Cluster 1
