@@ -361,7 +361,7 @@ Here we select the second axis of each trait PCA.
 
 ```{r}
 trait_database = avonet_jetz %>%
-  dplyr::select(JetzSpeciesName, beak_width, trophic_pc2, locomotory_pc2, mass) %>%
+  dplyr::select(JetzSpeciesName, beak_width, trophic_pc2, locomotory_pc2, mass, kipps_distance) %>%
   rename(jetz_species_name=JetzSpeciesName, gape_width=beak_width, trophic_trait=trophic_pc2, locomotory_trait=locomotory_pc2)
 trait_database
 ```
