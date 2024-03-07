@@ -48,6 +48,10 @@ community_data_metrics
 ```
 
 ```{r}
+community_data_metrics %>% group_by(core_realm) %>% summarise(total_cities = n())
+```
+
+```{r}
 test_value = function(name, normalised_list) {
   wilcox_test_result = wilcox.test(normalised_list, mu = 0.5)
   
@@ -64,6 +68,7 @@ test_value = function(name, normalised_list) {
 test_value('Global MNTD', community_data_metrics$mntd_normalised)
 test_value('Global beak gape', community_data_metrics$gape_width_fdiv_normalised)
 test_value('Global kipps distance', community_data_metrics$kipps_distance_fdiv_normalised)
+nrow(community_data_metrics)
 ```
 
 Load trait data
@@ -302,6 +307,7 @@ ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neartic_clusters.jpg'))
 test_value('Nearctic MNTD', nearctic_cities$mntd_normalised)
 test_value('Nearctic beak gape', nearctic_cities$gape_width_fdiv_normalised)
 test_value('Nearctic Kipps distance', nearctic_cities$kipps_distance_fdiv_normalised)
+nrow(nearctic_cities)
 ```
 
 
@@ -369,6 +375,7 @@ ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neotropic_clusters.jpg'))
 test_value('Neotropic MNTD', neotropic_cities$mntd_normalised)
 test_value('Neotropic beak gape', neotropic_cities$gape_width_fdiv_normalised)
 test_value('Neotropic kipps distance', neotropic_cities$kipps_distance_fdiv_normalised)
+nrow(neotropic_cities)
 ```
 
 ### Neotropic Cluster 1
@@ -442,13 +449,20 @@ ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'palearctic_clusters.jpg'))
 test_value('Palearctic MNTD', palearctic_cities$mntd_normalised)
 test_value('Palearctic beak gape', palearctic_cities$gape_width_fdiv_normalised)
 test_value('Palearctic kipps distance', palearctic_cities$kipps_distance_fdiv_normalised)
+nrow(palearctic_cities)
 ```
 
 ### Palearctic Cluster 1
 ```{r}
 palearctic_cluster1 = palearctic_cities %>% filter(cluster == 1)
-plot_city_cluster(palearctic_cluster1, 'Palearctic cluster 1')
+
+plot_city_cluster(palearctic_cluster1[1:25,], 'Palearctic cluster 1a')
 ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'palearctic_cluster1.jpg'), width = get_image_width(palearctic_cluster1), height = get_image_height(palearctic_cluster1), units = "mm")
+```
+
+```{r}
+plot_city_cluster(palearctic_cluster1[25:49,], 'Palearctic cluster 1b')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'palearctic_cluster1b.jpg'), width = get_image_width(palearctic_cluster1), height = get_image_height(palearctic_cluster1), units = "mm")
 ```
 
 ### Palearctic Cluster 2
@@ -529,6 +543,7 @@ ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'afrotropic_clusters.jpg'))
 test_value('Afrotropic MNTD', afrotropic_cities$mntd_normalised)
 test_value('Afrotropic beak gape', afrotropic_cities$gape_width_fdiv_normalised)
 test_value('Afrotropic kipps distance', afrotropic_cities$kipps_distance_fdiv_normalised)
+nrow(afrotropic_cities)
 ```
 
 ### Afrotropic Cluster 1
@@ -581,6 +596,7 @@ ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'indomalayan_clusters.jpg'))
 test_value('Indomalayan MNTD', indomalayan_cities$mntd_normalised)
 test_value('Indomalayan beak gape', indomalayan_cities$gape_width_fdiv_normalised)
 test_value('Indomalayan kipps distance', indomalayan_cities$kipps_distance_fdiv_normalised)
+nrow(indomalayan_cities)
 ```
 
 ### Indomalayan Cluster 1
@@ -618,3 +634,59 @@ plot_city_cluster(indomalayan_cluster5, 'Indomalayan cluster 5')
 ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'indomalayan_cluster5.jpg'), width = get_image_width(indomalayan_cluster5), height = get_image_height(indomalayan_cluster5), units = "mm")
 ```
 
+## Australasia
+```{r}
+australasia_cities_community_data = community_data_metrics %>% filter(core_realm == 'Australasia')
+australasia_cities_community_data %>% dplyr::select(city_name) %>% distinct() %>% as.list()
+```
+
+```{r}
+australasia_cities_nmds = community_nmds(communities %>% filter(city_id %in% australasia_cities_community_data$city_id)) 
+australasia_cities_nmds
+```
+
+```{r}
+scree_plot(australasia_cities_nmds)
+```
+
+```{r}
+australasia_cities = cluster_cities(city_nmds = australasia_cities_nmds, cities_community_data = australasia_cities_community_data, centers = 3)
+```
+
+```{r}
+plot_nmds_clusters(australasia_cities)
+```
+
+```{r}
+australasia_biomes = st_crop(resolve[resolve$REALM == 'Australasia',c('REALM')], xmin = 80, ymin = -70, xmax = 180, ymax = 20)
+ 
+ggplot() + 
+  geom_sf(data = australasia_biomes, aes(geometry = geometry)) + 
+  geom_sf(data = australasia_cities, aes(geometry = geometry, color = cluster))
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'australasia_clusters.jpg'))
+```
+
+```{r}
+test_value('Australasia MNTD', australasia_cities$mntd_normalised)
+test_value('Australasia beak gape', australasia_cities$gape_width_fdiv_normalised)
+test_value('Australasia kipps distance', australasia_cities$kipps_distance_fdiv_normalised)
+nrow(australasia_cities)
+```
+### Australasia Cluster 1
+```{r}
+australasia_cluster1 = australasia_cities %>% filter(cluster == 1)
+plot_city_cluster(australasia_cluster1, 'Australasia cluster 1')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'australasia_cluster1.jpg'), width = get_image_width(australasia_cluster1), height = get_image_height(australasia_cluster1), units = "mm")
+```
+
+```{r}
+australasia_cluster2 = australasia_cities %>% filter(cluster == 2)
+plot_city_cluster(australasia_cluster2, 'Australasia cluster 2')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'australasia_cluster2.jpg'), width = get_image_width(australasia_cluster2), height = get_image_height(australasia_cluster2), units = "mm")
+```
+
+```{r}
+australasia_cluster3 = australasia_cities %>% filter(cluster == 3)
+plot_city_cluster(australasia_cluster3, 'Australasia cluster 3')
+ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'australasia_cluster3.jpg'), width = get_image_width(australasia_cluster3), height = get_image_height(australasia_cluster3), units = "mm")
+```
