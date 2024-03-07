@@ -1,0 +1,185 @@
+---
+title: "Metrics for assessing community assembly processes"
+output: html_notebook
+bibliography: ../ref.bib  
+---
+
+```{r}
+source('../env.R')
+```
+
+```{r}
+community_data = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'community_assembly_metrics_using_relative_abundance.csv'))
+head(community_data)
+colnames(community_data)
+```
+
+Join on realms
+```{r}
+city_to_realm = read_csv(filename(CITY_DATA_OUTPUT_DIR, 'realms.csv'))
+community_data_with_realm = left_join(community_data, city_to_realm)
+```
+
+Cities as points
+```{r}
+city_points = st_centroid(read_sf(filename(CITY_DATA_OUTPUT_DIR, 'city_selection.shp'))) %>% left_join(community_data_with_realm)
+city_points_coords = st_coordinates(city_points)
+city_points$latitude = city_points_coords[,1]
+city_points$longitude = city_points_coords[,2]
+```
+  
+```{r}
+world_map = read_country_boundaries()
+```
+
+Load community data, and create long format version
+```{r}
+communities = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'communities_for_analysis.csv'))
+communities
+```
+```{r}
+community_summary = communities %>% group_by(city_id) %>% summarise(regional_pool_size = n(), urban_pool_size = sum(relative_abundance_proxy > 0))
+community_summary
+```
+
+Load trait data
+```{r}
+traits = read_csv(filename(TAXONOMY_OUTPUT_DIR, 'traits_jetz.csv'))
+head(traits)
+```
+
+Load realm geo
+```{r}
+resolve = read_resolve()
+head(resolve)
+```
+
+# Examine individual metrics
+```{r}
+geom_normalised_histogram = function(name, gg, legend.position = "right") {
+  gg + 
+    geom_histogram(aes(fill = core_realm), binwidth = 0.1, position = "dodge") +
+    geom_vline(aes(xintercept = 0.5), color = "#000000", size = 0.4) +
+    geom_vline(aes(xintercept = 0), color = "#000000", size = 0.2, linetype = "dashed") +
+    geom_vline(aes(xintercept = 1), color = "#000000", size = 0.2, linetype = "dashed") + 
+    ylab("Number of cities") + xlab("Normalised Response") + ylim(c(0, 70)) +
+    labs(title = name, fill = 'Realm') +
+    theme_bw() +
+    theme(legend.position=legend.position)
+}
+```
+
+```{r}
+geom_map = function(map_sf, title) {
+  norm_mntd_analysis_geo = ggplot() + 
+    geom_sf(data = world_map, aes(geometry = geometry)) +
+    map_sf +
+    normalised_colours_scale +
+    labs(title = title, colour = 'Normalised\nResponse')
+}
+```
+
+## MNTD
+```{r}
+norm_mntd_analysis_plot = geom_normalised_histogram(
+  'MNTD', 
+  ggplot(community_data_with_realm, aes(mntd_normalised))
+)
+norm_mntd_analysis_plot
+```
+
+```{r}
+norm_mntd_analysis_geo = geom_map(geom_sf(data = city_points, aes(color = mntd_normalised, geometry = geometry)), 'MNTD')
+norm_mntd_analysis_geo
+ggsave(filename(FIGURES_OUTPUT_DIR, 'normalised_mntd_using_abundance.jpg'), width = 2500, height=1100, units = 'px')
+```
+```{r}
+summary(lm(data = city_points, mntd_normalised ~ latitude))
+```
+```{r}
+summary(lm(data = city_points, mntd_normalised ~ abs(latitude)))
+```
+
+## Gape width - FDiv
+```{r}
+norm_gape_fdiv_analysis_plot = geom_normalised_histogram(
+  'Gape FDiv', 
+  ggplot(community_data_with_realm, aes(gape_width_fdiv_normalised))
+)
+norm_gape_fdiv_analysis_plot
+```
+
+```{r}
+norm_gape_fdiv_analysis_geo = geom_map(geom_sf(data = city_points, aes(color = gape_width_fdiv_normalised, geometry = geometry)), 'Gape Width FDiv')
+norm_gape_fdiv_analysis_geo
+ggsave(filename(FIGURES_OUTPUT_DIR, 'normalised_gape_width_using_abundance.jpg'), width = 2500, height=1100, units = 'px')
+```
+
+```{r}
+summary(lm(data = city_points, gape_width_fdiv_normalised ~ latitude))
+```
+
+```{r}
+summary(lm(data = city_points, gape_width_fdiv_normalised ~ abs(latitude)))
+```
+
+## Kipps distance - FDiv
+```{r}
+norm_kipps_fdiv_loco_analysis_plot = geom_normalised_histogram(
+  'Kipps distance FDiv', 
+  ggplot(community_data_with_realm, aes(kipps_distance_fdiv_normalised))
+)
+norm_kipps_fdiv_loco_analysis_plot
+```
+
+```{r}
+norm_kipps_fdiv_analysis_geo = geom_map(geom_sf(data = city_points, aes(color = kipps_distance_fdiv_normalised, geometry = geometry)), 'Kipps Distance FDiv')
+norm_kipps_fdiv_analysis_geo
+ggsave(filename(FIGURES_OUTPUT_DIR, 'normalised_kipps_distance_using_abundance.jpg'), width = 2500, height=1100, units = 'px')
+```
+
+```{r}
+summary(lm(data = city_points, kipps_distance_fdiv_normalised ~ latitude))
+```
+```{r}
+summary(lm(data = city_points, kipps_distance_fdiv_normalised ~ abs(latitude)))
+```
+
+# Compare metrics against each other
+```{r}
+ggplot(community_data_with_realm, aes(x = gape_width_fdiv_normalised, y = mntd_normalised, colour = core_realm)) + 
+  geom_point() +
+  ylab("MNTD") + 
+  xlab("Gape Width FDiv") +
+  theme_bw() + labs(color = "Realm")
+```
+
+
+
+```{r}
+ggplot(community_data_with_realm, aes(x = kipps_distance_fdiv_normalised, y = mntd_normalised, colour = core_realm)) + 
+  geom_point() +
+  ylab("MNTD") + 
+  xlab("Kipps Distance FDiv") +
+  theme_bw() + labs(color = "Realm")
+```
+```{r}
+ggplot(community_data_with_realm, aes(x = kipps_distance_fdiv_normalised, y = gape_width_fdiv_normalised, colour = core_realm)) + 
+  geom_point() +
+  ylab("Gape Width FDiv") + 
+  xlab("Kipps Distance FDiv") +
+  theme_bw() + labs(color = "Realm")
+```
+
+```{r}
+mntd_fdiv_analysis = community_data_with_realm %>% 
+  dplyr::select(city_id,  mntd_normalised, kipps_distance_fdiv_normalised, gape_width_fdiv_normalised) %>%
+  left_join(community_summary) %>%
+  mutate(urban_pool_perc = urban_pool_size * 100 / regional_pool_size)
+mntd_fdiv_analysis
+```
+
+```{r}
+ggpairs(mntd_fdiv_analysis %>% dplyr::select(mntd_normalised, kipps_distance_fdiv_normalised, gape_width_fdiv_normalised, regional_pool_size, urban_pool_size, urban_pool_perc))
+```
+
