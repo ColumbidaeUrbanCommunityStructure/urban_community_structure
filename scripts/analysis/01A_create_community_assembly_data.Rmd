@@ -150,7 +150,7 @@ get_mntd_for_communities(to_species_matrix_with_relative_abundance(communities$c
 ## FD
 ```{r}
 analysis_all_traits = c('mass', 'locomotory_trait', 'trophic_trait')
-analysis_single_traits = c('mass', 'locomotory_trait', 'trophic_trait', 'gape_width', 'kipps_distance')
+analysis_single_traits = c('mass', 'locomotory_trait', 'trophic_trait', 'gape_width', 'handwing_index')
 
 get_traits_data_frame = function(trait_names) {
   trait_names = prepend('jetz_species_name', trait_names)
