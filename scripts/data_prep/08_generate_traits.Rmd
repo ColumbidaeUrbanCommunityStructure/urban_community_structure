@@ -369,3 +369,20 @@ trait_database
 ```{r}
 write_csv(trait_database, filename(TAXONOMY_OUTPUT_DIR, 'traits_jetz.csv'))
 ```
+
+# Check which single traits are associated with mass
+```{r}
+ggplot(trait_database, aes(x = mass, y = gape_width)) + geom_point()
+```
+
+```{r}
+summary(lm(gape_width ~ mass, data = trait_database))
+```
+
+```{r}
+ggplot(trait_database, aes(x = mass, y = handwing_index)) + geom_point()
+```
+
+```{r}
+summary(lm(handwing_index ~ mass, data = trait_database))
+```
