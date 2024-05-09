@@ -53,7 +53,8 @@ Load realm geo
 resolve = read_resolve()
 head(resolve)
 ```
-# Summary metrics
+
+# Summary metrics by Realm
 ```{r}
 test_required_values = function(name, df) {
   cat(paste(
@@ -69,6 +70,7 @@ test_required_values = function(name, df) {
 ```{r}
 test_required_values('Global', community_data_with_realm)
 ```
+
 ```{r}
 unique(community_data_with_realm$core_realm)
 ```
@@ -76,9 +78,11 @@ unique(community_data_with_realm$core_realm)
 ```{r}
 test_required_values('Nearctic', community_data_with_realm[community_data_with_realm$core_realm == 'Nearctic',])
 ```
+
 ```{r}
 test_required_values('Neotropic', community_data_with_realm[community_data_with_realm$core_realm == 'Neotropic',])
 ```
+
 ```{r}
 test_required_values('Palearctic', community_data_with_realm[community_data_with_realm$core_realm == 'Palearctic',])
 ```
@@ -95,7 +99,85 @@ test_required_values('Indomalayan', community_data_with_realm[community_data_wit
 test_required_values('Australasia', community_data_with_realm[community_data_with_realm$core_realm == 'Australasia',])
 ```
 
+# Summary metrics by introduced species
+```{r}
+communities = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'communities_for_analysis.csv'))
+city_introduced_species = communities %>% group_by(city_id) %>% summarise(number_of_species = n()) %>% left_join(
+  communities %>% group_by(city_id) %>% filter(origin == 'Introduced') %>% summarise(number_of_introduced_species = n())
+) %>% replace_na(list(number_of_introduced_species = 0))
+
+community_data_with_introductions = left_join(community_data, city_introduced_species)
+community_data_with_introductions$has_introduced_species = community_data_with_introductions$number_of_introduced_species > 0
+community_data_with_introductions
+```
+```{r}
+community_data_with_introductions[,c('mntd_normalised', 'has_introduced_species')]
+```
+
+```{r}
+community_data_with_introductions %>% group_by(has_introduced_species) %>% summarise(
+  mean_mntd_normalised = mean(mntd_normalised, na.rm = T),
+  sd_mntd_normalised = sd(mntd_normalised, na.rm = T),
+  
+  mean_mass_fdiv_normalised = mean(mass_fdiv_normalised, na.rm = T),
+  sd_mass_fdiv_normalised = sd(mass_fdiv_normalised, na.rm = T),
+  
+  mean_gape_width_fdiv_normalised = mean(gape_width_fdiv_normalised, na.rm = T),
+  sd_gape_width_fdiv_normalised = sd(gape_width_fdiv_normalised, na.rm = T),
+  
+  mean_handwing_index_fdiv_normalised = mean(handwing_index_fdiv_normalised, na.rm = T),
+  sd_handwing_index_fdiv_normalised = sd(handwing_index_fdiv_normalised, na.rm = T)
+)
+```
+
+## MNTD
+```{r}
+ggplot(community_data_with_introductions, aes(x = has_introduced_species, y = mntd_normalised)) + geom_boxplot()
+```
+
+```{r}
+wilcox.test(mntd_normalised ~ has_introduced_species, community_data_with_introductions)
+```
+
+There is a significant difference between the response of cities with introduced species (0.53±0.27) and those without (0.47±0.19) (p-value = 0.02).
+
+
+## Mass FDiv
+```{r}
+ggplot(community_data_with_introductions, aes(x = has_introduced_species, y = mass_fdiv_normalised)) + geom_boxplot()
+```
+
+```{r}
+wilcox.test(mass_fdiv_normalised ~ has_introduced_species, community_data_with_introductions)
+```
+There is a significant difference between the response of cities with introduced species (0.57±0.27) and those without (0.73±0.24) (p < 0.0001)
+
+
+## Beak Gape FDiv
+```{r}
+ggplot(community_data_with_introductions, aes(x = has_introduced_species, y = gape_width_fdiv_normalised)) + geom_boxplot()
+```
+
+```{r}
+wilcox.test(gape_width_fdiv_normalised ~ has_introduced_species, community_data_with_introductions)
+```
+There is NOT a significant difference between the response of cities with introduced species (0.61±0.30) and those without (0.56±0.27)
+
+
+## HWI FDiv
+```{r}
+ggplot(community_data_with_introductions, aes(x = has_introduced_species, y = handwing_index_fdiv_normalised)) + geom_boxplot()
+```
+
+```{r}
+wilcox.test(handwing_index_fdiv_normalised ~ has_introduced_species, community_data_with_introductions)
+```
+There is a significant difference between the response of cities with introduced species (0.49±0.30) and those without (0.79±0.21) (p < 0.0001)
+
+
 # Examine individual metrics
+
+## Helper plot functions
 ```{r}
 geom_normalised_histogram = function(name, gg, legend.position = "right") {
   gg + 
