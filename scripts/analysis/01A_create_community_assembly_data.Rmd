@@ -112,6 +112,22 @@ species_m = to_species_matrix_with_relative_abundance(valid_cities$city_id)
 species_m
 ```
 
+## Species included in analysis
+```{r}
+all_species_in_analysis = communities[communities$city_id %in% valid_cities$city_id, c('jetz_species_name', 'relative_abundance_proxy')]
+all_species_in_analysis
+```
+
+Total species
+```{r}
+length(unique(all_species_in_analysis$jetz_species_name))
+```
+
+Total species in cities
+```{r}
+length(unique(all_species_in_analysis$jetz_species_name[all_species_in_analysis$relative_abundance_proxy > 0]))
+```
+
 ## Test communities
 ```{r}
 test_communities = to_species_matrix_with_relative_abundance(c(79, 624, 1786, 2059, 11536, 65))

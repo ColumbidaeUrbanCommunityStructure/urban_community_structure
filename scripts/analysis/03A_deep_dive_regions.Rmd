@@ -35,39 +35,27 @@ city_points = st_centroid(read_sf(filename(CITY_DATA_OUTPUT_DIR, 'city_selection
 ```
 
 ```{r}
-community_data_metrics = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'community_assembly_metrics_using_relative_abundance.csv')) %>%
+community_data_metrics_results = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'community_assembly_metrics_using_relative_abundance.csv'))
+community_data_metrics = community_data_metrics_results %>%
   dplyr::select(city_id, mntd_normalised, fdiv_normalised, mass_fdiv_normalised, handwing_index_fdiv_normalised, trophic_trait_fdiv_normalised, gape_width_fdiv_normalised) %>%
   left_join(read_csv(filename(CITY_DATA_OUTPUT_DIR, 'realms.csv'))) %>%
   left_join(communities_summary) %>%
   left_join(city_points[,c('city_id', 'city_nm')]) %>%
   rename(city_name='city_nm') %>%
-  na.omit() %>%
   arrange(city_id)
 
 community_data_metrics
 ```
-
 ```{r}
 community_data_metrics %>% group_by(core_realm) %>% summarise(total_cities = n())
 ```
 
-```{r}
-test_value = function(name, normalised_list) {
-  wilcox_test_result = wilcox.test(normalised_list, mu = 0.5)
-  
-  significance = ifelse(wilcox_test_result$p.value < 0.0001, '***', 
-                        ifelse(wilcox_test_result$p.value < 0.001, '**', 
-                               ifelse(wilcox_test_result$p.value < 0.01, '*', '')))
-  m = mean(normalised_list)
-  
-  paste(name, 'mean', round(m, 2), significance)
-}
-```
+### Help functions for results
 
 ```{r}
-test_value('Global MNTD', community_data_metrics$mntd_normalised)
-test_value('Global beak gape FDiv', community_data_metrics$gape_width_fdiv_normalised)
-test_value('Global HWI FDiv', community_data_metrics$handwing_index_fdiv_normalised)
+test_value_wilcox('Global MNTD', community_data_metrics$mntd_normalised)
+test_value_wilcox('Global beak gape FDiv', community_data_metrics$gape_width_fdiv_normalised)
+test_value_wilcox('Global HWI FDiv', community_data_metrics$handwing_index_fdiv_normalised)
 nrow(community_data_metrics)
 ```
 
@@ -253,10 +241,10 @@ plot_city_cluster = function(city_cluster_data_metrics, title) {
   gg_cities_loco_fd = ggplot(city_cluster_data_metrics, aes(x = city_name, y = handwing_index_fdiv_normalised)) + geom_bar(stat = "identity") + theme_minimal() + theme(legend.position = "none", axis.text.x=element_blank()) + xlab(NULL) + ylab("HWI") + ylim(0, 1)
   
   gg_title = ggplot() + labs(title = title, subtitle = paste(
-    test_value('MNTD', city_cluster_data_metrics$mntd_normalised),
-    test_value('Compound FDiv', city_cluster_data_metrics$fdiv_normalised),
-    test_value('HWI FDiv', city_cluster_data_metrics$handwing_index_fdiv_normalised),
-    test_value('Gape width FDiv', city_cluster_data_metrics$gape_width_fdiv_normalised),
+    test_value_wilcox('MNTD', city_cluster_data_metrics$mntd_normalised),
+    test_value_wilcox('Compound FDiv', city_cluster_data_metrics$fdiv_normalised),
+    test_value_wilcox('HWI FDiv', city_cluster_data_metrics$handwing_index_fdiv_normalised),
+    test_value_wilcox('Gape width FDiv', city_cluster_data_metrics$gape_width_fdiv_normalised),
     sep = '\n'
   )) + theme_minimal() + theme(plot.subtitle=element_text(size=8, hjust=0, color="#444444"))
   
@@ -304,9 +292,9 @@ ggplot() +
 ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neartic_clusters.jpg'))
 ```
 ```{r}
-test_value('Nearctic MNTD', nearctic_cities$mntd_normalised)
-test_value('Nearctic beak gape FDiv', nearctic_cities$gape_width_fdiv_normalised)
-test_value('Nearctic HWI FDiv', nearctic_cities$handwing_index_fdiv_normalised)
+test_value_wilcox('Nearctic MNTD', nearctic_cities$mntd_normalised)
+test_value_wilcox('Nearctic beak gape FDiv', nearctic_cities$gape_width_fdiv_normalised)
+test_value_wilcox('Nearctic HWI FDiv', nearctic_cities$handwing_index_fdiv_normalised)
 nrow(nearctic_cities)
 ```
 
@@ -372,9 +360,9 @@ ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'neotropic_clusters.jpg'))
 ```
 
 ```{r}
-test_value('Neotropic MNTD', neotropic_cities$mntd_normalised)
-test_value('Neotropic beak gape FDiv', neotropic_cities$gape_width_fdiv_normalised)
-test_value('Neotropic HWI FDiv', neotropic_cities$handwing_index_fdiv_normalised)
+test_value_wilcox('Neotropic MNTD', neotropic_cities$mntd_normalised)
+test_value_wilcox('Neotropic beak gape FDiv', neotropic_cities$gape_width_fdiv_normalised)
+test_value_wilcox('Neotropic HWI FDiv', neotropic_cities$handwing_index_fdiv_normalised)
 nrow(neotropic_cities)
 ```
 
@@ -429,7 +417,7 @@ scree_plot(palearctic_cities_nmds)
 ```
 
 ```{r}
-palearctic_cities = cluster_cities(city_nmds = palearctic_cities_nmds, cities_community_data = palearctic_cities_community_data, centers = 7)
+palearctic_cities = cluster_cities(city_nmds = palearctic_cities_nmds, cities_community_data = palearctic_cities_community_data, centers = 5)
 ```
 
 ```{r}
@@ -446,9 +434,9 @@ ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'palearctic_clusters.jpg'))
 ```
 
 ```{r}
-test_value('Palearctic MNTD', palearctic_cities$mntd_normalised)
-test_value('Palearctic beak gape FDiv', palearctic_cities$gape_width_fdiv_normalised)
-test_value('Palearctic HWI FDiv', palearctic_cities$handwing_index_fdiv_normalised)
+test_value_wilcox('Palearctic MNTD', palearctic_cities$mntd_normalised)
+test_value_wilcox('Palearctic beak gape FDiv', palearctic_cities$gape_width_fdiv_normalised)
+test_value_wilcox('Palearctic HWI FDiv', palearctic_cities$handwing_index_fdiv_normalised)
 nrow(palearctic_cities)
 ```
 
@@ -489,25 +477,6 @@ plot_city_cluster(palearctic_cluster5[1:25,], 'Palearctic cluster 5a')
 ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'palearctic_cluster5.jpg'), width = get_image_width(palearctic_cluster5), height = get_image_height(palearctic_cluster5), units = "mm")
 ```
 
-```{r}
-plot_city_cluster(palearctic_cluster5[25:50,], 'Palearctic cluster 5b')
-ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'palearctic_cluster5b.jpg'), width = get_image_width(palearctic_cluster5), height = get_image_height(palearctic_cluster5), units = "mm")
-```
-
-### Palearctic Cluster 6
-```{r}
-palearctic_cluster6 = palearctic_cities %>% filter(cluster == 6)
-plot_city_cluster(palearctic_cluster6, 'Palearctic cluster 6')
-ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'palearctic_cluster6.jpg'), width = get_image_width(palearctic_cluster6), height = get_image_height(palearctic_cluster6), units = "mm")
-```
-
-### Palearctic Cluster 7
-```{r}
-palearctic_cluster7 = palearctic_cities %>% filter(cluster == 7)
-plot_city_cluster(palearctic_cluster7, 'Palearctic cluster 7')
-ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'palearctic_cluster7.jpg'), width = get_image_width(palearctic_cluster7), height = get_image_height(palearctic_cluster7), units = "mm")
-```
-
 ## Afrotropic
 ```{r}
 afrotropic_cities_community_data = community_data_metrics %>% filter(core_realm == 'Afrotropic')
@@ -541,9 +510,9 @@ ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'afrotropic_clusters.jpg'))
 ```
 
 ```{r}
-test_value('Afrotropic MNTD', afrotropic_cities$mntd_normalised)
-test_value('Afrotropic beak gape FDiv', afrotropic_cities$gape_width_fdiv_normalised)
-test_value('Afrotropic HWI FDiv', afrotropic_cities$handwing_index_fdiv_normalised)
+test_value_wilcox('Afrotropic MNTD', afrotropic_cities$mntd_normalised)
+test_value_wilcox('Afrotropic beak gape FDiv', afrotropic_cities$gape_width_fdiv_normalised)
+test_value_wilcox('Afrotropic HWI FDiv', afrotropic_cities$handwing_index_fdiv_normalised)
 nrow(afrotropic_cities)
 ```
 
@@ -594,9 +563,9 @@ ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'indomalayan_clusters.jpg'))
 ```
 
 ```{r}
-test_value('Indomalayan MNTD', indomalayan_cities$mntd_normalised)
-test_value('Indomalayan beak gape FDiv', indomalayan_cities$gape_width_fdiv_normalised)
-test_value('Indomalayan HWI FDiv', indomalayan_cities$handwing_index_fdiv_normalised)
+test_value_wilcox('Indomalayan MNTD', indomalayan_cities$mntd_normalised)
+test_value_wilcox('Indomalayan beak gape FDiv', indomalayan_cities$gape_width_fdiv_normalised)
+test_value_wilcox('Indomalayan HWI FDiv', indomalayan_cities$handwing_index_fdiv_normalised)
 nrow(indomalayan_cities)
 ```
 
@@ -668,9 +637,9 @@ ggsave(filename(REGION_DEEP_DIVE_FIGURES_OUTPUT, 'australasia_clusters.jpg'))
 ```
 
 ```{r}
-test_value('Australasia MNTD', australasia_cities$mntd_normalised)
-test_value('Australasia beak gape FDiv', australasia_cities$gape_width_fdiv_normalised)
-test_value('Australasia HWI FDiv', australasia_cities$handwing_index_fdiv_normalised)
+test_value_wilcox('Australasia MNTD', australasia_cities$mntd_normalised)
+test_value_wilcox('Australasia beak gape FDiv', australasia_cities$gape_width_fdiv_normalised)
+test_value_wilcox('Australasia HWI FDiv', australasia_cities$handwing_index_fdiv_normalised)
 nrow(australasia_cities)
 ```
 ### Australasia Cluster 1

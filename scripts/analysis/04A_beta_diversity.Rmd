@@ -1,0 +1,83 @@
+---
+title: "Beta diversity"
+output: html_notebook
+---
+
+
+```{r}
+source('../env.R')
+```
+
+
+Join on realms
+```{r}
+city_to_realm = read_csv(filename(CITY_DATA_OUTPUT_DIR, 'realms.csv'))
+city_to_realm
+```
+
+Load community data, and create long format version
+```{r}
+communities = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'communities_for_analysis.csv')) %>% left_join(city_to_realm) %>% filter(core_realm != 'Oceania')
+communities
+```
+
+```{r}
+regional_realm_metrics = communities %>% 
+  distinct(core_realm, jetz_species_name) %>% 
+  group_by(core_realm) %>% 
+  summarise(total_regional_richness = n())
+
+urban_realm_metrics = function(min_relative_abundance_proxy) {
+  communities %>% 
+    filter(relative_abundance_proxy > min_relative_abundance_proxy) %>% 
+    distinct(core_realm, jetz_species_name) %>% 
+    group_by(core_realm) %>% 
+    summarise(total_urban_richness = n())
+}
+```
+
+```{R}
+res = t.test(1:10, y = c(7:20)) 
+res$p.value
+```
+
+```{r}
+p_t_test = function(x, y) {
+  result = t.test(x, y)
+  significance = ifelse(result$p.value < 0.0001, '***', 
+                        ifelse(result$p.value < 0.001, '**', 
+                               ifelse(result$p.value < 0.01, '*', '')))
+  
+  significance
+}
+```
+
+```{r}
+turnover_report = function(min_relative_abundance_proxy) {
+  realm_metrics = left_join(regional_realm_metrics, urban_realm_metrics(min_relative_abundance_proxy))
+  
+  communities %>% 
+    filter(relative_abundance_proxy > min_relative_abundance_proxy) %>% 
+    group_by(city_id, core_realm) %>% 
+    summarise(city_urban_richness = n()) %>%
+    left_join(realm_metrics) %>%
+    group_by(city_id, core_realm) %>% 
+    summarise(urban_turnover = city_urban_richness / total_urban_richness, total_turnover = city_urban_richness / total_regional_richness) %>%
+    group_by(core_realm) %>%
+    summarise(mean_urban_turnover = mean(urban_turnover), mean_regional_turnover = mean(total_turnover), t_stat = p_t_test(urban_turnover, total_turnover))
+}
+```
+
+
+```{r}
+turnover_report(0)
+```
+
+```{r}
+turnover_report(15)
+```
+
+```{r}
+turnover_report(40)
+```
+

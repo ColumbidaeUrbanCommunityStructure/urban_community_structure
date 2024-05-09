@@ -53,6 +53,47 @@ Load realm geo
 resolve = read_resolve()
 head(resolve)
 ```
+# Summary metrics
+```{r}
+test_required_values = function(name, df) {
+  cat(paste(
+    test_value_wilcox(paste(name, 'MNTD'), df$mntd_normalised),
+    test_value_wilcox(paste(name, 'Beak Gape FDiv'), df$gape_width_fdiv_normalised),
+    test_value_wilcox(paste(name, 'HWI FDiv'), df$handwing_index_fdiv_normalised),
+    test_value_wilcox(paste(name, 'Mass FDiv'), df$mass_fdiv_normalised),
+    nrow(df),
+    sep = "\n"))
+}
+```
+
+```{r}
+test_required_values('Global', community_data_with_realm)
+```
+```{r}
+unique(community_data_with_realm$core_realm)
+```
+
+```{r}
+test_required_values('Nearctic', community_data_with_realm[community_data_with_realm$core_realm == 'Nearctic',])
+```
+```{r}
+test_required_values('Neotropic', community_data_with_realm[community_data_with_realm$core_realm == 'Neotropic',])
+```
+```{r}
+test_required_values('Palearctic', community_data_with_realm[community_data_with_realm$core_realm == 'Palearctic',])
+```
+
+```{r}
+test_required_values('Afrotropic', community_data_with_realm[community_data_with_realm$core_realm == 'Afrotropic',])
+```
+
+```{r}
+test_required_values('Indomalayan', community_data_with_realm[community_data_with_realm$core_realm == 'Indomalayan',])
+```
+
+```{r}
+test_required_values('Australasia', community_data_with_realm[community_data_with_realm$core_realm == 'Australasia',])
+```
 
 # Examine individual metrics
 ```{r}
@@ -93,9 +134,11 @@ norm_mntd_analysis_geo = geom_map(geom_sf(data = city_points, aes(color = mntd_n
 norm_mntd_analysis_geo
 ggsave(filename(FIGURES_OUTPUT_DIR, 'normalised_mntd_using_abundance.jpg'), width = 2500, height=1100, units = 'px')
 ```
+
 ```{r}
 summary(lm(data = city_points, mntd_normalised ~ latitude))
 ```
+
 ```{r}
 summary(lm(data = city_points, mntd_normalised ~ abs(latitude)))
 ```
@@ -141,6 +184,7 @@ ggsave(filename(FIGURES_OUTPUT_DIR, 'normalised_hwi_using_abundance.jpg'), width
 ```{r}
 summary(lm(data = city_points, handwing_index_fdiv_normalised ~ latitude))
 ```
+
 ```{r}
 summary(lm(data = city_points, handwing_index_fdiv_normalised ~ abs(latitude)))
 ```
@@ -154,8 +198,6 @@ ggplot(community_data_with_realm, aes(x = gape_width_fdiv_normalised, y = mntd_n
   theme_bw() + labs(color = "Realm")
 ```
 
-
-
 ```{r}
 ggplot(community_data_with_realm, aes(x = handwing_index_fdiv_normalised, y = mntd_normalised, colour = core_realm)) + 
   geom_point() +
@@ -163,6 +205,7 @@ ggplot(community_data_with_realm, aes(x = handwing_index_fdiv_normalised, y = mn
   xlab("HWI FDiv") +
   theme_bw() + labs(color = "Realm")
 ```
+
 ```{r}
 ggplot(community_data_with_realm, aes(x = handwing_index_fdiv_normalised, y = gape_width_fdiv_normalised, colour = core_realm)) + 
   geom_point() +
@@ -181,5 +224,7 @@ mntd_fdiv_analysis
 
 ```{r}
 ggpairs(mntd_fdiv_analysis %>% dplyr::select(mntd_normalised, handwing_index_fdiv_normalised, gape_width_fdiv_normalised, regional_pool_size, urban_pool_size, urban_pool_perc))
+ggsave(filename(FIGURES_OUTPUT_DIR, 'appendix_normalised_correlation.jpg'))
 ```
+
 

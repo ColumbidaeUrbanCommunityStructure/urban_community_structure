@@ -37,6 +37,17 @@ normalise = function(actual_value, min_value, max_value) {
   (actual_value - min_value) / (max_value - min_value) 
 }
 
+test_value_wilcox = function(name, normalised_list) {
+  wilcox_test_result = wilcox.test(normalised_list, mu = 0.5, na.rm = T)
+  
+  significance = ifelse(wilcox_test_result$p.value < 0.0001, '***', 
+                        ifelse(wilcox_test_result$p.value < 0.001, '**', 
+                               ifelse(wilcox_test_result$p.value < 0.01, '*', '')))
+  m = median(normalised_list, na.rm = T)
+  
+  paste(name, 'median', round(m, 2), significance)
+}
+
 # Working directories - not stored in repo
 TMP_DIR = '/tmp'
 
