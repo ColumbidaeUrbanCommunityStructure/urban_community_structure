@@ -177,6 +177,13 @@ There is a significant difference between the response of cities with introduced
 
 # Examine individual metrics
 
+## Analysis data frame
+```{r}
+analysis_data = community_data_with_realm[,c('city_id', 'mntd_normalised', 'mass_fdiv_normalised', 'gape_width_fdiv_normalised', 'handwing_index_fdiv_normalised', 'core_realm')] %>% 
+  left_join(city_points[,c('city_id', 'latitude', 'longitude')]) %>%
+  left_join(community_data_with_introductions[,c('city_id', 'has_introduced_species')])
+```
+
 ## Helper plot functions
 ```{r}
 geom_normalised_histogram = function(name, gg, legend.position = "right") {
@@ -206,74 +213,74 @@ geom_map = function(map_sf, title) {
 ```{r}
 norm_mntd_analysis_plot = geom_normalised_histogram(
   'MNTD', 
-  ggplot(community_data_with_realm, aes(mntd_normalised))
+  ggplot(analysis_data, aes(mntd_normalised))
 )
 norm_mntd_analysis_plot
 ```
 
 ```{r}
-norm_mntd_analysis_geo = geom_map(geom_sf(data = city_points, aes(color = mntd_normalised, geometry = geometry)), 'MNTD')
+norm_mntd_analysis_geo = geom_map(geom_sf(data = analysis_data, aes(color = mntd_normalised, geometry = geometry)), 'MNTD')
 norm_mntd_analysis_geo
 ggsave(filename(FIGURES_OUTPUT_DIR, 'normalised_mntd_using_abundance.jpg'), width = 2500, height=1100, units = 'px')
 ```
 
 ```{r}
-summary(lm(data = city_points, mntd_normalised ~ latitude))
+summary(lm(data = analysis_data, mntd_normalised ~ latitude))
 ```
 
 ```{r}
-summary(lm(data = city_points, mntd_normalised ~ abs(latitude)))
+summary(lm(data = analysis_data, mntd_normalised ~ abs(latitude)))
 ```
 
 ## Gape width - FDiv
 ```{r}
 norm_gape_fdiv_analysis_plot = geom_normalised_histogram(
   'Gape FDiv', 
-  ggplot(community_data_with_realm, aes(gape_width_fdiv_normalised))
+  ggplot(analysis_data, aes(gape_width_fdiv_normalised))
 )
 norm_gape_fdiv_analysis_plot
 ```
 
 ```{r}
-norm_gape_fdiv_analysis_geo = geom_map(geom_sf(data = city_points, aes(color = gape_width_fdiv_normalised, geometry = geometry)), 'Gape Width FDiv')
+norm_gape_fdiv_analysis_geo = geom_map(geom_sf(data = analysis_data, aes(color = gape_width_fdiv_normalised, geometry = geometry)), 'Gape Width FDiv')
 norm_gape_fdiv_analysis_geo
 ggsave(filename(FIGURES_OUTPUT_DIR, 'normalised_gape_width_using_abundance.jpg'), width = 2500, height=1100, units = 'px')
 ```
 
 ```{r}
-summary(lm(data = city_points, gape_width_fdiv_normalised ~ latitude))
+summary(lm(data = analysis_data, gape_width_fdiv_normalised ~ latitude))
 ```
 
 ```{r}
-summary(lm(data = city_points, gape_width_fdiv_normalised ~ abs(latitude)))
+summary(lm(data = analysis_data, gape_width_fdiv_normalised ~ abs(latitude)))
 ```
 
 ## HWI - FDiv
 ```{r}
 norm_hwi_fdiv_loco_analysis_plot = geom_normalised_histogram(
   'HWI FDiv', 
-  ggplot(community_data_with_realm, aes(handwing_index_fdiv_normalised))
+  ggplot(analysis_data, aes(handwing_index_fdiv_normalised))
 )
 norm_hwi_fdiv_loco_analysis_plot
 ```
 
 ```{r}
-norm_hwi_fdiv_analysis_geo = geom_map(geom_sf(data = city_points, aes(color = handwing_index_fdiv_normalised, geometry = geometry)), 'HWI FDiv')
+norm_hwi_fdiv_analysis_geo = geom_map(geom_sf(data = analysis_data, aes(color = handwing_index_fdiv_normalised, geometry = geometry)), 'HWI FDiv')
 norm_hwi_fdiv_analysis_geo
 ggsave(filename(FIGURES_OUTPUT_DIR, 'normalised_hwi_using_abundance.jpg'), width = 2500, height=1100, units = 'px')
 ```
 
 ```{r}
-summary(lm(data = city_points, handwing_index_fdiv_normalised ~ latitude))
+summary(lm(data = analysis_data, handwing_index_fdiv_normalised ~ latitude))
 ```
 
 ```{r}
-summary(lm(data = city_points, handwing_index_fdiv_normalised ~ abs(latitude)))
+summary(lm(data = analysis_data, handwing_index_fdiv_normalised ~ abs(latitude)))
 ```
 
 # Compare metrics against each other
 ```{r}
-ggplot(community_data_with_realm, aes(x = gape_width_fdiv_normalised, y = mntd_normalised, colour = core_realm)) + 
+ggplot(analysis_data, aes(x = gape_width_fdiv_normalised, y = mntd_normalised, colour = core_realm)) + 
   geom_point() +
   ylab("MNTD") + 
   xlab("Gape Width FDiv") +
@@ -281,7 +288,7 @@ ggplot(community_data_with_realm, aes(x = gape_width_fdiv_normalised, y = mntd_n
 ```
 
 ```{r}
-ggplot(community_data_with_realm, aes(x = handwing_index_fdiv_normalised, y = mntd_normalised, colour = core_realm)) + 
+ggplot(analysis_data, aes(x = handwing_index_fdiv_normalised, y = mntd_normalised, colour = core_realm)) + 
   geom_point() +
   ylab("MNTD") + 
   xlab("HWI FDiv") +
@@ -289,7 +296,7 @@ ggplot(community_data_with_realm, aes(x = handwing_index_fdiv_normalised, y = mn
 ```
 
 ```{r}
-ggplot(community_data_with_realm, aes(x = handwing_index_fdiv_normalised, y = gape_width_fdiv_normalised, colour = core_realm)) + 
+ggplot(analysis_data, aes(x = handwing_index_fdiv_normalised, y = gape_width_fdiv_normalised, colour = core_realm)) + 
   geom_point() +
   ylab("Gape Width FDiv") + 
   xlab("HWI FDiv") +
@@ -297,7 +304,7 @@ ggplot(community_data_with_realm, aes(x = handwing_index_fdiv_normalised, y = ga
 ```
 
 ```{r}
-mntd_fdiv_analysis = community_data_with_realm %>% 
+mntd_fdiv_analysis = analysis_data %>% 
   dplyr::select(city_id,  mntd_normalised, handwing_index_fdiv_normalised, gape_width_fdiv_normalised) %>%
   left_join(community_summary) %>%
   mutate(urban_pool_perc = urban_pool_size * 100 / regional_pool_size)
