@@ -179,9 +179,26 @@ There is a significant difference between the response of cities with introduced
 
 ## Analysis data frame
 ```{r}
+geography = read_csv(filename(CITY_DATA_OUTPUT_DIR, 'geography.csv'))
+names(geography)
+```
+
+```{r}
 analysis_data = community_data_with_realm[,c('city_id', 'mntd_normalised', 'mass_fdiv_normalised', 'gape_width_fdiv_normalised', 'handwing_index_fdiv_normalised', 'core_realm')] %>% 
   left_join(city_points[,c('city_id', 'latitude', 'longitude')]) %>%
-  left_join(community_data_with_introductions[,c('city_id', 'has_introduced_species')])
+  left_join(community_data_with_introductions[,c('city_id', 'has_introduced_species')]) %>%
+  left_join(geography)
+
+analysis_data$abs_latitude = abs(analysis_data$latitude)
+analysis_data$core_realm = as.factor(analysis_data$core_realm)
+analysis_data$has_introduced_species = as.factor(analysis_data$has_introduced_species)
+```
+
+```{r}
+model_data = function(df, dependant_var) {
+  df[,c(dependant_var, 'core_realm', 'abs_latitude', 'latitude', 'longitude', 'has_introduced_species', 'city_avg_ndvi', 'city_avg_elevation', 'city_avg_temp', 'city_avg_min_monthly_temp', 'city_avg_max_monthly_temp', 'city_avg_monthly_temp', 'city_avg_rainfall', 'city_avg_max_monthly_rainfall', 'city_avg_min_monthly_rainfall', 'city_avg_soil_moisture', 'city_max_elev', 'city_min_elev', 'city_elev_range', 'region_20km_avg_ndvi', 'region_20km_avg_elevation', 'region_20km_avg_soil_moisture', 'region_20km_max_elev', 'region_20km_min_elev', 'region_20km_elev_range', 'region_50km_avg_ndvi', 'region_50km_avg_elevation', 'region_50km_avg_soil_moisture', 'region_50km_max_elev', 'region_50km_min_elev', 'region_50km_elev_range')]
+}
+model_data(analysis_data, 'mntd_normalised')
 ```
 
 ## Helper plot functions
@@ -209,6 +226,88 @@ geom_map = function(map_sf, title) {
 }
 ```
 
+## Helper Dredge functions
+```{r}
+# Taken from MuMIN package
+# https://rdrr.io/cran/MuMIn/src/R/averaging.R
+# https://rdrr.io/cran/MuMIn/src/R/model.avg.R
+
+.coefarr.avg <-
+  function(cfarr, weight, revised.var, full, alpha) {	
+    weight <- weight / sum(weight)
+    nCoef <- dim(cfarr)[3L]
+    if(full) {
+      nas <- is.na(cfarr[, 1L, ]) & is.na(cfarr[, 2L, ])
+      cfarr[, 1L, ][nas] <- cfarr[, 2L, ][nas] <- 0
+      #cfarr[, 1L:2L, ][is.na(cfarr[, 1L:2L, ])] <- 0
+      if(!all(is.na(cfarr[, 3L, ])))
+        cfarr[ ,3L, ][is.na(cfarr[ , 3L, ])] <- Inf
+    }
+    
+    avgcoef <- array(dim = c(nCoef, 5L),
+                     dimnames = list(dimnames(cfarr)[[3L]], c("Estimate",
+                                                              "Std. Error", "Adjusted SE", "Lower CI", "Upper CI")))
+    for(i in seq_len(nCoef))
+      avgcoef[i, ] <- par.avg(cfarr[, 1L, i], cfarr[, 2L, i], weight,
+                              df = cfarr[, 3L, i], alpha = alpha, revised.var = revised.var)
+    
+    avgcoef[is.nan(avgcoef)] <- NA
+    return(avgcoef)
+  }
+
+.makecoefmat <- function(cf) {
+  no.ase <- all(is.na(cf[, 3L]))
+  z <- abs(cf[, 1L] / cf[, if(no.ase) 2L else 3L])
+  pval <- 2 * pnorm(z, lower.tail = FALSE)
+  cbind(cf[, if(no.ase) 1L:2L else 1L:3L, drop = FALSE],
+        `z value` = z, `Pr(>|z|)` = zapsmall(pval))
+}
+
+# Generate model selections using lmer, dredge, and model.avg
+# `forumla` : a two-sided linear formula object describing both the fixed-effects and random-effects part of the model
+# `data` : the data frame containing the variables from the formula
+# `aic_delta` : the AIC delta to use for selecting models in model average
+model_average <- function(formula, data, aic_delta) {
+  model <- lm(
+    formula,
+    data=data
+  )
+  dredge_result <- dredge(model)
+  summary(model.avg(dredge_result, subset = delta < aic_delta))
+}
+
+# Create a summary data frame containing the selected variables from a model
+# `model_sum` : The model summary output from `model_average`
+model_summary <- function(response_var, model_sum) {
+  .column_name <- function(postfix) {
+    postfix
+  }
+  
+  # just return the estimate and p value
+  weight <- model_sum$msTable[, 5L]
+  
+  coefmat.full <- as.data.frame(.makecoefmat(.coefarr.avg(model_sum$coefArray, weight,
+                                                          attr(model_sum, "revised.var"), TRUE, 0.05)))
+  
+  coefmat.subset <-
+    as.data.frame(.makecoefmat(.coefarr.avg(model_sum$coefArray, weight,
+                                            attr(model_sum, "revised.var"), FALSE, 0.05)))
+  
+  
+  coefmat.subset <- coefmat.subset[-c(1), c(1, 2, 5)]
+  names(coefmat.subset) <- c(.column_name("estimate"), .column_name("error"), .column_name("p"))
+  coefmat.subset <- tibble::rownames_to_column(coefmat.subset, "explanatory")
+  coefmat.subset$model = 'subset'
+  
+  coefmat.full <- coefmat.full[-c(1), c(1, 2, 5)]
+  names(coefmat.full) <- c(.column_name("estimate"), .column_name("error"), .column_name("p"))
+  coefmat.full <- tibble::rownames_to_column(coefmat.full, "explanatory")
+  coefmat.full$model = 'full'
+  
+  rbind(coefmat.full, coefmat.subset)
+}
+```
+
 ## MNTD
 ```{r}
 norm_mntd_analysis_plot = geom_normalised_histogram(
@@ -225,12 +324,11 @@ ggsave(filename(FIGURES_OUTPUT_DIR, 'normalised_mntd_using_abundance.jpg'), widt
 ```
 
 ```{r}
-summary(lm(data = analysis_data, mntd_normalised ~ latitude))
+norm_mntd_analysis_data = model_data(analysis_data[!is.na(analysis_data$mntd_normalised),], 'mntd_normalised')
+norm_mntd_analysis_result <- model_average(mntd_normalised ~ ., norm_mntd_analysis_data, 4)
+model_summary(norm_mntd_analysis_result)
 ```
 
-```{r}
-summary(lm(data = analysis_data, mntd_normalised ~ abs(latitude)))
-```
 
 ## Gape width - FDiv
 ```{r}
@@ -248,12 +346,11 @@ ggsave(filename(FIGURES_OUTPUT_DIR, 'normalised_gape_width_using_abundance.jpg')
 ```
 
 ```{r}
-summary(lm(data = analysis_data, gape_width_fdiv_normalised ~ latitude))
+norm_gape_fdiv_analysis_data = model_data(analysis_data[!is.na(analysis_data$gape_width_fdiv_normalised),], 'gape_width_fdiv_normalised')
+norm_gape_fdiv_analysis_result <- model_average(gape_width_fdiv_normalised ~ ., norm_gape_fdiv_analysis_data, 4)
+model_summary(norm_gape_fdiv_analysis_result)
 ```
 
-```{r}
-summary(lm(data = analysis_data, gape_width_fdiv_normalised ~ abs(latitude)))
-```
 
 ## HWI - FDiv
 ```{r}
@@ -271,11 +368,30 @@ ggsave(filename(FIGURES_OUTPUT_DIR, 'normalised_hwi_using_abundance.jpg'), width
 ```
 
 ```{r}
-summary(lm(data = analysis_data, handwing_index_fdiv_normalised ~ latitude))
+norm_hwi_fdiv_analysis_data = model_data(analysis_data[!is.na(analysis_data$handwing_index_fdiv_normalised),], 'handwing_index_fdiv_normalised')
+norm_hwi_fdiv_analysis_result <- model_average(handwing_index_fdiv_normalised ~ ., norm_hwi_fdiv_analysis_data, 4)
+model_summary(norm_hwi_fdiv_analysis_result)
+```
+
+## Mass - FDiv
+```{r}
+norm_mass_fdiv_loco_analysis_plot = geom_normalised_histogram(
+  'Mass FDiv', 
+  ggplot(analysis_data, aes(mass_fdiv_normalised))
+)
+norm_mass_fdiv_loco_analysis_plot
 ```
 
 ```{r}
-summary(lm(data = analysis_data, handwing_index_fdiv_normalised ~ abs(latitude)))
+norm_mass_fdiv_analysis_geo = geom_map(geom_sf(data = analysis_data, aes(color = mass_fdiv_normalised, geometry = geometry)), 'Mass FDiv')
+norm_mass_fdiv_analysis_geo
+ggsave(filename(FIGURES_OUTPUT_DIR, 'normalised_mass_using_abundance.jpg'), width = 2500, height=1100, units = 'px')
+```
+
+```{r}
+norm_mass_fdiv_analysis_data = model_data(analysis_data[!is.na(analysis_data$mass_fdiv_normalised),], 'mass_fdiv_normalised')
+norm_mass_fdiv_analysis_result <- model_average(mass_fdiv_normalised ~ ., norm_mass_fdiv_analysis_data, 4)
+model_summary(norm_mass_fdiv_analysis_result)
 ```
 
 # Compare metrics against each other

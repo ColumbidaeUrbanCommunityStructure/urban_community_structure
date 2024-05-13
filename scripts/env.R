@@ -20,9 +20,11 @@ library(aplot)
 library(foreach)
 library(fundiversity)
 library(scales)
+library(MuMIn)
 
 sf::sf_use_s2(FALSE)
 options(scipen=99999)
+options(na.action = "na.fail") 
 
 filename = function(directory, filename) {
   paste(directory, filename, sep = '/')
