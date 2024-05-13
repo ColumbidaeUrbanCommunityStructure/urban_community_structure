@@ -72,7 +72,7 @@ buffer_20_stats
 buffer_20_elev_in = read_csv(filename(EARTH_ENGINE_WORKING_OUTPUT_DIR, 'columbidae__elevation_min_max_buffer_20km__250.csv'))
 buffer_20_elev = buffer_20_elev_in[,c('city_id', 'max', 'min')]
 names(buffer_20_elev) = c('city_id', 'region_20km_max_elev', 'region_20km_min_elev')
-buffer_20_elev$city_elev_range = buffer_20_elev$region_20km_max_elev - buffer_20_elev$region_20km_min_elev
+buffer_20_elev$region_20km_elev_range = buffer_20_elev$region_20km_max_elev - buffer_20_elev$region_20km_min_elev
 buffer_20_elev
 ```
 ```{r}
@@ -86,7 +86,7 @@ buffer_50_stats
 buffer_50_elev_in = read_csv(filename(EARTH_ENGINE_WORKING_OUTPUT_DIR, 'columbidae__elevation_min_max_buffer_50km__250.csv'))
 buffer_50_elev = buffer_50_elev_in[,c('city_id', 'max', 'min')]
 names(buffer_50_elev) = c('city_id', 'region_50km_max_elev', 'region_50km_min_elev')
-buffer_50_elev$city_elev_range = buffer_50_elev$region_50km_max_elev - buffer_50_elev$region_50km_min_elev
+buffer_50_elev$region_50km_elev_range = buffer_50_elev$region_50km_max_elev - buffer_50_elev$region_50km_min_elev
 buffer_50_elev
 ```
 
@@ -94,11 +94,11 @@ buffer_50_elev
 geography = left_join(
   left_join(city_stats, city_elev),
   left_join(
-    left_join(buffer_20_stats, buffer_20_elev)
+    left_join(buffer_20_stats, buffer_20_elev),
     left_join(buffer_50_stats, buffer_50_elev)
   )
 )
-buffer_20_stats, buffer_20_elev
+geography
 ```
 
 ```{r}
