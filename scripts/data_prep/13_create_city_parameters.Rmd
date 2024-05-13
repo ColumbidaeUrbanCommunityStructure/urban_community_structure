@@ -47,3 +47,60 @@ head(city_to_single_realm)
 write_csv(city_to_single_realm[,c('city_id', 'core_realm')], filename(CITY_DATA_OUTPUT_DIR, 'realms.csv'))
 ```
 
+# Generate city geography dataset
+```{r}
+city_stats_in = read_csv(filename(EARTH_ENGINE_WORKING_OUTPUT_DIR, 'columbidae__stats_cities__250.csv'))
+city_stats = city_stats_in[,c('city_id', 'NDVI', 'b1', 'bio01', 'bio05', 'bio06', 'bio07', 'bio12', 'bio13', 'bio14', 'sm_surface')]
+names(city_stats) = c('city_id', 'city_avg_ndvi', 'city_avg_elevation', 'city_avg_temp', 'city_avg_min_monthly_temp', 'city_avg_max_monthly_temp', 'city_avg_monthly_temp', 'city_avg_rainfall', 'city_avg_max_monthly_rainfall', 'city_avg_min_monthly_rainfall', 'city_avg_soil_moisture')
+city_stats
+```
+```{r}
+city_elev_in = read_csv(filename(EARTH_ENGINE_WORKING_OUTPUT_DIR, 'columbidae__elevation_min_max_cities__250.csv'))
+city_elev = city_elev_in[,c('city_id', 'max', 'min')]
+names(city_elev) = c('city_id', 'city_max_elev', 'city_min_elev')
+city_elev$city_elev_range = city_elev$city_max_elev - city_elev$city_min_elev
+city_elev
+```
+
+```{r}
+buffer_20_stats_in = read_csv(filename(EARTH_ENGINE_WORKING_OUTPUT_DIR, 'columbidae__stats_buffer_20km__250.csv'))
+buffer_20_stats = buffer_20_stats_in[,c('city_id', 'NDVI', 'b1', 'sm_surface')]
+names(buffer_20_stats) = c('city_id', 'region_20km_avg_ndvi', 'region_20km_avg_elevation', 'region_20km_avg_soil_moisture')
+buffer_20_stats
+```
+```{r}
+buffer_20_elev_in = read_csv(filename(EARTH_ENGINE_WORKING_OUTPUT_DIR, 'columbidae__elevation_min_max_buffer_20km__250.csv'))
+buffer_20_elev = buffer_20_elev_in[,c('city_id', 'max', 'min')]
+names(buffer_20_elev) = c('city_id', 'region_20km_max_elev', 'region_20km_min_elev')
+buffer_20_elev$city_elev_range = buffer_20_elev$region_20km_max_elev - buffer_20_elev$region_20km_min_elev
+buffer_20_elev
+```
+```{r}
+buffer_50_stats_in = read_csv(filename(EARTH_ENGINE_WORKING_OUTPUT_DIR, 'columbidae__stats_buffer_50km__350.csv'))
+buffer_50_stats = buffer_50_stats_in[,c('city_id', 'NDVI', 'b1', 'sm_surface')]
+names(buffer_50_stats) = c('city_id', 'region_50km_avg_ndvi', 'region_50km_avg_elevation', 'region_50km_avg_soil_moisture')
+buffer_50_stats
+```
+
+```{r}
+buffer_50_elev_in = read_csv(filename(EARTH_ENGINE_WORKING_OUTPUT_DIR, 'columbidae__elevation_min_max_buffer_50km__250.csv'))
+buffer_50_elev = buffer_50_elev_in[,c('city_id', 'max', 'min')]
+names(buffer_50_elev) = c('city_id', 'region_50km_max_elev', 'region_50km_min_elev')
+buffer_50_elev$city_elev_range = buffer_50_elev$region_50km_max_elev - buffer_50_elev$region_50km_min_elev
+buffer_50_elev
+```
+
+```{r}
+geography = left_join(
+  left_join(city_stats, city_elev),
+  left_join(
+    left_join(buffer_20_stats, buffer_20_elev)
+    left_join(buffer_50_stats, buffer_50_elev)
+  )
+)
+buffer_20_stats, buffer_20_elev
+```
+
+```{r}
+write_csv(geography, filename(CITY_DATA_OUTPUT_DIR, 'geography.csv'))
+```

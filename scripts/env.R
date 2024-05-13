@@ -55,6 +55,7 @@ WORKING_OUTPUT_DIR = mkdir('../../../', 'urban_community_structure_wrk')
 GEO_WORKING_OUTPUT_DIR = mkdir(WORKING_OUTPUT_DIR, 'geo')
 EBIRD_WORKING_OUTPUT_DIR = mkdir(WORKING_OUTPUT_DIR, 'ebird')
 BIRDLIFE_WORKING_OUTPUT_DIR = mkdir(WORKING_OUTPUT_DIR, 'birdlife')
+EARTH_ENGINE_WORKING_OUTPUT_DIR = mkdir(WORKING_OUTPUT_DIR, 'earthengine')
 
 KEYS_DIR = mkdir(WORKING_OUTPUT_DIR, 'auth')
 
@@ -90,15 +91,15 @@ normalised_size_scale = scale_size_continuous(
 
 # My mapping from Birdlife V8 to Jetz, this maps down the birdlife taxonomy versions to Birdlife V3 and thus Jetz. 
 # This version contains no extinct species.
-MY_BIRDLIFE_COL_MAPPING = '/Users/james/Dropbox/PhD/BirdLife/Taxonomy/birdlife_v8_columbidae_taxonomy_to_jetz.csv'
+MY_BIRDLIFE_COL_MAPPING = '/Users/jamese.richardson/Downloads/birdlife_v8_columbidae_taxonomy_to_jetz.csv'
 
 # Avonet can be downloaded here
 # https://figshare.com/s/b990722d72a26b5bfead
-DL_AVONET = '/Users/james/Dropbox/PhD/Avonet/TraitData/AVONET1_BirdLife.csv'
+DL_AVONET = '/Users/jamese.richardson/Downloads/AVONET1_BirdLife.csv'
 
 # The country boundandaries can be downloaded from the world bank here:
 # https://datacatalog.worldbank.org/search/dataset/0038272/World-Bank-Official-Boundaries
-DL_COUNTRY_BOUNDARIES = '/Users/james/Dropbox/PhD/WorldBank_countries_Admin0_10m/WB_countries_Admin0_10m.shp'
+DL_COUNTRY_BOUNDARIES = '/Users/jamese.richardson/Downloads/WorldBank_countries_Admin0_10m/WB_countries_Admin0_10m.shp'
 
 read_country_boundaries = function() {
   st_simplify(st_read(DL_COUNTRY_BOUNDARIES), dTolerance = 0.02)
@@ -114,7 +115,7 @@ DL_BIRDLIFE_TAXONOMY = '/Users/james/Dropbox/PhD/BirdLife/Taxonomy/Handbook of t
 
 # These have been exported to a shape file using google earth engine.
 # https://developers.google.com/earth-engine/datasets/catalog/RESOLVE_ECOREGIONS_2017
-DL_RESOLVE = '/Users/james/Dropbox/PhD/Ecoregions2017/Ecoregions2017.shp'
+DL_RESOLVE = '/Users/jamese.richardson/Downloads/Ecoregions2017/Ecoregions2017.shp'
 
 read_resolve = function() {
   st_simplify(st_buffer(read_sf(DL_RESOLVE), 0), dTolerance = 0.02)
