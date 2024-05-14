@@ -37,6 +37,7 @@ Load community data, and create long format version
 communities = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'communities_for_analysis.csv'))
 communities
 ```
+
 ```{r}
 community_summary = communities %>% group_by(city_id) %>% summarise(regional_pool_size = n(), urban_pool_size = sum(relative_abundance_proxy > 0))
 community_summary
@@ -202,6 +203,78 @@ model_data = function(df, dependant_var) {
 model_data(analysis_data, 'mntd_normalised')
 ```
 
+```{r}
+names(analysis_data)
+```
+
+```{r}
+all_explanatories = c(
+    'abs_latitude', 'latitude', 'longitude', 
+    'has_introduced_species',
+    'city_avg_ndvi', 'city_avg_elevation', 'city_avg_temp', 'city_avg_min_monthly_temp', 'city_avg_max_monthly_temp', 
+    'city_avg_monthly_temp', 'city_avg_rainfall', 'city_avg_max_monthly_rainfall', 'city_avg_min_monthly_rainfall', 
+    'city_avg_soil_moisture', 'city_max_elev', 'city_min_elev', 'city_elev_range',
+    'region_20km_avg_ndvi', 'region_20km_avg_elevation', 'region_20km_avg_soil_moisture', 'region_20km_max_elev', 
+    'region_20km_min_elev', 'region_20km_elev_range',
+    'region_50km_avg_ndvi', 'region_50km_avg_elevation', 'region_50km_avg_soil_moisture', 'region_50km_max_elev', 
+    'region_50km_min_elev', 'region_50km_elev_range',
+    'core_realmAfrotropic', 'core_realmAustralasia', 'core_realmIndomalayan', 'core_realmNearctic', 'core_realmNeotropic')
+
+type_labels = function(p) {
+  explanatory_levels = all_explanatories[all_explanatories %in% p$explanatory]
+  p$explanatory <- factor(p$explanatory, levels = explanatory_levels)
+  
+  p$type <- 'Realm'
+  p$type[p$explanatory %in% c('city_avg_ndvi', 'city_avg_elevation', 'city_avg_temp', 'city_avg_min_monthly_temp', 'city_avg_max_monthly_temp', 
+    'city_avg_monthly_temp', 'city_avg_rainfall', 'city_avg_max_monthly_rainfall', 'city_avg_min_monthly_rainfall', 
+    'city_avg_soil_moisture', 'city_max_elev', 'city_min_elev', 'city_elev_range')] <- 'City geography'
+  p$type[p$explanatory %in% c('region_50km_avg_ndvi', 'region_50km_avg_elevation', 'region_50km_avg_soil_moisture', 'region_50km_max_elev', 
+    'region_50km_min_elev', 'region_50km_elev_range')] <- 'Regional (50km) geography'
+   p$type[p$explanatory %in% c('region_20km_avg_ndvi', 'region_20km_avg_elevation', 'region_20km_avg_soil_moisture', 'region_20km_max_elev', 
+    'region_20km_min_elev', 'region_20km_elev_range')] <- 'Regional (20km) geography'
+  p$type[p$explanatory %in% c('abs_latitude', 'latitude', 'longitude')] <- 'Spatial'
+  p
+}
+```
+
+```{r}
+explanatory_labels = c(
+  'has_introduced_species'='Has introduced species', 
+  'city_avg_ndvi'='Average NDVI', 
+  'city_avg_elevation'='Average elevation', 
+  'city_avg_temp'='Average temperature', 
+  'city_avg_min_monthly_temp'='Average minimum monthly temperature', 
+  'city_avg_max_monthly_temp'='Average maximum monthly temperature', 
+  'city_avg_monthly_temp'='Average monthly temperature', 
+  'city_avg_rainfall'='Average rainfall', 
+  'city_avg_max_monthly_rainfall'='Average maximum monthly rainfall', 
+  'city_avg_min_monthly_rainfall'='Average minimum monthly rainfall', 
+  'city_avg_soil_moisture'='Average soil moisture', 
+  'city_max_elev'='Maximum elevation', 
+  'city_min_elev'='Minimum elevation', 
+  'city_elev_range'='Elevation range', 
+  'region_20km_avg_ndvi'='Average NDVI', 
+  'region_20km_avg_elevation'='Average elevation', 
+  'region_20km_avg_soil_moisture'='Average soil moisture', 
+  'region_20km_max_elev'='Maximum elevation', 
+  'region_20km_min_elev'='Minimum elevation',
+  'region_20km_elev_range'='Elevation range',
+  'region_50km_avg_ndvi'='Average NDVI',
+  'region_50km_avg_elevation'='Average elevation',
+  'region_50km_avg_soil_moisture'='Average soil moisture', 
+  'region_50km_max_elev'='Maximum elevation',
+  'region_50km_min_elev'='Minimum elevation', 
+  'region_50km_elev_range'='Elevation range',
+  'abs_latitude' = 'Absolute latitude',
+  'latitude' = 'Latitude',
+  'longitude' = 'Longitude',
+  'core_realmAfrotropic' = 'Afrotropical', 
+  'core_realmAustralasia' = 'Austaliasian', 
+  'core_realmIndomalayan' = 'Indomalayan', 
+  'core_realmNearctic' = 'Nearctic', 
+  'core_realmNeotropic' = 'Neotropical')
+```
+
 ## Helper plot functions
 ```{r}
 geom_normalised_histogram = function(name, gg, legend.position = "right") {
@@ -309,6 +382,32 @@ model_summary <- function(model_sum) {
 }
 ```
 
+```{r}
+formula_from_vsurp = function(predictors, dependent, vsurp_result) {
+  as.formula(paste(dependent, paste(names(predictors[,vsurp_result$varselect.interp]), collapse="+"), sep = "~"))
+}
+```
+
+```{r}
+plot_vsurp_result = function(result_table) {
+  plot = result_table[result_table$model == 'full',]
+  plot = type_labels(plot)
+
+  ggplot(plot, aes(y=explanatory, x=estimate, colour = type)) + 
+    geom_line() +
+    geom_point()+
+    geom_errorbar(aes(xmin=estimate-error, xmax=estimate+error), width=.2,
+                   position=position_dodge(0.05)) +
+    scale_y_discrete(
+      limits = rev(levels(plot$explanatory)), 
+      labels = explanatory_labels) +
+    theme_bw() +
+    geom_vline(xintercept=0, linetype="dotted") +
+    guides(colour=guide_legend(title="Predictor type")) + xlab('Increase from 0 (habitat filtering) to 1 (competitive exclusion)\n± Standard Error') + ylab('Predictor') +
+    theme(legend.justification = "top")
+}
+```
+
 ## MNTD
 ```{r}
 norm_mntd_analysis_plot = geom_normalised_histogram(
@@ -332,8 +431,14 @@ names(norm_mntd_analysis_predictors[,norm_mntd_analysis_interp$varselect.interp]
 ```
 
 ```{r}
-norm_mntd_analysis_result <- model_average(mntd_normalised ~ city_avg_monthly_temp + city_avg_max_monthly_temp + longitude + core_realm + city_avg_temp + latitude + abs_latitude + city_avg_min_monthly_temp, norm_mntd_analysis_data, 4)
-model_summary(norm_mntd_analysis_result)
+norm_mntd_analysis_formula = formula_from_vsurp(norm_mntd_analysis_predictors, "mntd_normalised", norm_mntd_analysis_interp)
+norm_mntd_analysis_result <- model_average(norm_mntd_analysis_formula, norm_mntd_analysis_data, 10)
+norm_mntd_analysis_result_table = model_summary(norm_mntd_analysis_result)
+norm_mntd_analysis_result_table
+```
+
+```{r}
+plot_vsurp_result(norm_mntd_analysis_result_table)
 ```
 
 ## Gape width - FDiv
@@ -353,9 +458,22 @@ ggsave(filename(FIGURES_OUTPUT_DIR, 'normalised_gape_width_using_abundance.jpg')
 
 ```{r}
 norm_gape_fdiv_analysis_data = model_data(analysis_data[!is.na(analysis_data$gape_width_fdiv_normalised),], 'gape_width_fdiv_normalised')
-norm_gape_fdiv_analysis_result <- model_average(gape_width_fdiv_normalised ~ ., norm_gape_fdiv_analysis_data, 4)
-model_summary(norm_gape_fdiv_analysis_result)
+norm_gape_fdiv_analysis_predictors = norm_gape_fdiv_analysis_data[,-1]
+norm_gape_fdiv_analysis_interp = VSURF(x = norm_gape_fdiv_analysis_predictors, y = norm_gape_fdiv_analysis_data$gape_width_fdiv_normalised)
+names(norm_gape_fdiv_analysis_predictors[,norm_gape_fdiv_analysis_interp$varselect.interp])
 ```
+
+```{r}
+norm_gape_fdiv_analysis_formula = formula_from_vsurp(norm_gape_fdiv_analysis_predictors, "gape_width_fdiv_normalised", norm_gape_fdiv_analysis_interp)
+norm_gape_fdiv_analysis_result <- model_average(norm_gape_fdiv_analysis_formula, norm_gape_fdiv_analysis_data, 10)
+norm_gape_fdiv_analysis_result_table = model_summary(norm_gape_fdiv_analysis_result)
+norm_gape_fdiv_analysis_result_table
+```
+
+```{r}
+plot_vsurp_result(norm_gape_fdiv_analysis_result_table)
+```
+
 
 ## HWI - FDiv
 ```{r}
@@ -374,9 +492,22 @@ ggsave(filename(FIGURES_OUTPUT_DIR, 'normalised_hwi_using_abundance.jpg'), width
 
 ```{r}
 norm_hwi_fdiv_analysis_data = model_data(analysis_data[!is.na(analysis_data$handwing_index_fdiv_normalised),], 'handwing_index_fdiv_normalised')
-norm_hwi_fdiv_analysis_result <- model_average(handwing_index_fdiv_normalised ~ ., norm_hwi_fdiv_analysis_data, 4)
-model_summary(norm_hwi_fdiv_analysis_result)
+norm_hwi_fdiv_analysis_predictors = norm_hwi_fdiv_analysis_data[,-1]
+norm_hwi_fdiv_analysis_interp = VSURF(x = norm_hwi_fdiv_analysis_predictors, y = norm_hwi_fdiv_analysis_data$handwing_index_fdiv_normalised)
+names(norm_hwi_fdiv_analysis_predictors[,norm_hwi_fdiv_analysis_interp$varselect.interp])
 ```
+
+```{r}
+norm_hwi_fdiv_analysis_formula = formula_from_vsurp(norm_hwi_fdiv_analysis_predictors, "handwing_index_fdiv_normalised", norm_hwi_fdiv_analysis_interp)
+norm_hwi_fdiv_analysis_result <- model_average(norm_hwi_fdiv_analysis_formula, norm_hwi_fdiv_analysis_data, 10)
+norm_hwi_fdiv_analysis_result_table = model_summary(norm_hwi_fdiv_analysis_result)
+norm_hwi_fdiv_analysis_result_table
+```
+
+```{r}
+plot_vsurp_result(norm_hwi_fdiv_analysis_result_table)
+```
+
 
 ## Mass - FDiv
 ```{r}
@@ -395,8 +526,20 @@ ggsave(filename(FIGURES_OUTPUT_DIR, 'normalised_mass_using_abundance.jpg'), widt
 
 ```{r}
 norm_mass_fdiv_analysis_data = model_data(analysis_data[!is.na(analysis_data$mass_fdiv_normalised),], 'mass_fdiv_normalised')
-norm_mass_fdiv_analysis_result <- model_average(mass_fdiv_normalised ~ ., norm_mass_fdiv_analysis_data, 4)
-model_summary(norm_mass_fdiv_analysis_result)
+norm_mass_fdiv_analysis_predictors = norm_mass_fdiv_analysis_data[,-1]
+norm_mass_fdiv_analysis_interp = VSURF(x = norm_mass_fdiv_analysis_predictors, y = norm_mass_fdiv_analysis_data$mass_fdiv_normalised)
+names(norm_mass_fdiv_analysis_predictors[,norm_mass_fdiv_analysis_interp$varselect.interp])
+```
+
+```{r}
+norm_mass_fdiv_analysis_formula = formula_from_vsurp(norm_mass_fdiv_analysis_predictors, "mass_fdiv_normalised", norm_mass_fdiv_analysis_interp)
+norm_mass_fdiv_analysis_result <- model_average(norm_mass_fdiv_analysis_formula, norm_mass_fdiv_analysis_data, 10)
+norm_mass_fdiv_analysis_result_table = model_summary(norm_mass_fdiv_analysis_result)
+norm_mass_fdiv_analysis_result_table
+```
+
+```{r}
+plot_vsurp_result(norm_mass_fdiv_analysis_result_table)
 ```
 
 # Compare metrics against each other
