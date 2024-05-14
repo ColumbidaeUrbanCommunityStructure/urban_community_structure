@@ -192,8 +192,8 @@ analysis_data = community_data_with_realm[,c('city_id', 'mntd_normalised', 'mass
   left_join(geography)
 
 analysis_data$abs_latitude = abs(analysis_data$latitude)
-analysis_data$core_realm = as.factor(analysis_data$core_realm)
-analysis_data$has_introduced_species = as.factor(analysis_data$has_introduced_species)
+analysis_data$core_realm = factor(analysis_data$core_realm, levels = c('Palearctic', 'Nearctic', 'Neotropic', 'Afrotropic', 'Indomalayan', 'Australasia', 'Oceania'))
+analysis_data$has_introduced_species = factor(analysis_data$has_introduced_species, level = c('TRUE', 'FALSE'), labels = c('Introduced species', 'No introduced species'))
 ```
 
 ```{r}
@@ -218,7 +218,7 @@ all_explanatories = c(
     'region_20km_min_elev', 'region_20km_elev_range',
     'region_50km_avg_ndvi', 'region_50km_avg_elevation', 'region_50km_avg_soil_moisture', 'region_50km_max_elev', 
     'region_50km_min_elev', 'region_50km_elev_range',
-    'core_realmAfrotropic', 'core_realmAustralasia', 'core_realmIndomalayan', 'core_realmNearctic', 'core_realmNeotropic')
+    'core_realmAfrotropic', 'core_realmAustralasia', 'core_realmIndomalayan', 'core_realmNearctic', 'core_realmNeotropic', 'core_realmPalearctic')
 
 type_labels = function(p) {
   explanatory_levels = all_explanatories[all_explanatories %in% p$explanatory]
@@ -272,12 +272,14 @@ explanatory_labels = c(
   'core_realmAustralasia' = 'Austaliasian', 
   'core_realmIndomalayan' = 'Indomalayan', 
   'core_realmNearctic' = 'Nearctic', 
-  'core_realmNeotropic' = 'Neotropical')
+  'core_realmNeotropic' = 'Neotropical',
+  'core_realmPalearctic' = 'Palearctic',
+  'core_realmOceania' = 'Oceanical')
 ```
 
 ## Helper plot functions
 ```{r}
-geom_normalised_histogram = function(name, gg, legend.position = "right") {
+geom_normalised_histogram = function(name, gg, legend.position = "bottom") {
   gg + 
     geom_histogram(aes(fill = core_realm), binwidth = 0.1, position = "dodge") +
     geom_vline(aes(xintercept = 0.5), color = "#000000", size = 0.4) +
@@ -296,7 +298,9 @@ geom_map = function(map_sf, title) {
     geom_sf(data = world_map, aes(geometry = geometry)) +
     map_sf +
     normalised_colours_scale +
-    labs(title = title, colour = 'Normalised\nResponse')
+    labs(colour = 'Normalised\nResponse') +
+    theme_bw() +
+    theme(legend.position="bottom")
 }
 ```
 
@@ -341,7 +345,7 @@ geom_map = function(map_sf, title) {
 # `forumla` : a two-sided linear formula object describing both the fixed-effects and random-effects part of the model
 # `data` : the data frame containing the variables from the formula
 # `aic_delta` : the AIC delta to use for selecting models in model average
-model_average <- function(formula, data, aic_delta) {
+model_average <- function(formula, data, aic_delta = 20) {
   model <- lm(
     formula,
     data=data
@@ -403,7 +407,7 @@ plot_vsurp_result = function(result_table) {
       labels = explanatory_labels) +
     theme_bw() +
     geom_vline(xintercept=0, linetype="dotted") +
-    guides(colour=guide_legend(title="Predictor type")) + xlab('Increase from 0 (habitat filtering) to 1 (competitive exclusion)\n± Standard Error') + ylab('Predictor') +
+    guides(colour=guide_legend(title="Predictor type")) + xlab('Increase from 0 (habitat filtering)\nto 1 (competitive exclusion)\n± Standard Error') + ylab('Predictor') +
     theme(legend.justification = "top")
 }
 ```
@@ -418,8 +422,8 @@ norm_mntd_analysis_plot
 ```
 
 ```{r}
-norm_mntd_analysis_geo = geom_map(geom_sf(data = analysis_data, aes(color = mntd_normalised, geometry = geometry)), 'MNTD')
-norm_mntd_analysis_geo
+norm_mntd_analysis_geo_plot = geom_map(geom_sf(data = analysis_data, aes(color = mntd_normalised, geometry = geometry)), 'MNTD')
+norm_mntd_analysis_geo_plot
 ggsave(filename(FIGURES_OUTPUT_DIR, 'normalised_mntd_using_abundance.jpg'), width = 2500, height=1100, units = 'px')
 ```
 
@@ -432,13 +436,14 @@ names(norm_mntd_analysis_predictors[,norm_mntd_analysis_interp$varselect.interp]
 
 ```{r}
 norm_mntd_analysis_formula = formula_from_vsurp(norm_mntd_analysis_predictors, "mntd_normalised", norm_mntd_analysis_interp)
-norm_mntd_analysis_result <- model_average(norm_mntd_analysis_formula, norm_mntd_analysis_data, 10)
+norm_mntd_analysis_result <- model_average(norm_mntd_analysis_formula, norm_mntd_analysis_data)
 norm_mntd_analysis_result_table = model_summary(norm_mntd_analysis_result)
 norm_mntd_analysis_result_table
 ```
 
 ```{r}
-plot_vsurp_result(norm_mntd_analysis_result_table)
+norm_mntd_analysis_pred_plot = plot_vsurp_result(norm_mntd_analysis_result_table)
+norm_mntd_analysis_pred_plot
 ```
 
 ## Gape width - FDiv
@@ -451,8 +456,8 @@ norm_gape_fdiv_analysis_plot
 ```
 
 ```{r}
-norm_gape_fdiv_analysis_geo = geom_map(geom_sf(data = analysis_data, aes(color = gape_width_fdiv_normalised, geometry = geometry)), 'Gape Width FDiv')
-norm_gape_fdiv_analysis_geo
+norm_gape_fdiv_analysis_geo_plot = geom_map(geom_sf(data = analysis_data, aes(color = gape_width_fdiv_normalised, geometry = geometry)), 'Gape Width FDiv')
+norm_gape_fdiv_analysis_geo_plot
 ggsave(filename(FIGURES_OUTPUT_DIR, 'normalised_gape_width_using_abundance.jpg'), width = 2500, height=1100, units = 'px')
 ```
 
@@ -465,13 +470,14 @@ names(norm_gape_fdiv_analysis_predictors[,norm_gape_fdiv_analysis_interp$varsele
 
 ```{r}
 norm_gape_fdiv_analysis_formula = formula_from_vsurp(norm_gape_fdiv_analysis_predictors, "gape_width_fdiv_normalised", norm_gape_fdiv_analysis_interp)
-norm_gape_fdiv_analysis_result <- model_average(norm_gape_fdiv_analysis_formula, norm_gape_fdiv_analysis_data, 10)
+norm_gape_fdiv_analysis_result <- model_average(norm_gape_fdiv_analysis_formula, norm_gape_fdiv_analysis_data)
 norm_gape_fdiv_analysis_result_table = model_summary(norm_gape_fdiv_analysis_result)
 norm_gape_fdiv_analysis_result_table
 ```
 
 ```{r}
-plot_vsurp_result(norm_gape_fdiv_analysis_result_table)
+norm_gape_fdiv_analysis_pred_plot = plot_vsurp_result(norm_gape_fdiv_analysis_result_table)
+norm_gape_fdiv_analysis_pred_plot
 ```
 
 
@@ -485,8 +491,8 @@ norm_hwi_fdiv_loco_analysis_plot
 ```
 
 ```{r}
-norm_hwi_fdiv_analysis_geo = geom_map(geom_sf(data = analysis_data, aes(color = handwing_index_fdiv_normalised, geometry = geometry)), 'HWI FDiv')
-norm_hwi_fdiv_analysis_geo
+norm_hwi_fdiv_analysis_geo_plot = geom_map(geom_sf(data = analysis_data, aes(color = handwing_index_fdiv_normalised, geometry = geometry)), 'HWI FDiv')
+norm_hwi_fdiv_analysis_geo_plot
 ggsave(filename(FIGURES_OUTPUT_DIR, 'normalised_hwi_using_abundance.jpg'), width = 2500, height=1100, units = 'px')
 ```
 
@@ -497,15 +503,17 @@ norm_hwi_fdiv_analysis_interp = VSURF(x = norm_hwi_fdiv_analysis_predictors, y =
 names(norm_hwi_fdiv_analysis_predictors[,norm_hwi_fdiv_analysis_interp$varselect.interp])
 ```
 
+
 ```{r}
 norm_hwi_fdiv_analysis_formula = formula_from_vsurp(norm_hwi_fdiv_analysis_predictors, "handwing_index_fdiv_normalised", norm_hwi_fdiv_analysis_interp)
-norm_hwi_fdiv_analysis_result <- model_average(norm_hwi_fdiv_analysis_formula, norm_hwi_fdiv_analysis_data, 10)
+norm_hwi_fdiv_analysis_result <- model_average(norm_hwi_fdiv_analysis_formula, norm_hwi_fdiv_analysis_data)
 norm_hwi_fdiv_analysis_result_table = model_summary(norm_hwi_fdiv_analysis_result)
 norm_hwi_fdiv_analysis_result_table
 ```
 
 ```{r}
-plot_vsurp_result(norm_hwi_fdiv_analysis_result_table)
+norm_hwi_fdiv_analysis_pred_plot = plot_vsurp_result(norm_hwi_fdiv_analysis_result_table)
+norm_hwi_fdiv_analysis_pred_plot
 ```
 
 
@@ -519,8 +527,8 @@ norm_mass_fdiv_loco_analysis_plot
 ```
 
 ```{r}
-norm_mass_fdiv_analysis_geo = geom_map(geom_sf(data = analysis_data, aes(color = mass_fdiv_normalised, geometry = geometry)), 'Mass FDiv')
-norm_mass_fdiv_analysis_geo
+norm_mass_fdiv_analysis_geo_plot = geom_map(geom_sf(data = analysis_data, aes(color = mass_fdiv_normalised, geometry = geometry)), 'Mass FDiv')
+norm_mass_fdiv_analysis_geo_plot
 ggsave(filename(FIGURES_OUTPUT_DIR, 'normalised_mass_using_abundance.jpg'), width = 2500, height=1100, units = 'px')
 ```
 
@@ -533,14 +541,57 @@ names(norm_mass_fdiv_analysis_predictors[,norm_mass_fdiv_analysis_interp$varsele
 
 ```{r}
 norm_mass_fdiv_analysis_formula = formula_from_vsurp(norm_mass_fdiv_analysis_predictors, "mass_fdiv_normalised", norm_mass_fdiv_analysis_interp)
-norm_mass_fdiv_analysis_result <- model_average(norm_mass_fdiv_analysis_formula, norm_mass_fdiv_analysis_data, 10)
+norm_mass_fdiv_analysis_result <- model_average(norm_mass_fdiv_analysis_formula, norm_mass_fdiv_analysis_data)
 norm_mass_fdiv_analysis_result_table = model_summary(norm_mass_fdiv_analysis_result)
 norm_mass_fdiv_analysis_result_table
 ```
 
 ```{r}
-plot_vsurp_result(norm_mass_fdiv_analysis_result_table)
+norm_mass_fdiv_analysis_pred_plot = plot_vsurp_result(norm_mass_fdiv_analysis_result_table)
+norm_mass_fdiv_analysis_pred_plot
 ```
+# Create plot of differences in process response
+```{r}
+pred_legend <- get_legend(
+  # create some space to the left of the legend
+  norm_hwi_fdiv_analysis_pred_plot + theme(legend.box.margin = margin(0, 0, 0, 12))
+)
+geo_legend <- get_legend(
+  # create some space to the left of the legend
+  norm_mass_fdiv_analysis_geo_plot + theme(legend.box.margin = margin(0, 0, 0, 12))
+)
+
+plot_grid(
+  plot_grid(
+    norm_mntd_analysis_geo_plot + theme(legend.position="none"), 
+    norm_mntd_analysis_pred_plot + theme(legend.position="none"), 
+    nrow = 1
+  ) + draw_label("MNTD", size = 16, angle = 90, x = 0.01, y = 0.5),
+  plot_grid(
+    norm_gape_fdiv_analysis_geo_plot + theme(legend.position="none"), 
+    norm_gape_fdiv_analysis_pred_plot + theme(legend.position="none"), 
+    nrow = 1
+  ) + draw_label("Gape", size = 16, angle = 90, x = 0.01, y = 0.5),
+  plot_grid(
+    norm_hwi_fdiv_analysis_geo_plot + theme(legend.position="none"), 
+    norm_hwi_fdiv_analysis_pred_plot + theme(legend.position="none"), 
+    nrow = 1
+  ) + draw_label("HWI", size = 16, angle = 90, x = 0.01, y = 0.5),
+  plot_grid(
+    norm_mass_fdiv_analysis_geo_plot + theme(legend.position="none"), 
+    norm_mass_fdiv_analysis_pred_plot + theme(legend.position="none"), 
+    nrow = 1
+  ) + draw_label("Mass", size = 16, angle = 90, x = 0.01, y = 0.5), 
+  plot_grid(
+    geo_legend, 
+    pred_legend, 
+    nrow = 1
+  ),
+  nrow = 5
+)
+ggsave(filename(FIGURES_OUTPUT_DIR, 'process_response.jpg'), width = 2500, height=5000, units = 'px')
+```
+
 
 # Compare metrics against each other
 ```{r}

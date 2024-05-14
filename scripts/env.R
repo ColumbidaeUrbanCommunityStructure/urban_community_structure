@@ -22,6 +22,8 @@ library(fundiversity)
 library(scales)
 library(MuMIn)
 library(VSURF)
+library(cowplot)
+library(ggplot2)
 
 sf::sf_use_s2(FALSE)
 options(scipen=99999)
@@ -82,6 +84,7 @@ normalised_colours_scale = scale_colour_gradient2(
   na.value = "grey50",
   guide = "colourbar",
   aesthetics = "colour",
+  limits = c(0, 1)
 )
 
 normalised_size_scale = scale_size_continuous( 
