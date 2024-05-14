@@ -118,6 +118,8 @@ community_data_with_introductions[,c('mntd_normalised', 'has_introduced_species'
 
 ```{r}
 community_data_with_introductions %>% group_by(has_introduced_species) %>% summarise(
+  total_cities = n(), 
+  
   mean_mntd_normalised = mean(mntd_normalised, na.rm = T),
   sd_mntd_normalised = sd(mntd_normalised, na.rm = T),
   
