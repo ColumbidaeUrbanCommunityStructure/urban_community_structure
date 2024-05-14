@@ -279,7 +279,7 @@ model_average <- function(formula, data, aic_delta) {
 
 # Create a summary data frame containing the selected variables from a model
 # `model_sum` : The model summary output from `model_average`
-model_summary <- function(response_var, model_sum) {
+model_summary <- function(model_sum) {
   .column_name <- function(postfix) {
     postfix
   }
@@ -326,7 +326,13 @@ ggsave(filename(FIGURES_OUTPUT_DIR, 'normalised_mntd_using_abundance.jpg'), widt
 
 ```{r}
 norm_mntd_analysis_data = model_data(analysis_data[!is.na(analysis_data$mntd_normalised),], 'mntd_normalised')
-norm_mntd_analysis_result <- model_average(mntd_normalised ~ ., norm_mntd_analysis_data, 4)
+norm_mntd_analysis_predictors = norm_mntd_analysis_data[,-1]
+norm_mntd_analysis_interp = VSURF(x = norm_mntd_analysis_predictors, y = norm_mntd_analysis_data$mntd_normalised)
+names(norm_mntd_analysis_predictors[,norm_mntd_analysis_interp$varselect.interp])
+```
+
+```{r}
+norm_mntd_analysis_result <- model_average(mntd_normalised ~ city_avg_monthly_temp + city_avg_max_monthly_temp + longitude + core_realm + city_avg_temp + latitude + abs_latitude + city_avg_min_monthly_temp, norm_mntd_analysis_data, 4)
 model_summary(norm_mntd_analysis_result)
 ```
 

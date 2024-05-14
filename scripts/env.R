@@ -21,6 +21,7 @@ library(foreach)
 library(fundiversity)
 library(scales)
 library(MuMIn)
+library(VSURF)
 
 sf::sf_use_s2(FALSE)
 options(scipen=99999)
