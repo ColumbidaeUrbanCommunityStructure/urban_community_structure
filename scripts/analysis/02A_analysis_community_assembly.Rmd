@@ -110,6 +110,7 @@ community_data_with_introductions = left_join(community_data, city_introduced_sp
 community_data_with_introductions$has_introduced_species = community_data_with_introductions$number_of_introduced_species > 0
 community_data_with_introductions
 ```
+
 ```{r}
 community_data_with_introductions[,c('mntd_normalised', 'has_introduced_species')]
 ```
@@ -136,7 +137,7 @@ ggplot(community_data_with_introductions, aes(x = has_introduced_species, y = mn
 ```
 
 ```{r}
-wilcox.test(mntd_normalised ~ has_introduced_species, community_data_with_introductions)
+wilcox.test(mntd_normalised ~ has_introduced_species, community_data_with_introductions, na.action = 'na.omit')
 ```
 
 There is a significant difference between the response of cities with introduced species (0.53±0.27) and those without (0.47±0.19) (p-value = 0.02).
@@ -148,7 +149,7 @@ ggplot(community_data_with_introductions, aes(x = has_introduced_species, y = ma
 ```
 
 ```{r}
-wilcox.test(mass_fdiv_normalised ~ has_introduced_species, community_data_with_introductions)
+wilcox.test(mass_fdiv_normalised ~ has_introduced_species, community_data_with_introductions, na.action = 'na.omit')
 ```
 There is a significant difference between the response of cities with introduced species (0.57±0.27) and those without (0.73±0.24) (p < 0.0001)
 
@@ -159,7 +160,7 @@ ggplot(community_data_with_introductions, aes(x = has_introduced_species, y = ga
 ```
 
 ```{r}
-wilcox.test(gape_width_fdiv_normalised ~ has_introduced_species, community_data_with_introductions)
+wilcox.test(gape_width_fdiv_normalised ~ has_introduced_species, community_data_with_introductions, na.action = 'na.omit')
 ```
 There is NOT a significant difference between the response of cities with introduced species (0.61±0.30) and those without (0.56±0.27)
 
@@ -170,7 +171,7 @@ ggplot(community_data_with_introductions, aes(x = has_introduced_species, y = ha
 ```
 
 ```{r}
-wilcox.test(handwing_index_fdiv_normalised ~ has_introduced_species, community_data_with_introductions)
+wilcox.test(handwing_index_fdiv_normalised ~ has_introduced_species, community_data_with_introductions, na.action = 'na.omit')
 ```
 There is a significant difference between the response of cities with introduced species (0.49±0.30) and those without (0.79±0.21) (p < 0.0001)
 
@@ -329,7 +330,6 @@ norm_mntd_analysis_result <- model_average(mntd_normalised ~ ., norm_mntd_analys
 model_summary(norm_mntd_analysis_result)
 ```
 
-
 ## Gape width - FDiv
 ```{r}
 norm_gape_fdiv_analysis_plot = geom_normalised_histogram(
@@ -350,7 +350,6 @@ norm_gape_fdiv_analysis_data = model_data(analysis_data[!is.na(analysis_data$gap
 norm_gape_fdiv_analysis_result <- model_average(gape_width_fdiv_normalised ~ ., norm_gape_fdiv_analysis_data, 4)
 model_summary(norm_gape_fdiv_analysis_result)
 ```
-
 
 ## HWI - FDiv
 ```{r}

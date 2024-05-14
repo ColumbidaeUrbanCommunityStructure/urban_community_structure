@@ -117,7 +117,7 @@ DL_BIRDLIFE_TAXONOMY = '/Users/james/Dropbox/PhD/BirdLife/Taxonomy/Handbook of t
 
 # These have been exported to a shape file using google earth engine.
 # https://developers.google.com/earth-engine/datasets/catalog/RESOLVE_ECOREGIONS_2017
-DL_RESOLVE = '/Users/jamese.richardson/Downloads/Ecoregions2017/Ecoregions2017.shp'
+DL_RESOLVE = '/Users/james/Dropbox/PhD/Ecoregions2017/Ecoregions2017.shp'
 
 read_resolve = function() {
   st_simplify(st_buffer(read_sf(DL_RESOLVE), 0), dTolerance = 0.02)
