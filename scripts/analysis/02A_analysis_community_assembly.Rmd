@@ -121,15 +121,19 @@ community_data_with_introductions %>% group_by(has_introduced_species) %>% summa
   total_cities = n(), 
   
   mean_mntd_normalised = mean(mntd_normalised, na.rm = T),
+  median_mntd_normalised = median(mntd_normalised, na.rm = T),
   sd_mntd_normalised = sd(mntd_normalised, na.rm = T),
   
   mean_mass_fdiv_normalised = mean(mass_fdiv_normalised, na.rm = T),
+  median_mass_fdiv_normalised = median(mass_fdiv_normalised, na.rm = T),
   sd_mass_fdiv_normalised = sd(mass_fdiv_normalised, na.rm = T),
   
   mean_gape_width_fdiv_normalised = mean(gape_width_fdiv_normalised, na.rm = T),
+  median_gape_width_fdiv_normalised = median(gape_width_fdiv_normalised, na.rm = T),
   sd_gape_width_fdiv_normalised = sd(gape_width_fdiv_normalised, na.rm = T),
   
   mean_handwing_index_fdiv_normalised = mean(handwing_index_fdiv_normalised, na.rm = T),
+  median_handwing_index_fdiv_normalised = median(handwing_index_fdiv_normalised, na.rm = T),
   sd_handwing_index_fdiv_normalised = sd(handwing_index_fdiv_normalised, na.rm = T)
 )
 ```

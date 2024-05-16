@@ -1,0 +1,79 @@
+---
+title: "Compare urban traits and phylogency"
+output: html_notebook
+bibliography: ../ref.bib  
+---
+
+```{r}
+source('../env.R')
+```
+# Create dataset
+
+Load community data
+```{r}
+communities = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'communities_for_analysis.csv'))
+communities
+```
+Load trait data
+```{r}
+traits = read_csv(filename(TAXONOMY_OUTPUT_DIR, 'traits_jetz.csv'))
+head(traits)
+```
+
+```{r}
+species_urban_response = communities %>% group_by(jetz_species_name) %>% summarise(mean_relative_abundance_proxy = mean(relative_abundance_proxy)) %>% left_join(traits)
+species_urban_response$is_urban = species_urban_response$mean_relative_abundance_proxy > 0
+species_urban_response
+```
+```{r}
+species_urban_response %>% group_by(is_urban) %>% summarise(
+  mean_gape_width = mean(gape_width),
+  median_gape_width = median(gape_width),
+  sd_gape_width = sd(gape_width),
+  
+  mean_handwing_index = mean(handwing_index),
+  median_handwing_index = median(handwing_index),
+  sd_handwing_index = sd(handwing_index),
+  
+  mean_mass = mean(mass),
+  median_mass = median(mass),
+  sd_mass = sd(mass),
+  
+  n = n()
+)
+```
+
+# Compare traits between urban and non-urban species
+
+## Gape Width
+```{r}
+ggplot(species_urban_response, aes(x = is_urban, y = gape_width)) + geom_boxplot()
+```
+```{r}
+wilcox.test(gape_width ~ is_urban, species_urban_response)
+```
+There is not a significant response for the gape width between urban species and non urban species.
+
+## HWI
+```{r}
+ggplot(species_urban_response, aes(x = is_urban, y = handwing_index)) + geom_boxplot()
+```
+
+```{r}
+wilcox.test(handwing_index ~ is_urban, species_urban_response)
+```
+There is a significant response between urban and non-urban species
+
+## Mass
+
+```{r}
+ggplot(species_urban_response, aes(x = is_urban, y = mass)) + geom_boxplot()
+```
+
+```{r}
+wilcox.test(mass ~ is_urban, species_urban_response)
+```
+
+There is not a significant response between species.
+
+# Phylogeny
