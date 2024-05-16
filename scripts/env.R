@@ -24,6 +24,8 @@ library(MuMIn)
 library(VSURF)
 library(cowplot)
 library(ggplot2)
+library(phytools)
+library(treedataverse) # BiocManager::install("YuLab-SMU/treedataverse")
 
 sf::sf_use_s2(FALSE)
 options(scipen=99999)
