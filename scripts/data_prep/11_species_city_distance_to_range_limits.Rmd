@@ -1,5 +1,5 @@
 ---
-title: "Distribution limits"
+title: "Range limits"
 output: html_notebook
 ---
 
@@ -7,7 +7,7 @@ output: html_notebook
 source('../env.R')
 ```
 
-Here we wish to find out how close each city is to a species distribution limits.
+Here we wish to find out how close each city is to a species range limits.
 
 # Load data
 ```{r}

@@ -26,7 +26,7 @@ The thresholds are:
 
 ```{r}
 raw_data = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'jetz_all_recorded_species_with_spatial_data.csv'))
-raw_data_trimmed_to_accepted_cities = raw_data[raw_data$percentage_total_city_area_surveyed > 10,]
+raw_data_trimmed_to_accepted_cities = raw_data[raw_data$percentage_total_city_area_surveyed > 10 & raw_data$total_city_locations > 10,]
 length(unique(raw_data_trimmed_to_accepted_cities$city_id))
 ```
 
@@ -84,6 +84,21 @@ city_data = pools %>%
             distinct()
 
 write_csv(city_data, filename(CITY_DATA_OUTPUT_DIR, 'city_effort.csv'))
+```
+
+Total checklists included in survey
+```{r}
+sum(city_data$total_city_checklists)
+```
+
+Total checklists which include at least one Columbidae:
+```{r}
+columbidae_checklists = read_csv(filename(EBIRD_WORKING_OUTPUT_DIR, 'urban_columbidae.csv'))
+columbidae_checklists %>% filter(city_id %in% city_data$city_id) %>% select(checklist_id) %>% distinct() %>% count()
+```
+
+```{r}
+city_data %>% arrange(total_city_area_m2) %>% mutate(total_city_area_km2 = total_city_area_m2 / (1000 * 1000)) %>% dplyr::select(city_name, total_city_area_km2)
 ```
 
 Create shape file with selected cities

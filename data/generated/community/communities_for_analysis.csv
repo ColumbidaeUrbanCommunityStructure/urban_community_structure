@@ -1655,13 +1655,6 @@ city_id,city_name,jetz_species_name,seasonal,presence,origin,distance_to_norther
 7431,Gwalior,Streptopelia_orientalis,Non-breeding Season,Extant,Native,7932.07044865486,10882.4998320825,FALSE,FALSE,FALSE,0
 7431,Gwalior,Streptopelia_tranquebarica,Resident,Extant,Native,9070.55497089177,11611.400145362399,FALSE,TRUE,TRUE,22.227233211349276
 7431,Gwalior,Treron_phoenicopterus,Resident,Extant,Native,9425.41053043755,10875.9669229839,TRUE,TRUE,TRUE,47.59902025809921
-7474,Budaun,Columba_livia,Resident,Extant,Native,7679.03483554521,13010.784625023,TRUE,TRUE,TRUE,70.91370553042563
-7474,Budaun,Stigmatopelia_chinensis,Resident,Extant,Native,8853.409482240952,12921.5501659976,TRUE,TRUE,TRUE,71.054694581687
-7474,Budaun,Stigmatopelia_senegalensis,Resident,Extant,Native,8256.19191455382,12668.8853102505,TRUE,TRUE,TRUE,71.054694581687
-7474,Budaun,Streptopelia_decaocto,Resident,Extant,Native,7509.29429017893,12627.0737570529,TRUE,TRUE,TRUE,70.91421843216654
-7474,Budaun,Streptopelia_orientalis,Passage,Extant,Native,7714.4378880492195,10756.654030868,FALSE,TRUE,TRUE,30.434470458203037
-7474,Budaun,Streptopelia_tranquebarica,Resident,Extant,Native,8872.02307846156,11530.354163352,TRUE,TRUE,TRUE,70.9113170288189
-7474,Budaun,Treron_phoenicopterus,Resident,Extant,Native,9237.522213796521,10749.7666374948,TRUE,TRUE,TRUE,71.05461200566977
 7480,Bareilly,Columba_livia,Resident,Extant,Native,7628.01715568491,13011.213206414699,TRUE,TRUE,TRUE,53.74544207333912
 7480,Bareilly,Stigmatopelia_chinensis,Resident,Extant,Native,8801.606240612718,12918.9028253665,FALSE,TRUE,TRUE,26.94177131517028
 7480,Bareilly,Stigmatopelia_senegalensis,Resident,Extant,Native,8203.693324987711,12659.165152122001,TRUE,TRUE,TRUE,41.6597391786236
@@ -1685,13 +1678,6 @@ city_id,city_name,jetz_species_name,seasonal,presence,origin,distance_to_norther
 7503,Bhopal,Streptopelia_orientalis,Non-breeding Season,Extant,Native,8261.158193927009,11016.6205098263,FALSE,FALSE,FALSE,0
 7503,Bhopal,Streptopelia_tranquebarica,Resident,Extant,Native,9346.06569207392,11668.2901247453,FALSE,FALSE,FALSE,0
 7503,Bhopal,Treron_phoenicopterus,Resident,Extant,Native,9677.86134652701,11010.7104991503,FALSE,FALSE,TRUE,3.735168843496014
-7527,Bhind,Columba_livia,Resident,Extant,Native,7840.13530837372,12929.7054223874,TRUE,TRUE,TRUE,99.58052269368449
-7527,Bhind,Stigmatopelia_chinensis,Resident,Extant,Native,8985.3333455359,12849.9063570598,FALSE,TRUE,TRUE,39.583900821209305
-7527,Bhind,Stigmatopelia_senegalensis,Resident,Extant,Native,8404.749579103689,12620.2486950493,TRUE,TRUE,TRUE,70.78692899819943
-7527,Bhind,Streptopelia_decaocto,Resident,Extant,Native,7673.02320610996,12581.8691327744,TRUE,TRUE,TRUE,94.95589076895544
-7527,Bhind,Streptopelia_orientalis,Non-breeding Season,Extant,Native,7874.9133828187605,10818.6502629496,FALSE,FALSE,FALSE,0
-7527,Bhind,Streptopelia_tranquebarica,Resident,Extant,Native,9003.38423398349,11555.3711212323,TRUE,TRUE,TRUE,59.375851105756894
-7527,Bhind,Treron_phoenicopterus,Resident,Extant,Native,9357.35536883,10812.066015169,FALSE,TRUE,TRUE,19.791950284547593
 7542,Mangaluru,Chalcophaps_indica,Resident,Extant,Native,10720.5356152247,12192.8463064234,FALSE,FALSE,FALSE,0
 7542,Mangaluru,Columba_livia,Resident,Extant,Native,9378.640924312509,12184.2182165148,TRUE,TRUE,TRUE,67.65715890701051
 7542,Mangaluru,Ducula_aenea,Resident,Extant,Native,10751.9987437944,11887.0553396559,FALSE,FALSE,FALSE,0
@@ -1724,13 +1710,6 @@ city_id,city_name,jetz_species_name,seasonal,presence,origin,distance_to_norther
 7593,Akola,Streptopelia_orientalis,Non-breeding Season,Extant,Native,8537.41521198076,11111.1482926536,FALSE,FALSE,TRUE,12.056089194894904
 7593,Akola,Streptopelia_tranquebarica,Resident,Extant,Native,9566.94761349953,11694.6966892708,FALSE,TRUE,TRUE,21.696749065056327
 7593,Akola,Treron_phoenicopterus,Resident,Extant,Native,9877.898745186521,11105.7938404341,FALSE,TRUE,TRUE,24.178215887319837
-7635,Latur,Columba_livia,Resident,Extant,Native,8755.708780174371,12488.291325126,TRUE,TRUE,TRUE,68.54625989021733
-7635,Latur,Stigmatopelia_chinensis,Resident,Extant,Native,9759.560769501351,12461.8946494516,FALSE,TRUE,TRUE,29.640539815151605
-7635,Latur,Stigmatopelia_senegalensis,Resident,Extant,Native,9263.14717385109,12363.391142842,TRUE,TRUE,TRUE,68.54625989021733
-7635,Latur,Streptopelia_decaocto,Resident,Extant,Native,8598.6830524404,12344.690459396601,FALSE,TRUE,TRUE,38.90572007506572
-7635,Latur,Streptopelia_orientalis,Non-breeding Season,Extant,Native,8787.9119123007,11206.207076382101,FALSE,FALSE,TRUE,14.82026981318391
-7635,Latur,Streptopelia_tranquebarica,Resident,Extant,Native,9774.67619509529,11727.3631536285,FALSE,FALSE,FALSE,0
-7635,Latur,Treron_phoenicopterus,Resident,Extant,Native,10067.5656389031,11201.358678351,FALSE,FALSE,FALSE,0
 7655,Kannur,Chalcophaps_indica,Resident,Extant,Native,10733.147410216,12083.8083991531,FALSE,FALSE,FALSE,0.8094433007940056
 7655,Kannur,Columba_livia,Resident,Extant,Native,9457.61975276123,12066.9995932862,TRUE,TRUE,TRUE,56.97860112713545
 7655,Kannur,Ducula_aenea,Resident,Extant,Native,10762.809463537798,11818.2257069222,FALSE,FALSE,FALSE,0.6134125772584554
@@ -1941,13 +1920,6 @@ city_id,city_name,jetz_species_name,seasonal,presence,origin,distance_to_norther
 8251,Prayagraj,Streptopelia_orientalis,Non-breeding Season,Extant,Native,7844.33634022466,10536.2573492076,FALSE,FALSE,FALSE,0
 8251,Prayagraj,Streptopelia_tranquebarica,Resident,Extant,Native,8847.64714481521,11239.7175828368,FALSE,FALSE,TRUE,7.423657301632392
 8251,Prayagraj,Treron_phoenicopterus,Resident,Extant,Native,9171.28509511126,10530.012069033399,FALSE,TRUE,TRUE,16.818021232792237
-8260,Pratapgarh,Columba_livia,Resident,Extant,Native,7763.463869928561,12643.678311835,TRUE,TRUE,TRUE,100
-8260,Pratapgarh,Stigmatopelia_chinensis,Resident,Extant,Native,8787.88172814764,12554.4276206516,TRUE,TRUE,TRUE,71.79192249629276
-8260,Pratapgarh,Stigmatopelia_senegalensis,Resident,Extant,Native,8260.88100200921,12307.4159868352,TRUE,TRUE,TRUE,100
-8260,Pratapgarh,Streptopelia_decaocto,Resident,Extant,Native,7620.4651541288895,12267.0781753243,FALSE,TRUE,TRUE,39.79055416189673
-8260,Pratapgarh,Streptopelia_orientalis,Non-breeding Season,Extant,Native,7793.516225532219,10514.3773638975,FALSE,FALSE,FALSE,0
-8260,Pratapgarh,Streptopelia_tranquebarica,Resident,Extant,Native,8804.456310533878,11231.302912479101,FALSE,FALSE,FALSE,0
-8260,Pratapgarh,Treron_phoenicopterus,Resident,Extant,Native,9131.42470080871,10508.033708594801,FALSE,FALSE,FALSE,0
 8331,Salem,Chalcophaps_indica,Resident,Extant,Native,10476.976148456899,11811.058002386,FALSE,FALSE,FALSE,0
 8331,Salem,Columba_livia,Resident,Extant,Native,9360.360167237179,11828.6538457865,TRUE,TRUE,TRUE,41.68376130237056
 8331,Salem,Stigmatopelia_chinensis,Resident,Extant,Native,10124.121381504201,11828.5451454778,FALSE,TRUE,TRUE,19.509698813146617
@@ -2084,13 +2056,6 @@ city_id,city_name,jetz_species_name,seasonal,presence,origin,distance_to_norther
 9063,Kandy,Treron_bicinctus,Resident,Extant,Native,10504.1393879788,11157.3784596789,FALSE,FALSE,FALSE,0
 9063,Kandy,Treron_phoenicopterus,Resident,Extant,Native,10415.200558647699,10951.168312533398,FALSE,FALSE,FALSE,0
 9063,Kandy,Treron_pompadora,Resident,Extant,Native,10518.1346599842,11097.042626320901,FALSE,TRUE,TRUE,16.662671825467473
-9124,Bihar Sharif,Columba_livia,Resident,Extant,Native,7680.89762167704,12326.1923775243,FALSE,TRUE,TRUE,21.2434608766948
-9124,Bihar Sharif,Stigmatopelia_chinensis,Resident,Extant,Native,8569.00799180433,12226.5744976958,TRUE,TRUE,TRUE,42.48692202399338
-9124,Bihar Sharif,Stigmatopelia_senegalensis,Resident,Extant,Native,8102.46796458715,11960.2933823228,FALSE,FALSE,FALSE,0
-9124,Bihar Sharif,Streptopelia_decaocto,Resident,Extant,Native,7564.889487813301,11917.7455287099,FALSE,TRUE,TRUE,21.2434608766948
-9124,Bihar Sharif,Streptopelia_orientalis,Non-breeding Season,Extant,Native,7705.652782721821,10175.854482738901,FALSE,FALSE,FALSE,0
-9124,Bihar Sharif,Streptopelia_tranquebarica,Resident,Extant,Native,8583.92201608085,10871.132427304501,FALSE,FALSE,FALSE,0
-9124,Bihar Sharif,Treron_phoenicopterus,Resident,Extant,Native,8880.42881569639,10169.7769749614,FALSE,FALSE,FALSE,0
 9180,Visakhapatnam,Chalcophaps_indica,Resident,Extant,Native,9671.416653378381,11755.551220716801,FALSE,FALSE,FALSE,0
 9180,Visakhapatnam,Columba_livia,Resident,Extant,Native,8523.37189051563,11922.7437378425,TRUE,TRUE,TRUE,66.86806552047813
 9180,Visakhapatnam,Stigmatopelia_chinensis,Resident,Extant,Native,9275.74681859821,11870.0173867639,TRUE,TRUE,TRUE,67.35206314767488

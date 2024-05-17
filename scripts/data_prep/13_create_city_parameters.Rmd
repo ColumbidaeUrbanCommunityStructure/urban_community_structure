@@ -75,6 +75,7 @@ names(buffer_20_elev) = c('city_id', 'region_20km_max_elev', 'region_20km_min_el
 buffer_20_elev$region_20km_elev_range = buffer_20_elev$region_20km_max_elev - buffer_20_elev$region_20km_min_elev
 buffer_20_elev
 ```
+
 ```{r}
 buffer_50_stats_in = read_csv(filename(EARTH_ENGINE_WORKING_OUTPUT_DIR, 'columbidae__stats_buffer_50km__350.csv'))
 buffer_50_stats = buffer_50_stats_in[,c('city_id', 'NDVI', 'b1', 'sm_surface')]
