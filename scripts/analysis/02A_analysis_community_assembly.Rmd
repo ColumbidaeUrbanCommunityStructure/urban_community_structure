@@ -100,6 +100,16 @@ test_required_values('Indomalayan', community_data_with_realm[community_data_wit
 test_required_values('Australasia', community_data_with_realm[community_data_with_realm$core_realm == 'Australasia',])
 ```
 
+# What families exist in which realms?
+```{r}
+communities %>% 
+  left_join(city_to_realm) %>% 
+  mutate(family = gsub( "_.*$", "", jetz_species_name)) %>%
+  dplyr::select(family, core_realm) %>%
+  distinct() %>%
+  arrange(core_realm)
+```
+
 # Summary metrics by introduced species
 ```{r}
 communities = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'communities_for_analysis.csv'))
