@@ -440,7 +440,6 @@ norm_mntd_analysis_plot
 ```{r}
 norm_mntd_analysis_geo_plot = geom_map(geom_sf(data = analysis_data, aes(color = mntd_normalised, geometry = geometry)), 'MNTD')
 norm_mntd_analysis_geo_plot
-ggsave(filename(FIGURES_OUTPUT_DIR, 'normalised_mntd_using_abundance.jpg'), width = 2500, height=1100, units = 'px')
 ```
 
 ```{r}
@@ -474,7 +473,6 @@ norm_gape_fdiv_analysis_plot
 ```{r}
 norm_gape_fdiv_analysis_geo_plot = geom_map(geom_sf(data = analysis_data, aes(color = gape_width_fdiv_normalised, geometry = geometry)), 'Gape Width FDiv')
 norm_gape_fdiv_analysis_geo_plot
-ggsave(filename(FIGURES_OUTPUT_DIR, 'normalised_gape_width_using_abundance.jpg'), width = 2500, height=1100, units = 'px')
 ```
 
 ```{r}
@@ -509,7 +507,6 @@ norm_hwi_fdiv_loco_analysis_plot
 ```{r}
 norm_hwi_fdiv_analysis_geo_plot = geom_map(geom_sf(data = analysis_data, aes(color = handwing_index_fdiv_normalised, geometry = geometry)), 'HWI FDiv')
 norm_hwi_fdiv_analysis_geo_plot
-ggsave(filename(FIGURES_OUTPUT_DIR, 'normalised_hwi_using_abundance.jpg'), width = 2500, height=1100, units = 'px')
 ```
 
 ```{r}
@@ -545,7 +542,6 @@ norm_mass_fdiv_loco_analysis_plot
 ```{r}
 norm_mass_fdiv_analysis_geo_plot = geom_map(geom_sf(data = analysis_data, aes(color = mass_fdiv_normalised, geometry = geometry)), 'Mass FDiv')
 norm_mass_fdiv_analysis_geo_plot
-ggsave(filename(FIGURES_OUTPUT_DIR, 'normalised_mass_using_abundance.jpg'), width = 2500, height=1100, units = 'px')
 ```
 
 ```{r}
@@ -566,6 +562,7 @@ norm_mass_fdiv_analysis_result_table
 norm_mass_fdiv_analysis_pred_plot = plot_vsurp_result(norm_mass_fdiv_analysis_result_table)
 norm_mass_fdiv_analysis_pred_plot
 ```
+
 # Create plot of differences in process response
 ```{r}
 pred_legend <- get_legend(
