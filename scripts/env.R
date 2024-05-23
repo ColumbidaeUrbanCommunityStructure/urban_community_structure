@@ -113,18 +113,23 @@ read_country_boundaries = function() {
   st_simplify(st_read(DL_COUNTRY_BOUNDARIES), dTolerance = 0.02)
 }
 
+
+downloaded_data_file = function(file) {
+  paste('/Users/james/Dropbox/PhD/', file, sep = '')
+}
+
 # A download of the birdlife distributions can be requested from here:
 # https://datazone.birdlife.org/species/requestdis
-DL_BIRDLIFE_DISTRIBUTIONS = '/Users/james/Dropbox/PhD/Birdlife/Distribution/SppDataRequest_columbidae/SppDataRequest.shp'
+DL_BIRDLIFE_DISTRIBUTIONS = downloaded_data_file('Birdlife/Distribution/SppDataRequest_columbidae/SppDataRequest.shp')
 
 # The taxonomy can be downloaded here:
 # https://datazone.birdlife.org/species/taxonomy
-DL_BIRDLIFE_TAXONOMY = '/Users/james/Dropbox/PhD/BirdLife/Taxonomy/Handbook of the Birds of the World and BirdLife International Digital Checklist of the Birds of the World_Version_8.xlsx'
+DL_BIRDLIFE_TAXONOMY = downloaded_data_file('BirdLife/Taxonomy/Handbook of the Birds of the World and BirdLife International Digital Checklist of the Birds of the World_Version_8.xlsx')
 
 # These have been exported to a shape file using google earth engine.
 # https://developers.google.com/earth-engine/datasets/catalog/RESOLVE_ECOREGIONS_2017
-DL_RESOLVE = '/Users/james/Dropbox/PhD/Ecoregions2017/Ecoregions2017.shp'
-DL_RESOLVE_CLEANED = '/Users/james/Dropbox/PhD/Ecoregions2017/Ecoregions2017_Cleaned.shp'
+DL_RESOLVE = downloaded_data_file('Ecoregions2017/Ecoregions2017.shp')
+DL_RESOLVE_CLEANED = downloaded_data_file('Ecoregions2017/Ecoregions2017_Cleaned.shp')
 
 read_resolve = function() {
   if (file.exists(DL_RESOLVE_CLEANED)) {
@@ -138,16 +143,16 @@ read_resolve = function() {
 
 # ebird data can be downloaded here:
 # https://science.ebird.org/en/use-ebird-data/download-ebird-data-products
-DL_EBIRD_SAMPLE_DATA_RAW = '/Users/james/Dropbox/PhD/eBird/ebd_sampling_relNov-2023/ebd_sampling_relNov-2023.txt'
-DL_EBIRD_DATA_RAW = '/Users/james/Dropbox/PhD/eBird/ebd_relNov-2023/ebd_relNov-2023.txt'
+DL_EBIRD_SAMPLE_DATA_RAW = downloaded_data_file('eBird/ebd_sampling_relNov-2023/ebd_sampling_relNov-2023.txt')
+DL_EBIRD_DATA_RAW = downloaded_data_file('eBird/ebd_relNov-2023/ebd_relNov-2023.txt')
 
 # See here for links to download:
 # https://science.ebird.org/en/use-ebird-data/the-ebird-taxonomy
-DL_EBIRD_TAXONOMY = '/Users/james/Dropbox/PhD/eBird/taxonomy_2023/ebird_taxonomy_v2023.csv'
+DL_EBIRD_TAXONOMY = downloaded_data_file('eBird/taxonomy_2023/ebird_taxonomy_v2023.csv')
 
 # eBird: Status & Trends
 # This data can be downloaded here:
 # https://science.ebird.org/en/status-and-trends/species/#columb2
-DL_EBIRD_EUCDOV_RANGE = '/Users/james/Dropbox/PhD/eBird/eucdov_range_2022/eucdov_range_2022.gpkg'
-DL_EBIRD_ROCPIG_RANGE = '/Users/james/Dropbox/PhD/eBird/rocpig_range_2022/rocpig_range_2022.gpkg'
-DL_EBIRD_SPODOV_RANGE = '/Users/james/Dropbox/PhD/eBird/spodov_range_2022/spodov_range_2022.gpkg'
+DL_EBIRD_EUCDOV_RANGE = downloaded_data_file('eBird/eucdov_range_2022/eucdov_range_2022.gpkg')
+DL_EBIRD_ROCPIG_RANGE = downloaded_data_file('eBird/rocpig_range_2022/rocpig_range_2022.gpkg')
+DL_EBIRD_SPODOV_RANGE = downloaded_data_file('eBird/spodov_range_2022/spodov_range_2022.gpkg')
