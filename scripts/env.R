@@ -96,26 +96,31 @@ normalised_size_scale = scale_size_continuous(
 
 # Third Party Data downloaded locally
 # ------------------------------------
+downloaded_data_file = function(file) {
+  paste('/Users/james/Dropbox/PhD/', file, sep = '')
+}
 
 # My mapping from Birdlife V8 to Jetz, this maps down the birdlife taxonomy versions to Birdlife V3 and thus Jetz. 
 # This version contains no extinct species.
-MY_BIRDLIFE_COL_MAPPING = '/Users/james/Dropbox/PhD/birdlife_v8_columbidae_taxonomy_to_jetz.csv'
+MY_BIRDLIFE_COL_MAPPING = downloaded_data_file('BirdLife/Taxonomy/birdlife_v8_columbidae_taxonomy_to_jetz.csv')
 
 # Avonet can be downloaded here
 # https://figshare.com/s/b990722d72a26b5bfead
-DL_AVONET = '/Users/jamese.richardson/Downloads/AVONET1_BirdLife.csv'
+DL_AVONET = downloaded_data_file('Avonet/TraitData/AVONET1_BirdLife.csv')
 
 # The country boundandaries can be downloaded from the world bank here:
 # https://datacatalog.worldbank.org/search/dataset/0038272/World-Bank-Official-Boundaries
-DL_COUNTRY_BOUNDARIES = '/Users/james/Dropbox/PhD/WorldBank_countries_Admin0_10m/WB_countries_Admin0_10m.shp'
+DL_COUNTRY_BOUNDARIES = downloaded_data_file('WorldBank_countries_Admin0_10m/WB_countries_Admin0_10m.shp')
+DL_COUNTRY_BOUNDARIES_CLEANED = downloaded_data_file('WorldBank_countries_Admin0_10m/WB_countries_Admin0_10m.shp')
 
 read_country_boundaries = function() {
-  st_simplify(st_read(DL_COUNTRY_BOUNDARIES), dTolerance = 0.02)
-}
-
-
-downloaded_data_file = function(file) {
-  paste('/Users/james/Dropbox/PhD/', file, sep = '')
+  if (file.exists(DL_COUNTRY_BOUNDARIES_CLEANED)) {
+    read_sf(DL_COUNTRY_BOUNDARIES_CLEANED)
+  } else {
+    countries_cleaned = st_simplify(st_read(DL_COUNTRY_BOUNDARIES), dTolerance = 0.02)
+    st_write(countries_cleaned, DL_COUNTRY_BOUNDARIES_CLEANED)
+    countries_cleaned
+  }
 }
 
 # A download of the birdlife distributions can be requested from here:
