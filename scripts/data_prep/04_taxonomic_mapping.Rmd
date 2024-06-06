@@ -13,36 +13,46 @@ We map to Jetz as our working taxonomy to allow us to use a clade tree.
 # Map Birdlife and eBird
 
 ## Compare missing species
-Read in Birdlife
+
+### Read in Birdlife
 ```{r}
-birdlife_tax = read_csv(filename(BIRDLIFE_WORKING_OUTPUT_DIR, 'taxonomy.csv'))
-names(birdlife_tax) = c('birdlife_id', 'species_name', 'birdlife_common_name', 'alternative_name')
-head(birdlife_tax)
+birdlife_tax_input = read_csv(filename(BIRDLIFE_WORKING_OUTPUT_DIR, 'taxonomy.csv'))
+names(birdlife_tax_input) = c('birdlife_id', 'species_name', 'birdlife_common_name', 'alternative_name', 'status')
+head(birdlife_tax_input)
+```
+```{r}
+unique(birdlife_tax_input$status)
 ```
 
-Read in eBird
+Drop extinct species
 ```{r}
-ebird_tax = read_csv(filename(EBIRD_WORKING_OUTPUT_DIR, 'taxonomy.csv'))
-names(ebird_tax) = c('ebird_id', 'ebird_category', 'ebird_species_fullname', 'ebird_common_name')
-head(ebird_tax)
+birdlife_tax = birdlife_tax_input[birdlife_tax_input$status != 'EW',]
 ```
+
+### Read in eBird
+```{r}
+ebird_tax_input = read_csv(filename(EBIRD_WORKING_OUTPUT_DIR, 'taxonomy.csv'))
+names(ebird_tax_input) = c('ebird_id', 'ebird_category', 'ebird_species_fullname', 'ebird_common_name')
+head(ebird_tax_input)
+```
+
 First create the root species name for all ebird records
 ```{r}
 ebird_tax$species_name = word(ebird_tax$ebird_species_fullname, 1, 2, sep = ' ')
 head(ebird_tax)
 ```
 
-Species in eBird but not Birdlife
+### Species in eBird but not Birdlife
 ```{r}
 ebird_tax[!(ebird_tax$species_name %in% birdlife_tax$species_name),]
 ```
 
-Species in Birdlife but not eBird
+### Species in Birdlife but not eBird
 ```{r}
 birdlife_tax[!(birdlife_tax$species_name %in% ebird_tax$species_name),]
 ```
 
-Expand birdlife alternative names
+### Expand birdlife alternative names
 ```{r}
 birdlife_tax_alt_names = birdlife_tax[!is.na(birdlife_tax$alternative_name),c('birdlife_id', 'species_name', 'birdlife_common_name', 'alternative_name')] %>% separate_rows(alternative_name, sep = ";")
 birdlife_tax_alt_names
@@ -83,23 +93,22 @@ ebird_birdlife_taxonomy_mapping = rbind(
 ```
 
 
-## Species left to map
+# Species left to map
 
-Species in Birdlife but in our new taxonomy
+## Species in Birdlife but in our new taxonomy
 ```{r}
 missing_birdlife_species = birdlife_tax[!(birdlife_tax$species_name %in% ebird_birdlife_taxonomy_mapping$species_name),]
 missing_birdlife_species
 ```
 
 
-Species in eBird but not our new taxonomy
+## Species in eBird but not our new taxonomy
 ```{r}
 missing_ebird_species = ebird_tax[!(ebird_tax$species_name %in% ebird_birdlife_taxonomy_mapping$ebird_species_name),]
 missing_ebird_species
 ```
 
 ### Map Remaining Birdlife Species
-
 ```{r}
 ebird_tax$ebird_species_name = ebird_tax$species_name
 ```
@@ -363,8 +372,93 @@ birdlife_ptilinopus_fasciatus = cbind(
 ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_ptilinopus_fasciatus)
 birdlife_ptilinopus_fasciatus
 ```
+### 22690868	Leptotila battyi
+* https://avibase.bsc-eoc.org/species.jsp?avibaseid=CC39ED207FDAB555
 
-### eBird
+```{r}
+ebird_tax[ebird_tax$ebird_species_fullname == 'Leptotila plumbeiceps', c('ebird_id', 'ebird_species_name', 'ebird_species_fullname', 'ebird_common_name')]
+```
+
+```{r}
+birdlife_leptotila_battyi = cbind(
+  ebird_tax[ebird_tax$ebird_species_fullname == 'Leptotila plumbeiceps', c('ebird_id', 'ebird_species_name', 'ebird_species_fullname', 'ebird_common_name')],
+  birdlife_tax[birdlife_tax$species_name == 'Leptotila battyi', c('birdlife_id', 'species_name', 'birdlife_common_name')]
+)
+ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_leptotila_battyi)
+birdlife_leptotila_battyi
+```
+
+### 22728146	Ramphiculus subgularis
+Ptilinopus subgularis
+* https://avibase.bsc-eoc.org/species.jsp?avibaseid=E5F5E7D2C7B69514
+
+```{r}
+birdlife_ramphiculus_subgularis = cbind(
+  ebird_tax[ebird_tax$ebird_species_fullname == 'Ptilinopus subgularis', c('ebird_id', 'ebird_species_name', 'ebird_species_fullname', 'ebird_common_name')],
+  birdlife_tax[birdlife_tax$species_name == 'Ramphiculus subgularis', c('birdlife_id', 'species_name', 'birdlife_common_name')]
+)
+ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, birdlife_ramphiculus_subgularis)
+birdlife_ramphiculus_subgularis
+```
+
+### Confirm all non-extinct species mapped
+```{r}
+birdlife_tax[!(birdlife_tax$species_name %in% ebird_birdlife_taxonomy_mapping$species_name),]
+```
+
+## eBird
+## Species in eBird but not our new taxonomy
+```{r}
+missing_ebird_species = ebird_tax[!(ebird_tax$species_name %in% ebird_birdlife_taxonomy_mapping$ebird_species_name),]
+missing_ebird_species
+```
+
+```{r}
+ebird_species_extinct = c()
+```
+
+### 1925 Columba thiriouxi
+Extinct
+* https://avibase.bsc-eoc.org/species.jsp?avibaseid=B01378DFDE407C6D
+
+```{r}
+ebird_species_extinct = append(ebird_species_extinct, 'Columba thiriouxi')
+```
+
+### 1938 Columba jouyi
+Extinct
+* https://avibase.bsc-eoc.org/species.jsp?avibaseid=33D2620F2FE88FC1
+
+```{r}
+ebird_species_extinct = append(ebird_species_extinct, 'Columba jouyi')
+```
+
+### 1939 Columba versicolor
+Extinct
+* https://avibase.bsc-eoc.org/species.jsp?lang=EN&avibaseid=0EFF2CA35EEEC5CB
+```{r}
+ebird_species_extinct = append(ebird_species_extinct, 'Columba versicolor')
+```
+
+### 2023 Ectopistes migratorius
+Extinct passenger pigeon
+```{r}
+ebird_species_extinct = append(ebird_species_extinct, 'Ectopistes migratorius')
+```
+
+### 2033	Nesoenas cicur
+Extinct
+* https://avibase.bsc-eoc.org/species.jsp?lang=EN&avibaseid=E54E8DE67BA6C994
+```{r}
+ebird_species_extinct = append(ebird_species_extinct, 'Nesoenas cicur')
+```
+
+### 2034 Nesoenas rodericanus
+Extinct 
+* https://avibase.bsc-eoc.org/species.jsp?lang=EN&avibaseid=2BB91092BC7E5063
+```{r}
+ebird_species_extinct = append(ebird_species_extinct, 'Nesoenas rodericanus')
+```
 
 ### 2119: Macropygia doreya(Sultan's Cuckoo-Dove)
 
@@ -396,84 +490,103 @@ ebird_macropygia_modiglianii = cbind(
 ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, ebird_macropygia_modiglianii)
 ebird_macropygia_modiglianii
 ```
-
-### 2224: Pampusana norfolkensis(Norfolk Ground Dove)
-Extinct, so exclude from mapping
-
-### 2440: Caloenas maculata(Spotted Green Pigeon)    
-Extinct, so exclude from mapping
-
-### 2605: Ptilinopus fischeri(Red-eared Fruit-Dove)
-
-2606: Ptilinopus fischeri(Red-eared Fruit-Dove (Red-eared))
-
-2609: Ptilinopus fischeri(Red-eared Fruit-Dove (Lompobattang))
-
+### 2205 Pampusana salamonis	
+Extinct 
+* https://avibase.bsc-eoc.org/species.jsp?lang=EN&avibaseid=71BE72FC64AB2A87
 ```{r}
-ebird_ptilinopus_fischeri = cbind(
-  ebird_tax[ebird_tax$ebird_species_fullname == 'Ptilinopus fischeri fischeri/centralis', c('ebird_id', 'ebird_species_name', 'ebird_species_fullname', 'ebird_common_name')],
-  birdlife_tax[birdlife_tax$species_name == 'Ramphiculus fischeri', c('birdlife_id', 'species_name', 'birdlife_common_name')]
-)
-ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, ebird_ptilinopus_fischeri)
-ebird_ptilinopus_fischeri
+ebird_species_extinct = append(ebird_species_extinct, 'Pampusana salamonis')
 ```
 
-### 2613: Ptilinopus mangoliensis(Sula Fruit-Dove)"   
-
-Pampusana beccarii beccarii
+### 2206 Pampusana ferruginea
+Extinct
+* https://avibase.bsc-eoc.org/species.jsp?lang=EN&avibaseid=8832822EC4F51ABA
 ```{r}
-ebird_pampusana_beccarii_beccarii = cbind(
-  ebird_tax[ebird_tax$ebird_species_name == 'Pampusana beccarii beccarii',c('ebird_id', 'ebird_species_name', 'ebird_species_fullname', 'ebird_common_name')],
-  birdlife_tax[birdlife_tax$species_name == 'Alopecoenas beccarii', c('birdlife_id', 'species_name', 'birdlife_common_name')]
-)
-ebird_birdlife_taxonomy_mapping = rbind(ebird_birdlife_taxonomy_mapping, ebird_pampusana_beccarii_beccarii)
-ebird_pampusana_beccarii_beccarii
+ebird_species_extinct = append(ebird_species_extinct, 'Pampusana ferruginea')
+```
+
+### 2224 Pampusana norfolkensis
+Extinct
+* https://avibase.bsc-eoc.org/species.jsp?lang=EN&avibaseid=8D0BB075EC35B34B
+```{r}
+ebird_species_extinct = append(ebird_species_extinct, 'Pampusana norfolkensis')
+```
+
+### 2436	Zenaida graysoni
+Extinct in the wild
+* https://avibase.bsc-eoc.org/species.jsp?lang=EN&avibaseid=5428D8973A682327
+```{r}
+ebird_species_extinct = append(ebird_species_extinct, 'Zenaida graysoni')
+```
+
+### 2440	Caloenas maculata
+Extinct in the wild
+* https://avibase.bsc-eoc.org/species.jsp?lang=EN&avibaseid=5428D8973A682327
+```{r}
+ebird_species_extinct = append(ebird_species_extinct, 'Caloenas maculata')
+```
+
+### 2441	Raphus cucullatus
+Extinct Dodo
+* https://avibase.bsc-eoc.org/species.jsp?lang=EN&avibaseid=DEF9592737DC3B5E
+```{r}
+ebird_species_extinct = append(ebird_species_extinct, 'Raphus cucullatus')
+```
+
+### 2442	Pezophaps solitaria
+Extinct
+* https://avibase.bsc-eoc.org/species.jsp?lang=EN&avibaseid=2FC54A500BFB61BA
+```{r}
+ebird_species_extinct = append(ebird_species_extinct, 'Pezophaps solitaria')
+```
+
+### 2464	Microgoura meeki
+Extinct
+* https://avibase.bsc-eoc.org/species.jsp?lang=EN&avibaseid=75D098B55481BD7E
+```{r}
+ebird_species_extinct = append(ebird_species_extinct, 'Microgoura meeki')
+```
+
+### 2674	Ptilinopus mercierii
+Extinct
+* https://avibase.bsc-eoc.org/species.jsp?lang=EN&avibaseid=B526D1AE92AC6811
+```{r}
+ebird_species_extinct = append(ebird_species_extinct, 'Ptilinopus mercierii')
+```
+
+### 2738	Alectroenas nitidissimus
+Extinct
+* https://avibase.bsc-eoc.org/species.jsp?lang=EN&avibaseid=BE8566B00A06FE64
+```{r}
+ebird_species_extinct = append(ebird_species_extinct, 'Alectroenas nitidissimus')
+```
+
+### 2739	Alectroenas payandeei
+Extinct
+* https://avibase.bsc-eoc.org/species.jsp?lang=EN&avibaseid=05E1097F65FC6090
+```{r}
+ebird_species_extinct = append(ebird_species_extinct, 'Alectroenas payandeei')
+```
+
+### Confirm all non-extinct species mapped
+```{r}
+ebird_tax[!(ebird_tax$ebird_species_name %in% ebird_birdlife_taxonomy_mapping$ebird_species_name) & !(ebird_tax$ebird_species_name %in% ebird_species_extinct),]
 ```
 
 
-## Confirm all non-extinct species mapped
-Species missing in Birdlife - 1 extinct species and 1 species not recorded in eBird
+# Result
 ```{r}
-birdlife_tax[!(birdlife_tax$species_name %in% ebird_birdlife_taxonomy_mapping$species_name),]
-```
-
-Species missing in eBird - 2 extinct species
-```{r}
-ebird_tax[!(ebird_tax$ebird_species_name %in% ebird_birdlife_taxonomy_mapping$ebird_species_name),]
-```
-
-
-# Map to Jetz
-Load my mapping from Birdlife V8 to Jetz, this maps down the birdlife taxonomy versions to Birdlife V3 and thus Jetz. This version contains no extinct species.
-```{r}
-birdlife_jetz_mapping = read_csv(MY_BIRDLIFE_COL_MAPPING)
-ebird_birdlife_taxonomy_mapping[!(ebird_birdlife_taxonomy_mapping$species_name %in% birdlife_jetz_mapping$SpeciesName_v8),]
-```
-```{r}
-ebird_birdlife_jetz_taxonomy_mapping = ebird_birdlife_taxonomy_mapping %>% 
-  inner_join(birdlife_jetz_mapping[,c('SpeciesName_v8', 'JetzSpeciesName')], by = c('species_name' = 'SpeciesName_v8')) %>%
-  rename(jetz_species_name='JetzSpeciesName')
-ebird_birdlife_jetz_taxonomy_mapping
-```
-
-```{r}
-jetz_phylo_tree <- read.tree(PHYLO_TREE)
-```
-
-Check all species mapped
-```{r}
-ebird_birdlife_jetz_taxonomy_mapping[!(ebird_birdlife_jetz_taxonomy_mapping$jetz_species_name %in% jetz_phylo_tree$tip.label),]
+ebird_birdlife_taxonomy_mapping
 ```
 
 
 ## Store Mapping file
 ```{r}
-write_csv(ebird_birdlife_jetz_taxonomy_mapping, filename(TAXONOMY_OUTPUT_DIR, 'taxonomy_mapping.csv'))
+write_csv(ebird_birdlife_taxonomy_mapping, filename(TAXONOMY_OUTPUT_DIR, 'taxonomy_mapping.csv'))
 ```
 
-## Prune Phylogeny and store
+## Create phylogeny
 ```{r}
-selected_species <- ebird_birdlife_jetz_taxonomy_mapping$jetz_species_name
-pruned_tree <- ladderize(drop.tip(jetz_phylo_tree, setdiff(jetz_phylo_tree$tip.label, selected_species)))
+pruned_tree = extractTree(species = ebird_birdlife_taxonomy_mapping$ebird_species_name, output.type = 'scientific', taxonomy.year = '2023', version = 'current')
 write.tree(pruned_tree, filename(TAXONOMY_OUTPUT_DIR, 'phylogeny.tre'))
+plot(pruned_tree)
 ```
