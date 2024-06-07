@@ -31,9 +31,9 @@ birdlife_tax = birdlife_tax_input[birdlife_tax_input$status != 'EW',]
 
 ### Read in eBird
 ```{r}
-ebird_tax_input = read_csv(filename(EBIRD_WORKING_OUTPUT_DIR, 'taxonomy.csv'))
-names(ebird_tax_input) = c('ebird_id', 'ebird_category', 'ebird_species_fullname', 'ebird_common_name')
-head(ebird_tax_input)
+ebird_tax = read_csv(filename(EBIRD_WORKING_OUTPUT_DIR, 'taxonomy.csv'))
+names(ebird_tax) = c('ebird_id', 'ebird_category', 'ebird_species_fullname', 'ebird_common_name')
+head(ebird_tax)
 ```
 
 First create the root species name for all ebird records
