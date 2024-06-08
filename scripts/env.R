@@ -108,7 +108,7 @@ MY_BIRDLIFE_COL_MAPPING = downloaded_data_file('BirdLife/Taxonomy/birdlife_v8_co
 
 # Avonet can be downloaded here
 # https://figshare.com/s/b990722d72a26b5bfead
-DL_AVONET = downloaded_data_file('Avonet/TraitData/AVONET1_BirdLife.csv')
+DL_AVONET = downloaded_data_file('Avonet/TraitData/AVONET2_eBird.csv')
 
 # The country boundandaries can be downloaded from the world bank here:
 # https://datacatalog.worldbank.org/search/dataset/0038272/World-Bank-Official-Boundaries
@@ -156,6 +156,7 @@ DL_EBIRD_DATA_RAW = downloaded_data_file('eBird/ebd_relNov-2023/ebd_relNov-2023.
 # See here for links to download:
 # https://science.ebird.org/en/use-ebird-data/the-ebird-taxonomy
 DL_EBIRD_TAXONOMY = downloaded_data_file('eBird/taxonomy_2023/ebird_taxonomy_v2023.csv')
+DL_EBIRD_TAXONOMY_2021 = downloaded_data_file('eBird/taxonomy_2021/ebird_taxonomy_v2021.csv')
 
 # eBird: Status & Trends
 # This data can be downloaded here:
