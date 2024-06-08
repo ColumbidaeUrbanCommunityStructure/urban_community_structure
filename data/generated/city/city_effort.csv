@@ -1,4 +1,4 @@
-city_id,city_name,total_city_checklists,total_city_locations,total_city_effort,total_city_area_m2,percentage_total_city_area_surveyed
+city_id,city_name,total_city_checklists,total_city_locations,total_city_effort,total_city_area_m2,buf_500m_percentage_total_city_area_surveyed
 1,Honolulu,4609,1459,111638,343442519.61,57
 10,San Jose,106592,13399,3761697,1771367066.43,80
 14,Los Angeles,121497,17515,5390320,5688995686.2,61
@@ -136,7 +136,7 @@ city_id,city_name,total_city_checklists,total_city_locations,total_city_effort,t
 1639,Seville,2212,249,100047,394068854.4,24
 1663,Dublin,4403,549,168060,463776242.55,36
 1684,Málaga,4160,589,201356,498228044.09,37
-1708,Madrid,10346,1456,334503,1653539473.84,33
+1708,Madrid,10346,1456,334503,1653539473.85,33
 1716,Glasgow,1277,249,40361,429408646.2,23
 1744,Bilbao,1147,154,99087,260170343.46,28
 1758,Liverpool,1047,230,63813,615427584.57,18
@@ -321,7 +321,7 @@ city_id,city_name,total_city_checklists,total_city_locations,total_city_effort,t
 11197,Kuala Lumpur,1417,574,56535,1873848810.13,13
 11536,Phnom Penh,2575,200,71819,376114154.77,18
 11554,Singapore,7258,1894,458832,1325571624,30
-11699,Perth,4383,1000,141081,1239133475.35,31
+11699,Perth,4383,1000,141081,1239133475.34,31
 12333,Hong Kong,2229,493,97692,622576920.29,27
 12349,Sha Tin,560,162,22587,199494958.97,27
 12743,Hsinchu,1028,421,33326,386064843.67,33

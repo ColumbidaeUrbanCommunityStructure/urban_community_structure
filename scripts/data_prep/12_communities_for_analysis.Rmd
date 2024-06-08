@@ -9,24 +9,9 @@ source('../env.R')
 ```
 
 # Build Communities
-Build three community data sets:
-
-1. High threshold - birds that cover most of the city
-2. Middle threshold - should include most urban adapter species
-3. Low threshold - includes species that regularly use cities, but are around the fringes or in larger green areas.
-
-Using the species in cities from @Bonier2007, the high threshold will find 80% of those species, the middle threshold will find 90%, and the lowest threshold will find 100%.
-
-We include cities with at least 10% of their area surveyed.
-The thresholds are:
-
-1. High: Species present in at least 40% of the surveyed area.
-2: Medium: Species present in at least 15% of the surveyed area.
-3: Low: Species present in at least 3.5% of the surveyed area.
-
 ```{r}
-raw_data = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'jetz_all_recorded_species_with_spatial_data.csv'))
-raw_data_trimmed_to_accepted_cities = raw_data[raw_data$percentage_total_city_area_surveyed > 10 & raw_data$total_city_locations > 10,]
+raw_data = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'recorded_species_with_spatial_data.csv'))
+raw_data_trimmed_to_accepted_cities = raw_data[raw_data$buf_500m_percentage_total_city_area_surveyed > 10 & raw_data$total_city_locations > 10,]
 length(unique(raw_data_trimmed_to_accepted_cities$city_id))
 ```
 
@@ -35,41 +20,18 @@ Trim out species in cities but not regional pool data
 pools = raw_data_trimmed_to_accepted_cities[!is.na(raw_data_trimmed_to_accepted_cities$seasonal),]
 ```
 
-Assign to communities
-```{r}
-pools$present_urban_high = pools$percentage_surveyed_area > 40
-pools$present_urban_med = pools$percentage_surveyed_area > 15
-pools$present_urban_low = pools$percentage_surveyed_area > 3.5
-
-head(pools)
-```
-
-```{r}
-distances = read_csv(filename(GEO_WORKING_OUTPUT_DIR, 'distance_to_range_edge.csv'))
-nrow(pools)
-nrow(pools %>% left_join(distances))
-
-pools %>% left_join(distances) %>% filter(distance_to_northern_edge == Inf)
-```
           
 ```{r}
 write_csv(pools %>%
-            left_join(distances) %>% 
-            mutate(distance_to_northern_edge_km = distance_to_northern_edge / 1000, distance_to_southern_edge_km = distance_to_southern_edge / 1000) %>%
             dplyr::select(
               city_id,
               city_name,
-              jetz_species_name,
+              ebird_species_name,
               seasonal,
               presence,
               origin,
-              distance_to_northern_edge_km,
-              distance_to_southern_edge_km,
-              present_urban_high,
-              present_urban_med,
-              present_urban_low,
-              percentage_surveyed_area
-            ) %>% dplyr::rename(relative_abundance_proxy='percentage_surveyed_area'), filename(COMMUNITY_OUTPUT_DIR, 'communities_for_analysis.csv'))
+              buf_500m_percentage_survey_area_present
+            ) %>% dplyr::rename(relative_abundance_proxy='buf_500m_percentage_survey_area_present'), filename(COMMUNITY_OUTPUT_DIR, 'communities_for_analysis.csv'))
 
 city_data = pools %>%
             dplyr::select(
@@ -79,7 +41,7 @@ city_data = pools %>%
               total_city_locations,
               total_city_effort,
               total_city_area_m2,
-              percentage_total_city_area_surveyed
+              buf_500m_percentage_total_city_area_surveyed
             ) %>%
             distinct()
 
@@ -118,7 +80,7 @@ world_map = read_country_boundaries()
 
 ggplot() +  
   geom_sf(data = world_map, aes(geometry = geometry)) +
-  geom_sf(data = final_city_selection, aes(geometry = geometry, colour = percentage_total_city_area_surveyed)) + 
+  geom_sf(data = final_city_selection, aes(geometry = geometry, colour = buf_500m_percentage_total_city_area_surveyed)) + 
   theme(legend.position="bottom") + scale_colour_gradient2(
     low = "darkgreen",
     mid = "yellow",
@@ -141,58 +103,41 @@ head(abundance_data)
 ```
 
 ```{r}
-taxonomic_mapping = read_csv(filename(TAXONOMY_OUTPUT_DIR, 'taxonomy_mapping.csv'))
 test_species = unique(abundance_data$species)
-
-test_species_mapping = unique(taxonomic_mapping[taxonomic_mapping$ebird_species_name %in% test_species, c('ebird_species_name', 'jetz_species_name')])
-
-test_species_mapping[order(test_species_mapping$ebird_species_name),] %>% arrange(jetz_species_name)
+test_species
 ```
 
-```{r}
-abundance_data_jetz = abundance_data %>% left_join(test_species_mapping, by=c('species' = 'ebird_species_name')) %>% dplyr::select(-c('species'))
-abundance_data_jetz
-```
 
 ```{r, echo = FALSE, warning = FALSE}
-abundance_data_jetz$max_mean_abundance = apply(abundance_data_jetz[,c('mean_breeding', 'mean_nonbreeding', 'mean_resident')], 1, max, na.rm = T)
-abundance_data_jetz$max_mean_abundance[abundance_data_jetz$max_mean_abundance == -Inf] = NA
+abundance_data$max_mean_abundance = apply(abundance_data[,c('mean_breeding', 'mean_nonbreeding', 'mean_resident')], 1, max, na.rm = T)
+abundance_data$max_mean_abundance[abundance_data$max_mean_abundance == -Inf] = NA
 ```
 
 ```{r}
 analytical_pools = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'communities_for_analysis.csv'))
-comparison_data = inner_join(analytical_pools, abundance_data_jetz[,c('city_id', 'jetz_species_name', 'max_mean_abundance')])
+comparison_data = left_join(analytical_pools, abundance_data[,c('city_id', 'species', 'max_mean_abundance')], by = c('ebird_species_name' = 'species', 'city_id' = 'city_id'))
 comparison_data
 ```
 
-```{r}
-comparison_data$present_urban_never = !comparison_data$present_urban_low & !comparison_data$present_urban_med & !comparison_data$present_urban_high
-
-comparison_data %>% 
-  dplyr::select(city_id, jetz_species_name, max_mean_abundance, present_urban_high, present_urban_med, present_urban_low, present_urban_never) %>%
-  filter(sqrt(max_mean_abundance) < 5) %>%
-  pivot_longer(cols = starts_with('present_urban'), names_to = 'urban_pool') %>%
-  mutate(urban_pool = factor(urban_pool, levels=c('present_urban_never', 'present_urban_low', 'present_urban_med', 'present_urban_high'), labels=c('Always Absent', 'Low', 'Medium', 'High'))) %>%
-  filter(value) %>%
-  ggplot(aes(x = urban_pool, y = max_mean_abundance)) + 
-    geom_boxplot() +
-    xlab('Threshold') + 
-    ylab('Mean abundance across cities') +
-    labs(title = 'Mean Species Urban Abundance at each Threshold', subtitle='eBird Status & Trends abundance data') +
-    theme_bw() +
-    theme(legend.position = "none")
-
-ggsave(filename(FIGURES_OUTPUT_DIR, 'thresholds_to_ebird_trends_and_status_abundance_data.jpg'))
-```
 
 
 ```{r}
+plot_data = comparison_data[!is.na(comparison_data$max_mean_abundance),]
+pred_data <- predict(glm(formula = max_mean_abundance ~ poly(relative_abundance_proxy, 2), data = plot_data), se.fit=T)
+
+number_of_degrees_out = 50
+outside_se_data <- plot_data[plot_data$max_mean_abundance < pred_data$fit - number_of_degrees_out * pred_data$se.fit | plot_data$max_mean_abundance > pred_data$fit + number_of_degrees_out * pred_data$se.fit,]
+outside_se_data$label = paste(outside_se_data$ebird_species_name, '\nin', outside_se_data$city_name)
+
 comparison_data %>% 
-  ggplot(aes(x = relative_abundance_proxy, y = sqrt(max_mean_abundance))) +
+  ggplot(aes(x = relative_abundance_proxy, y = max_mean_abundance)) +
     geom_point() +
-    xlab('Abundance Proxy') + 
-    ylab('Mean abundance across cities (sqrt)') +
+    xlab('Abundance Proxy\nCalculated from area of city covered by checklists') + 
+    ylab('Mean relative abundance across cities\nfrom eBird Status & Trends') +
     labs(title = 'Abundance proxy vs eBird relative abundance estimate', subtitle='eBird Status & Trends abundance data') +
+    geom_smooth(method = 'glm', formula = y ~ poly(x, 2)) + 
+    geom_text_repel(aes(label = label), data = outside_se_data, size = 3, nudge_y = 1, color = "red") +
+    geom_point(data = outside_se_data, color = "red") +
     theme_bw() +
     theme(legend.position = "none")
 
