@@ -4,16 +4,23 @@ output: html_notebook
 bibliography: ../ref.bib 
 ---
 
+1. calculate total area of each city
+2. buffer checklists by 250m, 500m, and 1km - calculate total area of city covered by checklists - surveyed area
+3. for each species within a city, find the percentage of the total surveyed area that the species occurs in.
+
 ```{r}
 source('../env.R')
 ```
 
 ```{r}
-RADIUS_FROM_CHECKLIST_CENTRE_FOR_SPATIAL_COVERAGE_M = 500
-METRE_BASED_CRS = "+proj=utm +zone=42N +datum=WGS84 +units=m"
+RADIUS_FROM_CHECKLIST_CENTRE_FOR_SPATIAL_COVERAGE_250M = 250
+RADIUS_FROM_CHECKLIST_CENTRE_FOR_SPATIAL_COVERAGE_500M = 500
+RADIUS_FROM_CHECKLIST_CENTRE_FOR_SPATIAL_COVERAGE_1KM = 1000
+
+METRE_BASED_CRS = "+proj=utm +zone=42 +datum=WGS84 +units=m"
 ```
 
-## Find area of each city
+## Calculate total area of each city
 ```{r}
 initial_city_selection = st_read(filename(mkdir(GEO_WORKING_OUTPUT_DIR, 'cities'), 'initial_selection.shp'))
 initial_city_selection_m = st_transform(initial_city_selection, METRE_BASED_CRS)
@@ -24,47 +31,77 @@ city_total_areas = initial_city_selection_m %>% mutate(area_metres = st_area(geo
 city_total_areas
 ```
 
-## Find area covered by all checklists within city
+```{r}
+city_total_areas %>% arrange(area_metres) %>% mutate(area_km2 = area_metres / (1000 * 1000)) %>% filter(row_number()==1 | row_number()==n())
+```
+
+## Calculate total area of city covered by checklists
 ```{r}
 urban_checklists = read_csv(filename(EBIRD_WORKING_OUTPUT_DIR, 'urban_checklists.csv'))
 head(urban_checklists)
 ```
 
 ```{r, warning=FALSE}
-city_total_areas$surveyed_area = NA
+city_total_areas$surveyed_area_250m = NA
+city_total_areas$surveyed_area_500m = NA
+city_total_areas$surveyed_area_1km = NA
+
+# find total area of city surveyed given checklist buffer size
+surveyed_area = function(buffer_size) {
+  checklists_sf %>%
+      st_transform(METRE_BASED_CRS) %>%
+      st_buffer(buffer_size) %>%
+      st_union() %>%
+      st_intersection(st_buffer(city_polygon, 0)) %>%
+      st_area()
+}
 
 for (selected_city_id in city_total_areas$city_id) {
+  # final all checklists within city
   checklist_locations = urban_checklists %>% 
     filter(city_id == selected_city_id) %>% 
     dplyr::select(lat, long) %>% 
     distinct()
   
   if (nrow(checklist_locations) > 0) {
+    # if we have more than one checklist in the city
     city_polygon = initial_city_selection_m[initial_city_selection_m$city_id == selected_city_id,]
     
     checklists_sf = st_as_sf(checklist_locations, coords = c("long", "lat"))
     st_crs(checklists_sf) = 4326
     
-    city_total_areas$surveyed_area[city_total_areas$city_id == selected_city_id] = checklists_sf %>%
-      st_transform(METRE_BASED_CRS) %>%
-      st_buffer(RADIUS_FROM_CHECKLIST_CENTRE_FOR_SPATIAL_COVERAGE_M) %>%
-      st_union() %>%
-      st_intersection(st_buffer(city_polygon, 0)) %>%
-      st_area()
+    # calculate total area surveyed per buffer size
+    city_total_areas$surveyed_area_250m[city_total_areas$city_id == selected_city_id] = surveyed_area(RADIUS_FROM_CHECKLIST_CENTRE_FOR_SPATIAL_COVERAGE_250M)
+    city_total_areas$surveyed_area_500m[city_total_areas$city_id == selected_city_id] = surveyed_area(RADIUS_FROM_CHECKLIST_CENTRE_FOR_SPATIAL_COVERAGE_500M)
+    city_total_areas$surveyed_area_1km[city_total_areas$city_id == selected_city_id] = surveyed_area(RADIUS_FROM_CHECKLIST_CENTRE_FOR_SPATIAL_COVERAGE_1KM)
+    
   } else {
-    city_total_areas$surveyed_area[city_total_areas$city_id == selected_city_id] = 0
+    # we have no checklists in the city, an so no area has been surveyed
+    city_total_areas$surveyed_area_250m[city_total_areas$city_id == selected_city_id] = 0
+    city_total_areas$surveyed_area_500m[city_total_areas$city_id == selected_city_id] = 0
+    city_total_areas$surveyed_area_1km[city_total_areas$city_id == selected_city_id] = 0
   }
 }
 
-city_total_areas$percentaged_surveyed = city_total_areas$surveyed_area * 100 / city_total_areas$area_metres
+# calculate percentage of total city area surveyed (e.g. covered by checkluists)
+city_total_areas$percentaged_surveyed_250m = city_total_areas$surveyed_area_250m * 100 / city_total_areas$area_metres
+city_total_areas$percentaged_surveyed_500m = city_total_areas$surveyed_area_500m * 100 / city_total_areas$area_metres
+city_total_areas$percentaged_surveyed_1km = city_total_areas$surveyed_area_1km * 100 / city_total_areas$area_metres
+
 city_total_areas
 ```
 
 
-## Find area each each city each pigeon is found
+## Calculate area each each city each pigeon is found
 ```{r}
-pools = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'jetz_all_recorded_species.csv'))
+pools = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'recorded_species.csv'))
 head(pools)
+```
+
+```{r}
+mapping = read_csv(filename(TAXONOMY_OUTPUT_DIR, 'taxonomy_mapping.csv'))
+ebird_to_species = distinct(mapping[,c('ebird_species_fullname', 'ebird_species_name')])
+ebird_to_species
 ```
 
 ```{r}
@@ -74,31 +111,41 @@ head(columbidae_checklists)
 ```
 
 ```{r}
-taxonomic_mapping = read_csv(filename(TAXONOMY_OUTPUT_DIR, 'taxonomy_mapping.csv'))
-ebird_to_jetz_mapping = unique(taxonomic_mapping[,c('ebird_species_fullname', 'jetz_species_name')])
-ebird_to_jetz_mapping
+columbidae_checklists_by_species = columbidae_checklists %>% 
+  rename(ebird_species_fullname = species_name) %>%
+  left_join(ebird_to_species) %>%
+  group_by(ebird_species_name, checklist_id,  city_id) %>%
+  summarise() %>% 
+  ungroup
+columbidae_checklists_by_species
 ```
 
 ```{r}
-columbidae_checklists_jetz = columbidae_checklists %>% left_join(ebird_to_jetz_mapping, by = c('species_name' = 'ebird_species_fullname')) %>% dplyr::select(checklist_id, jetz_species_name, city_id)
-nrow(columbidae_checklists_jetz)
-columbidae_checklists_jetz_distinct = distinct(columbidae_checklists_jetz)
-head(columbidae_checklists_jetz_distinct)
-```
+pools$area_found_250m = NA
+pools$area_found_500m = NA
+pools$area_found_1km = NA
 
-```{r}
-pools$area_found = NA
+area_found = function(checklists_sf, city_polygon, buffer_size) {
+  checklists_sf %>%
+      st_transform(METRE_BASED_CRS) %>%
+      st_buffer(buffer_size) %>%
+      st_union() %>%
+      st_intersection(st_buffer(city_polygon, 0)) %>%
+      st_area()
+}
 
-row = 2
+checklists_by_location = urban_checklists %>% group_by(checklist_id, lat, long) %>% ungroup
+  
 for (row in 1:nrow(pools)) {
   selected_city_id = pools[row, c('city_id')]
-  selected_species = pools[row, c('jetz_species_name')]
+  selected_species = pools[row, c('ebird_species_name')]
   
-  checklists = columbidae_checklists_jetz_distinct %>% 
-    filter(city_id == as.integer(selected_city_id)) %>% filter(jetz_species_name %in% c(selected_species)) %>% 
+  checklists =  columbidae_checklists_by_species %>%
+    filter(city_id == as.integer(selected_city_id)) %>% 
+    filter(ebird_species_name %in% c(selected_species)) %>% 
     dplyr::select(checklist_id)
   
-  checklist_locations = urban_checklists %>% 
+  checklist_locations = checklists_by_location %>%
     filter(checklist_id %in% checklists$checklist_id) %>% 
     dplyr::select(lat, long) %>% 
     distinct()
@@ -109,20 +156,21 @@ for (row in 1:nrow(pools)) {
     checklists_sf = st_as_sf(checklist_locations, coords = c("long", "lat"))
     st_crs(checklists_sf) = 4326
     
-    pools$area_found[row] = checklists_sf %>%
-      st_transform(METRE_BASED_CRS) %>%
-      st_buffer(RADIUS_FROM_CHECKLIST_CENTRE_FOR_SPATIAL_COVERAGE_M) %>%
-      st_union() %>%
-      st_intersection(st_buffer(city_polygon, 0)) %>%
-      st_area()
+    pools$area_found_250m[row] = area_found(checklists_sf, city_polygon, RADIUS_FROM_CHECKLIST_CENTRE_FOR_SPATIAL_COVERAGE_250M)
+    pools$area_found_500m[row] = area_found(checklists_sf, city_polygon, RADIUS_FROM_CHECKLIST_CENTRE_FOR_SPATIAL_COVERAGE_500M)
+    pools$area_found_1km[row] = area_found(checklists_sf, city_polygon, RADIUS_FROM_CHECKLIST_CENTRE_FOR_SPATIAL_COVERAGE_1KM)
   } else {
-    pools$area_found[row] = 0
+    pools$area_found_250m[row] = 0
+    pools$area_found_500m[row] = 0
+    pools$area_found_1km[row] = 0
   }
 }
 ```
 
 ```{r}
 write_csv(pools, filename(EBIRD_WORKING_OUTPUT_DIR, 'area_found_within_city.csv'))
+pools = read_csv(filename(EBIRD_WORKING_OUTPUT_DIR, 'area_found_within_city.csv'))
+head(pools)
 ```
 
 ## Pull all data together
@@ -132,11 +180,19 @@ pools_city_data = pools %>%
   left_join(city_total_areas) %>% 
   rename(
     total_city_area_m2='area_metres', 
-    total_city_area_surveyed_m2='surveyed_area', 
-    total_presence_area_m2='area_found', 
-    percentage_total_city_area_surveyed='percentaged_surveyed') %>%
+    buf_250m_total_city_area_surveyed_m2='surveyed_area_250m', 
+    buf_500m_total_city_area_surveyed_m2='surveyed_area_500m', 
+    buf_1km_total_city_area_surveyed_m2='surveyed_area_1km', 
+    buf_250m_total_presence_area_m2='area_found_250m', 
+    buf_500m_total_presence_area_m2='area_found_500m', 
+    buf_1km_total_presence_area_m2='area_found_1km', 
+    buf_250m_percentage_total_city_area_surveyed='percentaged_surveyed_250m', 
+    buf_500m_percentage_total_city_area_surveyed='percentaged_surveyed_500m', 
+    buf_1km_percentage_total_city_area_surveyed='percentaged_surveyed_1km') %>%
   mutate(
-    percentage_total_city_area_surveyed = as.integer(percentage_total_city_area_surveyed), 
+    buf_250m_percentage_total_city_area_surveyed = as.integer(buf_250m_percentage_total_city_area_surveyed), 
+    buf_500m_percentage_total_city_area_surveyed = as.integer(buf_500m_percentage_total_city_area_surveyed), 
+    buf_1km_percentage_total_city_area_surveyed = as.integer(buf_1km_percentage_total_city_area_surveyed), 
     total_city_area_m2 = as.numeric(total_city_area_m2)) %>%  
   mutate(across(where(is.numeric), round, 2))
 
@@ -145,7 +201,11 @@ nrow(pools_city_data)
 
 
 ```{r}
-pools_city_data$percentage_surveyed_area = pools_city_data$total_presence_area_m2 * 100 / pools_city_data$total_city_area_surveyed_m2
+pools_city_data$buf_250m_percentage_survey_area_present = pools_city_data$buf_250m_total_presence_area_m2 * 100 / pools_city_data$buf_250m_total_city_area_surveyed_m2
+
+pools_city_data$buf_500m_percentage_survey_area_present = pools_city_data$buf_500m_total_presence_area_m2 * 100 / pools_city_data$buf_500m_total_city_area_surveyed_m2
+
+pools_city_data$buf_1km_percentage_survey_area_present = pools_city_data$buf_1km_total_presence_area_m2 * 100 / pools_city_data$buf_1km_total_city_area_surveyed_m2
 
 pools_city_data = pools_city_data %>% 
   dplyr::select(
@@ -155,38 +215,68 @@ pools_city_data = pools_city_data %>%
     total_city_locations, 
     total_city_effort, 
     total_city_area_m2, 
-    total_city_area_surveyed_m2, 
-    percentage_total_city_area_surveyed, 
-    jetz_species_name, 
-    percentage_checklists, 
-    percentage_locations, 
-    percentage_effort, 
-    percentage_surveyed_area, 
+    
+    ebird_species_name, 
     seasonal, 
     presence, 
-    origin) %>% 
+    origin,
+    
+    buf_250m_total_presence_area_m2,
+    buf_250m_total_city_area_surveyed_m2,
+    buf_250m_percentage_survey_area_present, 
+    buf_250m_percentage_total_city_area_surveyed,
+    
+    buf_500m_total_presence_area_m2,
+    buf_500m_total_city_area_surveyed_m2,
+    buf_500m_percentage_survey_area_present, 
+    buf_500m_percentage_total_city_area_surveyed,
+    
+    buf_1km_total_presence_area_m2,
+    buf_1km_total_city_area_surveyed_m2,
+    buf_1km_percentage_survey_area_present, 
+    buf_1km_percentage_total_city_area_surveyed,
+    
+    percentage_checklists, 
+    percentage_locations, 
+    percentage_effort) %>% 
   data.frame()
-pools_city_data
+head(pools_city_data)
 ```
 
 ```{r}
-write_csv(pools_city_data, filename(COMMUNITY_OUTPUT_DIR, 'jetz_all_recorded_species_with_spatial_data.csv'))
+write_csv(pools_city_data, filename(COMMUNITY_OUTPUT_DIR, 'recorded_species_with_spatial_data.csv'))
 ```
 
-## Compare spatial metric to checklists
-
+# Compare percentage of area present vs percentage of checklists present
 ```{r}
-ggplot(distinct(pools_city_data[,c('total_city_checklists', 'total_city_area_surveyed_m2')]), aes(x = total_city_checklists, y = total_city_area_surveyed_m2)) +
+ggplot(distinct(pools_city_data[,c('total_city_checklists', 'buf_500m_percentage_survey_area_present')]), aes(x = total_city_checklists, y = buf_500m_percentage_survey_area_present)) +
   geom_point() + geom_smooth()
 ```
 
 ```{r}
-length(unique(pools_city_data$city_id[pools_city_data$percentage_total_city_area_surveyed > 20]))
+length(unique(pools_city_data$city_id[pools_city_data$buf_500m_percentage_total_city_area_surveyed > 10]))
 ```
 
 ```{r}
-ggplot(pools_city_data[pools_city_data$percentage_total_city_area_surveyed > 20,], aes(x = percentage_checklists, y = percentage_surveyed_area)) +
-  geom_point() + geom_smooth()
+plot_data = pools_city_data[pools_city_data$buf_500m_percentage_total_city_area_surveyed > 10,]
+pred_data <- predict(glm(formula = percentage_checklists ~ buf_500m_percentage_survey_area_present, data = plot_data), se.fit=T)
+
+number_of_degrees_out = 100
+outside_se_data <- plot_data[plot_data$percentage_checklists < pred_data$fit - number_of_degrees_out * pred_data$se.fit | plot_data$percentage_checklists > pred_data$fit + number_of_degrees_out * pred_data$se.fit,]
+outside_se_data$label = paste(outside_se_data$ebird_species_name, '\nin', outside_se_data$city_name)
+
+ggplot(plot_data, aes(x = percentage_checklists, y = buf_500m_percentage_survey_area_present)) +
+  geom_point() + 
+  geom_smooth(method = 'glm') + 
+  geom_text_repel(aes(label = label), data = outside_se_data, size = 3, nudge_y = 1, color = "red") +
+  geom_point(data = outside_se_data, color = "red") +
+  labs(x = 'Percentage of checklists present', y = 'Percentage of surveyed area present\n(based on 500m buffers)')
 ```
 
 
+# Compare different buffer sizes
+
+```{r}
+ggpairs(pools_city_data[,c('buf_250m_percentage_survey_area_present', 'buf_500m_percentage_survey_area_present', 'buf_1km_percentage_survey_area_present')], columnLabels = c('250m buffer', '500m buffer', '1km buffer'))
+ggsave(filename(FIGURES_OUTPUT_DIR, 'compare_checklist_buffer_sizes.jpg'))
+```
