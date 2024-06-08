@@ -38,7 +38,7 @@ The species they consider to be rural birds are:
 Here will will investigate what each of these species look like within our pool data.
 
 ```{r}
-pools = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'jetz_all_recorded_species_with_spatial_data.csv'))
+pools = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'recorded_species_with_spatial_data.csv'))
 pools
 ```
 ```{r}
@@ -54,14 +54,14 @@ bornier_cities[!(bornier_cities$City %in% pools$city_name),]
 ```
 
 ```{r}
-reported_rows = c('city_id', 'city_name', 'jetz_species_name', 'percentage_checklists', 'percentage_locations', 'percentage_surveyed_area', 'total_city_checklists', 'total_city_locations', 'percentage_total_city_area_surveyed')
+reported_rows = c('city_id', 'city_name', 'ebird_species_name', 'percentage_checklists', 'percentage_locations', 'total_city_checklists', 'total_city_locations', 'buf_500m_percentage_survey_area_present', 'buf_500m_percentage_total_city_area_surveyed')
 ```
 
 ## Columba fasciata 
 ```{r}
 cities = bornier_cities$City[bornier_cities$`City Number` == 70]
 Columba_fasciata = pools %>% 
-  filter(jetz_species_name %in% c('Patagioenas_fasciata')) %>% 
+  filter(ebird_species_name %in% c('Patagioenas fasciata')) %>% 
   filter(city_name %in% cities) %>% 
   dplyr::select(reported_rows)
 Columba_fasciata                                                                                        
@@ -76,7 +76,7 @@ bornier_cities$City[bornier_cities$`City Number` %in% c(1,26,27,28,35,36,39,40,4
 ```{r}
 cities = bornier_cities$City[bornier_cities$`City Number` %in% c(1,26,27,28,35,36,39,40,47,54,62,66,67,72)]
 Columba_livia = pools %>% 
-  filter(jetz_species_name %in% c('Columba_livia')) %>% 
+  filter(ebird_species_name %in% c('Columba livia')) %>% 
   filter(city_name %in% cities) %>% 
   dplyr::select(reported_rows)
 Columba_livia
@@ -92,7 +92,7 @@ bornier_cities$City[bornier_cities$`City Number` %in% c(30,31,33,47,62)]
 ```{r}
 cities = bornier_cities$City[bornier_cities$`City Number` %in% c(30,31,33,47,62)]
 Columba_palumbus = pools %>% 
-  filter(jetz_species_name %in% c('Columba_palumbus')) %>% 
+  filter(ebird_species_name %in% c('Columba palumbus')) %>% 
   filter(city_name %in% cities) %>% 
   dplyr::select(reported_rows)
 Columba_palumbus
@@ -107,7 +107,7 @@ bornier_cities$City[bornier_cities$`City Number` %in% c(6,11)]
 ```{r}
 cities = bornier_cities$City[bornier_cities$`City Number` %in% c(6,11)]
 Columba_picazuro = pools %>% 
-  filter(jetz_species_name %in% c('Patagioenas_picazuro')) %>% 
+  filter(ebird_species_name %in% c('Patagioenas picazuro')) %>% 
   filter(city_name %in% cities) %>% 
   dplyr::select(reported_rows)
 Columba_picazuro
@@ -120,7 +120,7 @@ bornier_cities$City[bornier_cities$`City Number` %in% c(56)]
 ```{r}
 cities = bornier_cities$City[bornier_cities$`City Number` %in% c(56)]
 Columbina_cruziana = pools %>% 
-  filter(jetz_species_name %in% c('Columbina_cruziana')) %>% 
+  filter(ebird_species_name %in% c('Columbina cruziana')) %>% 
   filter(city_name %in% cities) %>% 
   dplyr::select(reported_rows)
 Columbina_cruziana
@@ -134,7 +134,7 @@ bornier_cities$City[bornier_cities$`City Number` %in% c(29,69)]
 ```{r}
 cities = bornier_cities$City[bornier_cities$`City Number` %in% c(29,69)]
 Columbina_inca = pools %>% 
-  filter(jetz_species_name %in% c('Columbina_inca')) %>% 
+  filter(ebird_species_name %in% c('Columbina inca')) %>% 
   filter(city_name %in% cities) %>% 
   dplyr::select(reported_rows)
 Columbina_inca
@@ -148,7 +148,7 @@ bornier_cities$City[bornier_cities$`City Number` %in% c(9)]
 ```{r}
 cities = bornier_cities$City[bornier_cities$`City Number` %in% c(9)]
 Columbina_passerina = pools %>% 
-  filter(jetz_species_name %in% c('Columbina_passerina')) %>% 
+  filter(ebird_species_name %in% c('Columbina passerina')) %>% 
   filter(city_name %in% cities) %>% 
   dplyr::select(reported_rows)
 Columbina_passerina
@@ -162,7 +162,7 @@ bornier_cities$City[bornier_cities$`City Number` %in% c(6,8)]
 ```{r}
 cities = bornier_cities$City[bornier_cities$`City Number` %in% c(6,8)]
 Columbina_squammata = pools %>% 
-  filter(jetz_species_name %in% c('Columbina_squammata')) %>% 
+  filter(ebird_species_name %in% c('Columbina squammata')) %>% 
   filter(city_name %in% cities) %>% 
   dplyr::select(reported_rows)
 Columbina_squammata
@@ -176,7 +176,7 @@ bornier_cities$City[bornier_cities$`City Number` %in% c(6,8,10,11,21,29,73)]
 ```{r}
 cities = bornier_cities$City[bornier_cities$`City Number` %in% c(6,8,10,11,21,29,73)]
 Columbina_talpacoti = pools %>% 
-  filter(jetz_species_name %in% c('Columbina_talpacoti')) %>% 
+  filter(ebird_species_name %in% c('Columbina talpacoti')) %>% 
   filter(city_name %in% cities) %>% 
   dplyr::select(reported_rows)
 Columbina_talpacoti
@@ -190,7 +190,7 @@ bornier_cities$City[bornier_cities$`City Number` %in% c(17,18,37,42,61)]
 ```{r}
 cities = bornier_cities$City[bornier_cities$`City Number` %in% c(17,18,37,42,61)]
 Streptopelia_chinensis = pools %>% 
-  filter(jetz_species_name %in% c('Stigmatopelia_chinensis')) %>% 
+  filter(ebird_species_name %in% c('Spilopelia chinensis')) %>% 
   filter(city_name %in% cities) %>% 
   dplyr::select(reported_rows)
 Streptopelia_chinensis
@@ -203,7 +203,7 @@ bornier_cities$City[bornier_cities$`City Number` %in% c(35,47,48,54,55,62,65,66,
 ```{r}
 cities = bornier_cities$City[bornier_cities$`City Number` %in% c(35,47,48,54,55,62,65,66,67)]
 Streptopelia_decaocto = pools %>% 
-  filter(jetz_species_name %in% c('Streptopelia_decaocto')) %>% 
+  filter(ebird_species_name %in% c('Streptopelia decaocto')) %>% 
   filter(city_name %in% cities) %>% 
   dplyr::select(reported_rows)
 Streptopelia_decaocto
@@ -217,7 +217,7 @@ bornier_cities$City[bornier_cities$`City Number` %in% c(32)]
 ```{r}
 cities = bornier_cities$City[bornier_cities$`City Number` %in% c(32)]
 Streptopelia_lugens = pools %>% 
-  filter(jetz_species_name %in% c('Streptopelia_lugens')) %>% 
+  filter(ebird_species_name %in% c('Streptopelia lugens')) %>% 
   filter(city_name %in% cities) %>% 
   dplyr::select(reported_rows)
 Streptopelia_lugens
@@ -231,7 +231,7 @@ bornier_cities$City[bornier_cities$`City Number` %in% c(14,18,51,52,55)]
 ```{r}
 cities = bornier_cities$City[bornier_cities$`City Number` %in% c(14,18,51,52,55)]
 Streptopelia_orientalis = pools %>% 
-  filter(jetz_species_name %in% c('Streptopelia_orientalis')) %>% 
+  filter(ebird_species_name %in% c('Streptopelia orientalis')) %>% 
   filter(city_name %in% cities) %>% 
   dplyr::select(reported_rows)
 Streptopelia_orientalis
@@ -245,7 +245,7 @@ bornier_cities$City[bornier_cities$`City Number` %in% c(63)]
 ```{r}
 cities = bornier_cities$City[bornier_cities$`City Number` %in% c(63)]
 Streptopelia_semitorquata = pools %>% 
-  filter(jetz_species_name %in% c('Streptopelia_semitorquata')) %>% 
+  filter(ebird_species_name %in% c('Streptopelia semitorquata')) %>% 
   filter(city_name %in% cities) %>% 
   dplyr::select(reported_rows)
 Streptopelia_semitorquata
@@ -259,7 +259,7 @@ bornier_cities$City[bornier_cities$`City Number` %in% c(26,27,28,47,53,54,60,66,
 ```{r}
 cities = bornier_cities$City[bornier_cities$`City Number` %in% c(26,27,28,47,53,54,60,66,67,72)]
 Streptopelia_senegalensis = pools %>% 
-  filter(jetz_species_name %in% c('Stigmatopelia_senegalensis')) %>% 
+  filter(ebird_species_name %in% c('Spilopelia senegalensis')) %>% 
   filter(city_name %in% cities) %>% 
   dplyr::select(reported_rows)
 Streptopelia_senegalensis
@@ -302,13 +302,13 @@ all_species %>%
 Area
 ```{r}
 all_species %>% 
-  filter(percentage_total_city_area_surveyed > 10) %>%
+  filter(buf_500m_percentage_total_city_area_surveyed > 10) %>%
   summarise(
     number_records = n(),
-    mean_percentage_surveyed_area = mean(percentage_surveyed_area),
-    lower_10_quant_percentage_surveyed_area = quantile(percentage_surveyed_area, 0.1),
-    lower_20_quant_percentage_surveyed_area = quantile(percentage_surveyed_area, 0.2),
-    min_percentage_surveyed_area = min(percentage_surveyed_area),
+    mean_percentage_surveyed_area = mean(buf_500m_percentage_survey_area_present),
+    lower_10_quant_percentage_surveyed_area = quantile(buf_500m_percentage_survey_area_present, 0.1),
+    lower_20_quant_percentage_surveyed_area = quantile(buf_500m_percentage_survey_area_present, 0.2),
+    min_percentage_surveyed_area = min(buf_500m_percentage_survey_area_present),
     mean_percentage_checklists = mean(percentage_checklists),
     lower_10_quant_percentage_checklists = quantile(percentage_checklists, 0.1),
     lower_20_quant_percentage_checklists = quantile(percentage_checklists, 0.2),
