@@ -463,23 +463,22 @@ result = foreach(loop_all_city_id = cs$city_id, .combine = 'rbind') %do% {
   )
 }
 
-right_join(result, cs)
+result = right_join(result, cs)
 ```
-    
 
 ```{r, warning=FALSE, message = FALSE}
 result
 ```
-
-```{r}
-write_csv(bind_rows(
-  result[!is.na(result),]
-), filename(COMMUNITY_OUTPUT_DIR, 'community_assembly_metrics_using_relative_abundance.csv'))
-```
-
-
-# Which cities have an NA result
+Which cities have an NA result?
 ```{r}
 city_id_with_na_result = result$city_id[is.na(result)]
 community_summary[community_summary$city_id %in% city_id_with_na_result,]
 ```
+
+Store all cities with an urban pool size greater than 2
+```{r}
+write_csv(result[result$urban_pool_size > 2,], filename(COMMUNITY_OUTPUT_DIR, 'community_assembly_metrics_using_relative_abundance.csv'))
+```
+
+
+

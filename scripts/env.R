@@ -46,13 +46,13 @@ standardise = function(actual_value, mean_value, sd_value) {
   (actual_value - mean_value) / sd_value
 }
 
-test_value_wilcox = function(name, normalised_list) {
-  wilcox_test_result = wilcox.test(normalised_list, mu = 0.5, na.rm = T)
+test_value_wilcox = function(name, standarised_list) {
+  wilcox_test_result = wilcox.test(standarised_list, mu = 0, na.rm = T)
   
   significance = ifelse(wilcox_test_result$p.value < 0.0001, '***', 
                         ifelse(wilcox_test_result$p.value < 0.001, '**', 
                                ifelse(wilcox_test_result$p.value < 0.01, '*', '')))
-  m = median(normalised_list, na.rm = T)
+  m = median(standarised_list, na.rm = T)
   
   paste(name, 'median', round(m, 2), significance)
 }
