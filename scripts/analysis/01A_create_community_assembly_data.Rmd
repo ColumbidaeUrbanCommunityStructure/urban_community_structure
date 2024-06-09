@@ -34,7 +34,7 @@ Many metrics sensitive to species richness. Urban communities are governed by th
 
 # Load communities
 ```{r}
-communities = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'communities_for_analysis.csv')) %>% dplyr::select(-c(present_urban_high, present_urban_med, present_urban_low))
+communities = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'communities_for_analysis.csv'))
 head(communities)
 ```
 
@@ -80,12 +80,12 @@ report_excluded_communities()
 
 # Load trait data
 ```{r}
-avonet_jetz = read_csv(filename(TAXONOMY_OUTPUT_DIR, 'traits_jetz.csv'))
-avonet_jetz
+avonet_ebird = read_csv(filename(TAXONOMY_OUTPUT_DIR, 'traits_ebird.csv'))
+avonet_ebird
 ```
 
 ```{r}
-communities$jetz_species_name[!(communities$jetz_species_name %in% avonet_jetz$jetz_species_name)]
+communities$ebird_species_name[!(communities$ebird_species_name %in% avonet_ebird$ebird_species_name)]
 ```
 
 ## Load phylogeny
@@ -99,8 +99,9 @@ columbidae_tree <- read.tree(filename(TAXONOMY_OUTPUT_DIR, 'phylogeny.tre'))
 # Create community matrix
 ```{r}
 to_species_matrix_with_relative_abundance = function(valid_city_ids) {
-  c = communities[communities$city_id %in% valid_city_ids, c('city_id', 'jetz_species_name', 'relative_abundance_proxy')]
-  m = pivot_wider(c[, c('jetz_species_name', 'relative_abundance_proxy', 'city_id')], names_from = jetz_species_name, values_from = "relative_abundance_proxy", values_fill = list(relative_abundance_proxy = as.double(0.0)))
+  c = communities[communities$city_id %in% valid_city_ids, c('city_id', 'ebird_species_name', 'relative_abundance_proxy')]
+  c$ebird_species_name = str_replace(c$ebird_species_name, ' ', '_')
+  m = pivot_wider(c[, c('ebird_species_name', 'relative_abundance_proxy', 'city_id')], names_from = ebird_species_name, values_from = "relative_abundance_proxy", values_fill = list(relative_abundance_proxy = as.double(0.0)))
   tibble::column_to_rownames(m, var='city_id')
 }
 ```
@@ -114,18 +115,18 @@ species_m
 
 ## Species included in analysis
 ```{r}
-all_species_in_analysis = communities[communities$city_id %in% valid_cities$city_id, c('jetz_species_name', 'relative_abundance_proxy')]
+all_species_in_analysis = communities[communities$city_id %in% valid_cities$city_id, c('ebird_species_name', 'relative_abundance_proxy')]
 all_species_in_analysis
 ```
 
 Total species
 ```{r}
-length(unique(all_species_in_analysis$jetz_species_name))
+length(unique(all_species_in_analysis$ebird_species_name))
 ```
 
 Total species in cities
 ```{r}
-length(unique(all_species_in_analysis$jetz_species_name[all_species_in_analysis$relative_abundance_proxy > 0]))
+length(unique(all_species_in_analysis$ebird_species_name[all_species_in_analysis$relative_abundance_proxy > 0]))
 ```
 
 ## Test communities
@@ -165,13 +166,13 @@ get_mntd_for_communities(to_species_matrix_with_relative_abundance(communities$c
 
 ## FD
 ```{r}
-analysis_all_traits = c('mass', 'locomotory_trait', 'trophic_trait')
-analysis_single_traits = c('mass', 'locomotory_trait', 'trophic_trait', 'gape_width', 'handwing_index')
+analysis_single_traits = c('mass', 'beak_width', 'hwi')
 
 get_traits_data_frame = function(trait_names) {
-  trait_names = prepend('jetz_species_name', trait_names)
-  traits = avonet_jetz[,trait_names]
-  traits = tibble::column_to_rownames(traits, var='jetz_species_name')
+  trait_names = prepend('ebird_species_name', trait_names)
+  traits = avonet_ebird[,trait_names]
+  traits$ebird_species_name = str_replace(traits$ebird_species_name, ' ', '_')
+  traits = tibble::column_to_rownames(traits, var='ebird_species_name')
   traits
 }
 
@@ -179,7 +180,7 @@ get_fd_for_traits = function(required_traits_for_fd, communities) {
   fd_fdiv(traits = get_traits_data_frame(required_traits_for_fd), sp_com = communities)
 }
 
-get_fd_for_traits(analysis_all_traits, test_communities)
+get_fd_for_traits(analysis_single_traits, test_communities)
 ```
 
 ```{r}
@@ -188,32 +189,27 @@ community_1786b = community_1786a
 community_1786c = community_1786a
 community_1786b[1,] = c(1, 1, 1, 1, 0)
 community_1786c[1,] = c(50.23238, 50.23238, 50.23238, 50.23238, 0)
-get_fd_for_traits(analysis_all_traits, rbind(community_1786a, community_1786b, community_1786c))
+get_fd_for_traits(analysis_single_traits, rbind(community_1786a, community_1786b, community_1786c))
 ```
 
 ```{r}
 community_13183 = to_species_matrix_with_relative_abundance(c(13183, 79))
-get_fd_for_traits(analysis_all_traits, community_13183)
+get_fd_for_traits(analysis_single_traits, community_13183)
 ```
 
 ```{r}
-get_fd_for_traits(analysis_all_traits, to_species_matrix_with_relative_abundance(communities$city_id))
+get_fd_for_traits(analysis_single_traits, to_species_matrix_with_relative_abundance(communities$city_id))
 ```
 
 ```{r}
-get_fd_for_traits(c('gape_width'), test_communities)
+get_fd_for_traits(c('beak_width'), test_communities)
 ```
 
 ## Function to create all metrics
 ```{r get_community_metrics}
-get_community_metrics = function(communities, included_traits_for_multi_trait_metrics = analysis_all_traits, included_traits_for_single_trait_metrics = analysis_single_traits) {
+get_community_metrics = function(communities, included_traits_for_single_trait_metrics = analysis_single_traits) {
 
-  mntd_result = get_mntd_for_communities(communities)
-  fd_all_traits = get_fd_for_traits(included_traits_for_multi_trait_metrics, communities) %>%
-      dplyr::select('site', 'FDiv') %>%
-      rename(fdiv='FDiv')
-  
-  result = right_join(mntd_result, fd_all_traits)
+  result = get_mntd_for_communities(communities)
   
   for (trait in included_traits_for_single_trait_metrics) {
     fd_col_name = function(value) {
@@ -242,7 +238,7 @@ Our null model is every possible community of species from the regional pool wit
 Find all species in regional pool:
 ```{r}
 test_city_id = 1786 # Manchester
-communities$jetz_species_name[communities$city_id == test_city_id]
+communities$ebird_species_name[communities$city_id == test_city_id]
 ```
 
 Find urban richness
@@ -332,6 +328,8 @@ create_null_model_communities = function(city_id, urban_richness, regional_speci
     to_possible_populations(proxy_relative_abundance_values)
   )
   
+  regional_species = str_replace(regional_species, ' ', '_')
+  
   colnames(null_model_sites) = regional_species
   rownames(null_model_sites) = 1:nrow(null_model_sites)
   
@@ -341,7 +339,7 @@ create_null_model_communities = function(city_id, urban_richness, regional_speci
 test_null_model = create_null_model_communities(
   test_city_id, 
   community_summary$urban_pool_size[community_summary$city_id == test_city_id], 
-  communities$jetz_species_name[communities$city_id == test_city_id],
+  communities$ebird_species_name[communities$city_id == test_city_id],
   communities$relative_abundance_proxy[communities$city_id == test_city_id]
 )
 
@@ -352,7 +350,7 @@ test_null_model
 create_null_model_communities(
   65, 
   community_summary$urban_pool_size[community_summary$city_id == 65], 
-  communities$jetz_species_name[communities$city_id == 65],
+  communities$ebird_species_name[communities$city_id == 65],
   communities$relative_abundance_proxy[communities$city_id == 65]
 )
 ```
@@ -361,7 +359,7 @@ create_null_model_communities(
 create_null_model_communities(
   1, 
   community_summary$urban_pool_size[community_summary$city_id == 1], 
-  communities$jetz_species_name[communities$city_id == 1],
+  communities$ebird_species_name[communities$city_id == 1],
   communities$relative_abundance_proxy[communities$city_id == 1]
 )
 ```
@@ -370,7 +368,7 @@ create_null_model_communities(
 create_null_model_communities(
   122, 
   community_summary$urban_pool_size[community_summary$city_id == 122], 
-  communities$jetz_species_name[communities$city_id == 122],
+  communities$ebird_species_name[communities$city_id == 122],
   communities$relative_abundance_proxy[communities$city_id == 122]
 )
 ```
@@ -384,38 +382,32 @@ test_null_model_community_metrics
 
 # Compare Urban Communities to regional null models
 ```{r}
-normalise(1.5, 1, 2)
+standardise(1.5, 1, 2)
 ```
 
 Create function to test actual value against all possible null model values
 ```{r}
 compare_community_to_null_model = function(metric_name, actual_metric_value, null_model_metric_values) {
-  min_value = min(null_model_metric_values)
-  max_value = max(null_model_metric_values)
   mean_value = mean(null_model_metric_values)
   sd_value = sd(null_model_metric_values)
   
   result = data.frame(
-    normalised = normalise(actual_metric_value, min_value, max_value),
-    actual = actual_metric_value,
-    min = min_value,
-    max = max_value,
-    mean = mean_value,
-    sd = sd_value
+    standard = standardise(actual_metric_value, mean_value, sd_value),
+    actual = actual_metric_value
   )
   
   col_name = function(value) {
       paste(metric_name, value, sep = '_')
   }
   
-  colnames(result) = c(col_name('normalised'), col_name('actual'), col_name('min'), col_name('max'), col_name('mean'), col_name('sd'))
+  colnames(result) = c(col_name('standard'), col_name('actual'))
   result
 }
 ```
 
 
 ```{r}
-compare_community_to_null_model('fd', 1233.96, test_null_model_community_metrics$fd)
+compare_community_to_null_model('mass_fdiv', 0.7167711, test_null_model_community_metrics$mass_fdiv)
 ```
 
 The metrics we want to test:
@@ -439,17 +431,18 @@ create_null_model_test_values = function(city_id, urban_richness, regional_speci
 create_null_model_test_values(
   test_city_id, 
   community_summary$urban_pool_size[community_summary$city_id == test_city_id], 
-  communities$jetz_species_name[communities$city_id == test_city_id],
+  communities$ebird_species_name[communities$city_id == test_city_id],
   communities$relative_abundance_proxy[communities$city_id == test_city_id],
   test_community_metrics[test_community_metrics$site == test_city_id,]
 )
 ```
 
+
 # Create analysis data
 ```{r, warning=F}
 valid_cities = get_valid_cities()
 
-c = communities[communities$city_id %in% valid_cities$city_id, c('city_id', 'jetz_species_name', 'relative_abundance_proxy')]
+c = communities[communities$city_id %in% valid_cities$city_id, c('city_id', 'ebird_species_name', 'relative_abundance_proxy')]
 
 cv = foreach(loop_all_city_id = valid_cities$city_id, .combine = 'rbind') %do% {
   community_matrix = to_species_matrix_with_relative_abundance(c(loop_all_city_id))
@@ -464,7 +457,7 @@ result = foreach(loop_all_city_id = cs$city_id, .combine = 'rbind') %do% {
   single_city_result = create_null_model_test_values(
     loop_all_city_id, 
     cs$urban_pool_size[cs$city_id == loop_all_city_id],
-    c$jetz_species_name[c$city_id == loop_all_city_id],
+    c$ebird_species_name[c$city_id == loop_all_city_id],
     c$relative_abundance_proxy[c$city_id == loop_all_city_id],
     cv[cv$site == loop_all_city_id,]
   )
@@ -480,7 +473,13 @@ result
 
 ```{r}
 write_csv(bind_rows(
-  result
+  result[!is.na(result),]
 ), filename(COMMUNITY_OUTPUT_DIR, 'community_assembly_metrics_using_relative_abundance.csv'))
 ```
 
+
+# Which cities have an NA result
+```{r}
+city_id_with_na_result = result$city_id[is.na(result)]
+community_summary[community_summary$city_id %in% city_id_with_na_result,]
+```

@@ -42,8 +42,8 @@ mkdir = function(mainDir, subDir) {
   filename(mainDir, subDir)
 }
 
-normalise = function(actual_value, min_value, max_value) { 
-  (actual_value - min_value) / (max_value - min_value) 
+standardise = function(actual_value, mean_value, sd_value) { 
+  (actual_value - mean_value) / sd_value
 }
 
 test_value_wilcox = function(name, normalised_list) {
@@ -99,7 +99,7 @@ normalised_size_scale = scale_size_continuous(
 # Third Party Data downloaded locally
 # ------------------------------------
 downloaded_data_file = function(file) {
-  paste('/Users/jamese.richardson/Downloads/', file, sep = '')
+  paste('/Users/james/Dropbox/PhD/', file, sep = '')
 }
 
 # My mapping from Birdlife V8 to Jetz, this maps down the birdlife taxonomy versions to Birdlife V3 and thus Jetz. 
