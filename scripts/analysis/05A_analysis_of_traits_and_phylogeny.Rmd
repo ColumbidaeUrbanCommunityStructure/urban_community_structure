@@ -98,9 +98,10 @@ col_ut_phylo_signal
 ```
 ## Plot tree
 ```{r}
+abundance_proxy_scale = scale_color_continuous(low='#058f00', high='#3400de')
 species_urban_response$ebird_species_name_clean = gsub("_", " ", species_urban_response$ebird_species_name)
 
-g = ggtree(tree_pruned, layout="fan", aes(color = mean_relative_abundance_proxy)) %<+% species_urban_response + scale_color_continuous(low='#058f00', high='#3400de')
+g = ggtree(tree_pruned, layout="fan", aes(color = mean_relative_abundance_proxy)) %<+% species_urban_response + abundance_proxy_scale
 g + geom_tiplab(size=2, aes(label=ebird_species_name_clean)) +
   labs(color = "Mean relative abundance proxy") + 
   theme(legend.position = "bottom") + ggplot2::xlim(0, 60)
@@ -108,3 +109,24 @@ g + geom_tiplab(size=2, aes(label=ebird_species_name_clean)) +
 ggsave(filename(FIGURES_OUTPUT_DIR, 'phylogeny.jpg'), width = 2000, height = 2100, units = 'px')
 ```
 
+## Plot traits against abundance proxy
+```{r}
+hwi_by_mass = ggplot(species_urban_response, aes(x = hwi, y = mass, colour = mean_relative_abundance_proxy)) + geom_point() + abundance_proxy_scale + theme(legend.position = 'bottom', legend.title.position = 'top', legend.key.width = unit(12, 'mm')) + labs(colour = "Mean relative abundance proxy", y = 'Mass', x = '')
+beak_width_by_mass = ggplot(species_urban_response, aes(x = beak_width, y = mass, colour = mean_relative_abundance_proxy)) + geom_point() + abundance_proxy_scale + labs(y = '', x = 'Beak width')
+hwi_by_beak_width = ggplot(species_urban_response, aes(x = hwi, y = beak_width, colour = mean_relative_abundance_proxy)) + geom_point() + abundance_proxy_scale + labs(y = 'Beak width', x = 'HWI')
+
+legend <- ggpubr::get_legend(
+  # create some space to the left of the legend
+  hwi_by_mass
+)
+
+plot_grid(
+  nrow = 2, ncol = 2,
+  hwi_by_mass + theme(legend.position="none"),
+  beak_width_by_mass + theme(legend.position="none"),
+  hwi_by_beak_width + theme(legend.position="none"),
+  legend 
+)
+
+ggsave(filename(FIGURES_OUTPUT_DIR, 'traits.jpg'), width = 2000, height = 1800, units = 'px')
+```
