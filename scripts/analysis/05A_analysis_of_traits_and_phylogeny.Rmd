@@ -16,24 +16,25 @@ communities
 ```
 Load trait data
 ```{r}
-traits = read_csv(filename(TAXONOMY_OUTPUT_DIR, 'traits_jetz.csv'))
+traits = read_csv(filename(TAXONOMY_OUTPUT_DIR, 'traits_ebird.csv'))
 head(traits)
 ```
 
 ```{r}
-species_urban_response = communities %>% group_by(jetz_species_name) %>% summarise(mean_relative_abundance_proxy = mean(relative_abundance_proxy)) %>% left_join(traits)
+species_urban_response = communities %>% group_by(ebird_species_name) %>% summarise(mean_relative_abundance_proxy = mean(relative_abundance_proxy)) %>% left_join(traits)
 species_urban_response$is_urban = species_urban_response$mean_relative_abundance_proxy > 0
+species_urban_response$ebird_species_name = str_replace(species_urban_response$ebird_species_name,' ', '_')
 species_urban_response
 ```
 ```{r}
 species_urban_response %>% group_by(is_urban) %>% summarise(
-  mean_gape_width = mean(gape_width),
-  median_gape_width = median(gape_width),
-  sd_gape_width = sd(gape_width),
+  mean_beak_width = mean(beak_width),
+  median_beak_width = median(beak_width),
+  sd_beak_width = sd(beak_width),
   
-  mean_handwing_index = mean(handwing_index),
-  median_handwing_index = median(handwing_index),
-  sd_handwing_index = sd(handwing_index),
+  mean_hwi = mean(hwi),
+  median_hwi = median(hwi),
+  sd_hwi = sd(hwi),
   
   mean_mass = mean(mass),
   median_mass = median(mass),
@@ -47,20 +48,20 @@ species_urban_response %>% group_by(is_urban) %>% summarise(
 
 ## Gape Width
 ```{r}
-ggplot(species_urban_response, aes(x = is_urban, y = gape_width)) + geom_boxplot()
+ggplot(species_urban_response, aes(x = is_urban, y = beak_width)) + geom_boxplot()
 ```
 ```{r}
-wilcox.test(gape_width ~ is_urban, species_urban_response)
+wilcox.test(beak_width ~ is_urban, species_urban_response)
 ```
 There is not a significant response for the gape width between urban species and non urban species.
 
 ## HWI
 ```{r}
-ggplot(species_urban_response, aes(x = is_urban, y = handwing_index)) + geom_boxplot()
+ggplot(species_urban_response, aes(x = is_urban, y = hwi)) + geom_boxplot()
 ```
 
 ```{r}
-wilcox.test(handwing_index ~ is_urban, species_urban_response)
+wilcox.test(hwi ~ is_urban, species_urban_response)
 ```
 There is a significant response between urban and non-urban species
 
@@ -81,12 +82,13 @@ There is not a significant response between species.
 ## Phylogentic response to relative abundance?
 ```{r}
 tree = read.tree(filename(TAXONOMY_OUTPUT_DIR, 'phylogeny.tre'))
-tree_pruned = ladderize(drop.tip(tree, setdiff(tree$tip.label, species_urban_response$jetz_species_name)))
+tree_pruned = ladderize(drop.tip(tree, setdiff(tree$tip.label, species_urban_response$ebird_species_name)))
+ggtree(tree_pruned, layout="fan")
 ```
 
 ```{r}
 columbidae_response <- species_urban_response$mean_relative_abundance_proxy
-names(columbidae_response) <- species_urban_response$jetz_species_name
+names(columbidae_response) <- species_urban_response$ebird_species_name
 ```
 
 Is the a phylogenetic signal for our relative abundance proxy
@@ -96,13 +98,12 @@ col_ut_phylo_signal
 ```
 ## Plot tree
 ```{r}
-species_urban_response$jetz_species_name_clean = gsub("_", " ", species_urban_response$jetz_species_name)
+species_urban_response$ebird_species_name_clean = gsub("_", " ", species_urban_response$ebird_species_name)
 
-g = ggtree(tree_pruned, layout="fan", aes(color = mean_relative_abundance_proxy)) %<+% species_urban_response
-g + geom_tiplab(size=2, aes(label=jetz_species_name_clean)) +
-    scale_color_continuous(low='darkgreen', high='red') + 
+g = ggtree(tree_pruned, layout="fan", aes(color = mean_relative_abundance_proxy)) %<+% species_urban_response + scale_color_continuous(low='#058f00', high='#3400de')
+g + geom_tiplab(size=2, aes(label=ebird_species_name_clean)) +
   labs(color = "Mean relative abundance proxy") + 
-  theme(legend.position = "bottom") + ggplot2::xlim(0, 40)
+  theme(legend.position = "bottom") + ggplot2::xlim(0, 60)
 
 ggsave(filename(FIGURES_OUTPUT_DIR, 'phylogeny.jpg'), width = 2000, height = 2100, units = 'px')
 ```
