@@ -13,6 +13,17 @@ community_data = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'community_assembly_met
 head(community_data)
 colnames(community_data)
 ```
+```{r}
+min(community_data$mntd_standard)
+max(community_data$mntd_standard)
+min(community_data$beak_width_fdiv_standard)
+max(community_data$beak_width_fdiv_standard)
+min(community_data$hwi_fdiv_standard)
+max(community_data$hwi_fdiv_standard)
+min(community_data$mass_fdiv_standard)
+max(community_data$mass_fdiv_standard)
+```
+
 
 Join on realms
 ```{r}
@@ -45,7 +56,7 @@ community_summary
 
 Load trait data
 ```{r}
-traits = read_csv(filename(TAXONOMY_OUTPUT_DIR, 'traits_jetz.csv'))
+traits = read_csv(filename(TAXONOMY_OUTPUT_DIR, 'traits_ebird.csv'))
 head(traits)
 ```
 
@@ -59,11 +70,11 @@ head(resolve)
 ```{r}
 test_required_values = function(name, df) {
   cat(paste(
-    test_value_wilcox(paste(name, 'MNTD'), df$mntd_normalised),
-    test_value_wilcox(paste(name, 'Beak Gape FDiv'), df$gape_width_fdiv_normalised),
-    test_value_wilcox(paste(name, 'HWI FDiv'), df$handwing_index_fdiv_normalised),
-    test_value_wilcox(paste(name, 'Mass FDiv'), df$mass_fdiv_normalised),
-    nrow(df),
+    test_value_wilcox(paste(name, 'MNTD'), df$mntd_standard),
+    test_value_wilcox(paste(name, 'Beak Gape FDiv'), df$beak_width_fdiv_standard),
+    test_value_wilcox(paste(name, 'HWI FDiv'), df$hwi_fdiv_standard),
+    test_value_wilcox(paste(name, 'Mass FDiv'), df$mass_fdiv_standard),
+    paste('N', nrow(df)),
     sep = "\n"))
 }
 ```
@@ -104,7 +115,7 @@ test_required_values('Australasia', community_data_with_realm[community_data_wit
 ```{r}
 communities %>% 
   left_join(city_to_realm) %>% 
-  mutate(family = gsub( "_.*$", "", jetz_species_name)) %>%
+  mutate(family = gsub( "_.*$", "", ebird_species_name)) %>%
   dplyr::select(family, core_realm) %>%
   distinct() %>%
   arrange(core_realm)
@@ -123,38 +134,38 @@ community_data_with_introductions
 ```
 
 ```{r}
-community_data_with_introductions[,c('mntd_normalised', 'has_introduced_species')]
+community_data_with_introductions[,c('mntd_standard', 'has_introduced_species')]
 ```
 
 ```{r}
 community_data_with_introductions %>% group_by(has_introduced_species) %>% summarise(
   total_cities = n(), 
   
-  mean_mntd_normalised = mean(mntd_normalised, na.rm = T),
-  median_mntd_normalised = median(mntd_normalised, na.rm = T),
-  sd_mntd_normalised = sd(mntd_normalised, na.rm = T),
+  mean_mntd_std = mean(mntd_standard, na.rm = T),
+  median_mntd_std = median(mntd_standard, na.rm = T),
+  sd_mntd_std = sd(mntd_standard, na.rm = T),
   
-  mean_mass_fdiv_normalised = mean(mass_fdiv_normalised, na.rm = T),
-  median_mass_fdiv_normalised = median(mass_fdiv_normalised, na.rm = T),
-  sd_mass_fdiv_normalised = sd(mass_fdiv_normalised, na.rm = T),
+  mean_mass_fdiv_std = mean(mass_fdiv_standard, na.rm = T),
+  median_mass_fdiv_std = median(mass_fdiv_standard, na.rm = T),
+  sd_mass_fdiv_std = sd(mass_fdiv_standard, na.rm = T),
   
-  mean_gape_width_fdiv_normalised = mean(gape_width_fdiv_normalised, na.rm = T),
-  median_gape_width_fdiv_normalised = median(gape_width_fdiv_normalised, na.rm = T),
-  sd_gape_width_fdiv_normalised = sd(gape_width_fdiv_normalised, na.rm = T),
+  mean_gape_width_fdiv_std = mean(beak_width_fdiv_standard, na.rm = T),
+  median_gape_width_fdiv_std = median(beak_width_fdiv_standard, na.rm = T),
+  sd_gape_width_fdiv_std = sd(beak_width_fdiv_standard, na.rm = T),
   
-  mean_handwing_index_fdiv_normalised = mean(handwing_index_fdiv_normalised, na.rm = T),
-  median_handwing_index_fdiv_normalised = median(handwing_index_fdiv_normalised, na.rm = T),
-  sd_handwing_index_fdiv_normalised = sd(handwing_index_fdiv_normalised, na.rm = T)
+  mean_handwing_index_fdiv_std = mean(hwi_fdiv_standard, na.rm = T),
+  median_handwing_index_fdiv_std = median(hwi_fdiv_standard, na.rm = T),
+  sd_handwing_index_fdiv_std = sd(hwi_fdiv_standard, na.rm = T)
 )
 ```
 
 ## MNTD
 ```{r}
-ggplot(community_data_with_introductions, aes(x = has_introduced_species, y = mntd_normalised)) + geom_boxplot()
+ggplot(community_data_with_introductions, aes(x = has_introduced_species, y = mntd_standard)) + geom_boxplot()
 ```
 
 ```{r}
-wilcox.test(mntd_normalised ~ has_introduced_species, community_data_with_introductions, na.action = 'na.omit')
+wilcox.test(mntd_standard ~ has_introduced_species, community_data_with_introductions, na.action = 'na.omit')
 ```
 
 There is a significant difference between the response of cities with introduced species (0.53±0.27) and those without (0.47±0.19) (p-value = 0.02).
@@ -162,33 +173,33 @@ There is a significant difference between the response of cities with introduced
 
 ## Mass FDiv
 ```{r}
-ggplot(community_data_with_introductions, aes(x = has_introduced_species, y = mass_fdiv_normalised)) + geom_boxplot()
+ggplot(community_data_with_introductions, aes(x = has_introduced_species, y = mass_fdiv_standard)) + geom_boxplot()
 ```
 
 ```{r}
-wilcox.test(mass_fdiv_normalised ~ has_introduced_species, community_data_with_introductions, na.action = 'na.omit')
+wilcox.test(mass_fdiv_standard ~ has_introduced_species, community_data_with_introductions, na.action = 'na.omit')
 ```
 There is a significant difference between the response of cities with introduced species (0.57±0.27) and those without (0.73±0.24) (p < 0.0001)
 
 
 ## Beak Gape FDiv
 ```{r}
-ggplot(community_data_with_introductions, aes(x = has_introduced_species, y = gape_width_fdiv_normalised)) + geom_boxplot()
+ggplot(community_data_with_introductions, aes(x = has_introduced_species, y = beak_width_fdiv_standard)) + geom_boxplot()
 ```
 
 ```{r}
-wilcox.test(gape_width_fdiv_normalised ~ has_introduced_species, community_data_with_introductions, na.action = 'na.omit')
+wilcox.test(beak_width_fdiv_standard ~ has_introduced_species, community_data_with_introductions, na.action = 'na.omit')
 ```
 There is NOT a significant difference between the response of cities with introduced species (0.61±0.30) and those without (0.56±0.27)
 
 
 ## HWI FDiv
 ```{r}
-ggplot(community_data_with_introductions, aes(x = has_introduced_species, y = handwing_index_fdiv_normalised)) + geom_boxplot()
+ggplot(community_data_with_introductions, aes(x = has_introduced_species, y = hwi_fdiv_standard)) + geom_boxplot()
 ```
 
 ```{r}
-wilcox.test(handwing_index_fdiv_normalised ~ has_introduced_species, community_data_with_introductions, na.action = 'na.omit')
+wilcox.test(hwi_fdiv_standard ~ has_introduced_species, community_data_with_introductions, na.action = 'na.omit')
 ```
 There is a significant difference between the response of cities with introduced species (0.49±0.30) and those without (0.79±0.21) (p < 0.0001)
 
@@ -202,7 +213,7 @@ names(geography)
 ```
 
 ```{r}
-analysis_data = community_data_with_realm[,c('city_id', 'mntd_normalised', 'mass_fdiv_normalised', 'gape_width_fdiv_normalised', 'handwing_index_fdiv_normalised', 'core_realm')] %>% 
+analysis_data = community_data_with_realm[,c('city_id', 'mntd_standard', 'mass_fdiv_standard', 'beak_width_fdiv_standard', 'hwi_fdiv_standard', 'core_realm')] %>% 
   left_join(city_points[,c('city_id', 'latitude', 'longitude')]) %>%
   left_join(community_data_with_introductions[,c('city_id', 'has_introduced_species')]) %>%
   left_join(geography)
@@ -216,7 +227,7 @@ analysis_data$has_introduced_species = factor(analysis_data$has_introduced_speci
 model_data = function(df, dependant_var) {
   df[,c(dependant_var, 'core_realm', 'abs_latitude', 'latitude', 'longitude', 'has_introduced_species', 'city_avg_ndvi', 'city_avg_elevation', 'city_avg_temp', 'city_avg_min_monthly_temp', 'city_avg_max_monthly_temp', 'city_avg_monthly_temp', 'city_avg_rainfall', 'city_avg_max_monthly_rainfall', 'city_avg_min_monthly_rainfall', 'city_avg_soil_moisture', 'city_max_elev', 'city_min_elev', 'city_elev_range', 'region_20km_avg_ndvi', 'region_20km_avg_elevation', 'region_20km_avg_soil_moisture', 'region_20km_max_elev', 'region_20km_min_elev', 'region_20km_elev_range', 'region_50km_avg_ndvi', 'region_50km_avg_elevation', 'region_50km_avg_soil_moisture', 'region_50km_max_elev', 'region_50km_min_elev', 'region_50km_elev_range')]
 }
-model_data(analysis_data, 'mntd_normalised')
+model_data(analysis_data, 'mntd_standard')
 ```
 
 ```{r}
@@ -295,26 +306,12 @@ explanatory_labels = c(
 
 ## Helper plot functions
 ```{r}
-geom_normalised_histogram = function(name, gg, legend.position = "bottom") {
-  gg + 
-    geom_histogram(aes(fill = core_realm), binwidth = 0.1, position = "dodge") +
-    geom_vline(aes(xintercept = 0.5), color = "#000000", size = 0.4) +
-    geom_vline(aes(xintercept = 0), color = "#000000", size = 0.2, linetype = "dashed") +
-    geom_vline(aes(xintercept = 1), color = "#000000", size = 0.2, linetype = "dashed") + 
-    ylab("Number of cities") + xlab("Normalised Response") + ylim(c(0, 70)) +
-    labs(title = name, fill = 'Realm') +
-    theme_bw() +
-    theme(legend.position=legend.position)
-}
-```
-
-```{r}
 geom_map = function(map_sf, title) {
   norm_mntd_analysis_geo = ggplot() + 
     geom_sf(data = world_map, aes(geometry = geometry)) +
     map_sf +
-    normalised_colours_scale +
-    labs(colour = 'Normalised\nResponse') +
+    standardised_colours_scale +
+    labs(colour = 'Standardised\nResponse') +
     theme_bw() +
     theme(legend.position="bottom")
 }
@@ -423,176 +420,144 @@ plot_vsurp_result = function(result_table) {
       labels = explanatory_labels) +
     theme_bw() +
     geom_vline(xintercept=0, linetype="dotted") +
-    guides(colour=guide_legend(title="Predictor type")) + xlab('Increase from 0 (habitat filtering)\nto 1 (competitive exclusion)\n± Standard Error') + ylab('Predictor') +
+    guides(colour=guide_legend(title="Predictor type")) + xlab('Difference in response from 0\nhabitat filtering (< 0) and competitive interactions (> 0)\n± Standard Error') + ylab('Predictor') +
     theme(legend.justification = "top")
 }
 ```
 
 ## MNTD
 ```{r}
-norm_mntd_analysis_plot = geom_normalised_histogram(
-  'MNTD', 
-  ggplot(analysis_data, aes(mntd_normalised))
-)
-norm_mntd_analysis_plot
+std_mntd_analysis_geo_plot = geom_map(geom_sf(data = analysis_data, aes(color = mntd_standard, geometry = geometry)), 'MNTD')
+std_mntd_analysis_geo_plot
 ```
 
 ```{r}
-norm_mntd_analysis_geo_plot = geom_map(geom_sf(data = analysis_data, aes(color = mntd_normalised, geometry = geometry)), 'MNTD')
-norm_mntd_analysis_geo_plot
+std_mntd_analysis_data = model_data(analysis_data[!is.na(analysis_data$mntd_standard),], 'mntd_standard')
+std_mntd_analysis_predictors = std_mntd_analysis_data[,-1]
+std_mntd_analysis_interp = VSURF(x = std_mntd_analysis_predictors, y = std_mntd_analysis_data$mntd_standard)
+names(std_mntd_analysis_predictors[,std_mntd_analysis_interp$varselect.interp])
 ```
 
 ```{r}
-norm_mntd_analysis_data = model_data(analysis_data[!is.na(analysis_data$mntd_normalised),], 'mntd_normalised')
-norm_mntd_analysis_predictors = norm_mntd_analysis_data[,-1]
-norm_mntd_analysis_interp = VSURF(x = norm_mntd_analysis_predictors, y = norm_mntd_analysis_data$mntd_normalised)
-names(norm_mntd_analysis_predictors[,norm_mntd_analysis_interp$varselect.interp])
+std_mntd_analysis_formula = formula_from_vsurp(std_mntd_analysis_predictors, "mntd_standard", std_mntd_analysis_interp)
+std_mntd_analysis_result <- model_average(std_mntd_analysis_formula, std_mntd_analysis_data)
+std_mntd_analysis_result_table = model_summary(std_mntd_analysis_result)
+std_mntd_analysis_result_table
 ```
 
 ```{r}
-norm_mntd_analysis_formula = formula_from_vsurp(norm_mntd_analysis_predictors, "mntd_normalised", norm_mntd_analysis_interp)
-norm_mntd_analysis_result <- model_average(norm_mntd_analysis_formula, norm_mntd_analysis_data)
-norm_mntd_analysis_result_table = model_summary(norm_mntd_analysis_result)
-norm_mntd_analysis_result_table
-```
-
-```{r}
-norm_mntd_analysis_pred_plot = plot_vsurp_result(norm_mntd_analysis_result_table)
-norm_mntd_analysis_pred_plot
+std_mntd_analysis_pred_plot = plot_vsurp_result(std_mntd_analysis_result_table)
+std_mntd_analysis_pred_plot
 ```
 
 ## Gape width - FDiv
 ```{r}
-norm_gape_fdiv_analysis_plot = geom_normalised_histogram(
-  'Gape FDiv', 
-  ggplot(analysis_data, aes(gape_width_fdiv_normalised))
-)
-norm_gape_fdiv_analysis_plot
+std_gape_fdiv_analysis_geo_plot = geom_map(geom_sf(data = analysis_data, aes(color = beak_width_fdiv_standard, geometry = geometry)), 'Beak Width FDiv')
+std_gape_fdiv_analysis_geo_plot
 ```
 
 ```{r}
-norm_gape_fdiv_analysis_geo_plot = geom_map(geom_sf(data = analysis_data, aes(color = gape_width_fdiv_normalised, geometry = geometry)), 'Gape Width FDiv')
-norm_gape_fdiv_analysis_geo_plot
+std_gape_fdiv_analysis_data = model_data(analysis_data[!is.na(analysis_data$beak_width_fdiv_standard),], 'beak_width_fdiv_standard')
+std_gape_fdiv_analysis_predictors = std_gape_fdiv_analysis_data[,-1]
+std_gape_fdiv_analysis_interp = VSURF(x = std_gape_fdiv_analysis_predictors, y = std_gape_fdiv_analysis_data$beak_width_fdiv_standard)
+names(std_gape_fdiv_analysis_predictors[,std_gape_fdiv_analysis_interp$varselect.interp])
 ```
 
 ```{r}
-norm_gape_fdiv_analysis_data = model_data(analysis_data[!is.na(analysis_data$gape_width_fdiv_normalised),], 'gape_width_fdiv_normalised')
-norm_gape_fdiv_analysis_predictors = norm_gape_fdiv_analysis_data[,-1]
-norm_gape_fdiv_analysis_interp = VSURF(x = norm_gape_fdiv_analysis_predictors, y = norm_gape_fdiv_analysis_data$gape_width_fdiv_normalised)
-names(norm_gape_fdiv_analysis_predictors[,norm_gape_fdiv_analysis_interp$varselect.interp])
+std_gape_fdiv_analysis_formula = formula_from_vsurp(std_gape_fdiv_analysis_predictors, "beak_width_fdiv_standard", std_gape_fdiv_analysis_interp)
+std_gape_fdiv_analysis_result <- model_average(std_gape_fdiv_analysis_formula, std_gape_fdiv_analysis_data)
+std_gape_fdiv_analysis_result_table = model_summary(std_gape_fdiv_analysis_result)
+std_gape_fdiv_analysis_result_table
 ```
 
 ```{r}
-norm_gape_fdiv_analysis_formula = formula_from_vsurp(norm_gape_fdiv_analysis_predictors, "gape_width_fdiv_normalised", norm_gape_fdiv_analysis_interp)
-norm_gape_fdiv_analysis_result <- model_average(norm_gape_fdiv_analysis_formula, norm_gape_fdiv_analysis_data)
-norm_gape_fdiv_analysis_result_table = model_summary(norm_gape_fdiv_analysis_result)
-norm_gape_fdiv_analysis_result_table
-```
-
-```{r}
-norm_gape_fdiv_analysis_pred_plot = plot_vsurp_result(norm_gape_fdiv_analysis_result_table)
-norm_gape_fdiv_analysis_pred_plot
+std_gape_fdiv_analysis_pred_plot = plot_vsurp_result(std_gape_fdiv_analysis_result_table)
+std_gape_fdiv_analysis_pred_plot
 ```
 
 
 ## HWI - FDiv
 ```{r}
-norm_hwi_fdiv_loco_analysis_plot = geom_normalised_histogram(
-  'HWI FDiv', 
-  ggplot(analysis_data, aes(handwing_index_fdiv_normalised))
-)
-norm_hwi_fdiv_loco_analysis_plot
+std_hwi_fdiv_analysis_geo_plot = geom_map(geom_sf(data = analysis_data, aes(color = hwi_fdiv_standard, geometry = geometry)), 'HWI FDiv')
+std_hwi_fdiv_analysis_geo_plot
 ```
 
 ```{r}
-norm_hwi_fdiv_analysis_geo_plot = geom_map(geom_sf(data = analysis_data, aes(color = handwing_index_fdiv_normalised, geometry = geometry)), 'HWI FDiv')
-norm_hwi_fdiv_analysis_geo_plot
-```
-
-```{r}
-norm_hwi_fdiv_analysis_data = model_data(analysis_data[!is.na(analysis_data$handwing_index_fdiv_normalised),], 'handwing_index_fdiv_normalised')
-norm_hwi_fdiv_analysis_predictors = norm_hwi_fdiv_analysis_data[,-1]
-norm_hwi_fdiv_analysis_interp = VSURF(x = norm_hwi_fdiv_analysis_predictors, y = norm_hwi_fdiv_analysis_data$handwing_index_fdiv_normalised)
-names(norm_hwi_fdiv_analysis_predictors[,norm_hwi_fdiv_analysis_interp$varselect.interp])
+std_hwi_fdiv_analysis_data = model_data(analysis_data[!is.na(analysis_data$hwi_fdiv_standard),], 'hwi_fdiv_standard')
+std_hwi_fdiv_analysis_predictors = std_hwi_fdiv_analysis_data[,-1]
+std_hwi_fdiv_analysis_interp = VSURF(x = std_hwi_fdiv_analysis_predictors, y = std_hwi_fdiv_analysis_data$hwi_fdiv_standard)
+names(std_hwi_fdiv_analysis_predictors[,std_hwi_fdiv_analysis_interp$varselect.interp])
 ```
 
 
 ```{r}
-norm_hwi_fdiv_analysis_formula = formula_from_vsurp(norm_hwi_fdiv_analysis_predictors, "handwing_index_fdiv_normalised", norm_hwi_fdiv_analysis_interp)
-norm_hwi_fdiv_analysis_result <- model_average(norm_hwi_fdiv_analysis_formula, norm_hwi_fdiv_analysis_data)
-norm_hwi_fdiv_analysis_result_table = model_summary(norm_hwi_fdiv_analysis_result)
-norm_hwi_fdiv_analysis_result_table
+std_hwi_fdiv_analysis_formula = formula_from_vsurp(std_hwi_fdiv_analysis_predictors, "hwi_fdiv_standard", std_hwi_fdiv_analysis_interp)
+std_hwi_fdiv_analysis_result <- model_average(std_hwi_fdiv_analysis_formula, std_hwi_fdiv_analysis_data)
+std_hwi_fdiv_analysis_result_table = model_summary(std_hwi_fdiv_analysis_result)
+std_hwi_fdiv_analysis_result_table
 ```
 
 ```{r}
-norm_hwi_fdiv_analysis_pred_plot = plot_vsurp_result(norm_hwi_fdiv_analysis_result_table)
-norm_hwi_fdiv_analysis_pred_plot
+std_hwi_fdiv_analysis_pred_plot = plot_vsurp_result(std_hwi_fdiv_analysis_result_table)
+std_hwi_fdiv_analysis_pred_plot
 ```
 
 
 ## Mass - FDiv
 ```{r}
-norm_mass_fdiv_loco_analysis_plot = geom_normalised_histogram(
-  'Mass FDiv', 
-  ggplot(analysis_data, aes(mass_fdiv_normalised))
-)
-norm_mass_fdiv_loco_analysis_plot
+std_mass_fdiv_analysis_geo_plot = geom_map(geom_sf(data = analysis_data, aes(color = mass_fdiv_standard, geometry = geometry)), 'Mass FDiv')
+std_mass_fdiv_analysis_geo_plot
 ```
 
 ```{r}
-norm_mass_fdiv_analysis_geo_plot = geom_map(geom_sf(data = analysis_data, aes(color = mass_fdiv_normalised, geometry = geometry)), 'Mass FDiv')
-norm_mass_fdiv_analysis_geo_plot
+std_mass_fdiv_analysis_data = model_data(analysis_data[!is.na(analysis_data$mass_fdiv_standard),], 'mass_fdiv_standard')
+std_mass_fdiv_analysis_predictors = std_mass_fdiv_analysis_data[,-1]
+std_mass_fdiv_analysis_interp = VSURF(x = std_mass_fdiv_analysis_predictors, y = std_mass_fdiv_analysis_data$mass_fdiv_standard)
+names(std_mass_fdiv_analysis_predictors[,std_mass_fdiv_analysis_interp$varselect.interp])
 ```
 
 ```{r}
-norm_mass_fdiv_analysis_data = model_data(analysis_data[!is.na(analysis_data$mass_fdiv_normalised),], 'mass_fdiv_normalised')
-norm_mass_fdiv_analysis_predictors = norm_mass_fdiv_analysis_data[,-1]
-norm_mass_fdiv_analysis_interp = VSURF(x = norm_mass_fdiv_analysis_predictors, y = norm_mass_fdiv_analysis_data$mass_fdiv_normalised)
-names(norm_mass_fdiv_analysis_predictors[,norm_mass_fdiv_analysis_interp$varselect.interp])
+std_mass_fdiv_analysis_formula = formula_from_vsurp(std_mass_fdiv_analysis_predictors, "mass_fdiv_standard", std_mass_fdiv_analysis_interp)
+std_mass_fdiv_analysis_result <- model_average(std_mass_fdiv_analysis_formula, std_mass_fdiv_analysis_data)
+std_mass_fdiv_analysis_result_table = model_summary(std_mass_fdiv_analysis_result)
+std_mass_fdiv_analysis_result_table
 ```
 
 ```{r}
-norm_mass_fdiv_analysis_formula = formula_from_vsurp(norm_mass_fdiv_analysis_predictors, "mass_fdiv_normalised", norm_mass_fdiv_analysis_interp)
-norm_mass_fdiv_analysis_result <- model_average(norm_mass_fdiv_analysis_formula, norm_mass_fdiv_analysis_data)
-norm_mass_fdiv_analysis_result_table = model_summary(norm_mass_fdiv_analysis_result)
-norm_mass_fdiv_analysis_result_table
-```
-
-```{r}
-norm_mass_fdiv_analysis_pred_plot = plot_vsurp_result(norm_mass_fdiv_analysis_result_table)
-norm_mass_fdiv_analysis_pred_plot
+std_mass_fdiv_analysis_pred_plot = plot_vsurp_result(std_mass_fdiv_analysis_result_table)
+std_mass_fdiv_analysis_pred_plot
 ```
 
 # Create plot of differences in process response
 ```{r}
 pred_legend <- get_legend(
   # create some space to the left of the legend
-  norm_hwi_fdiv_analysis_pred_plot + theme(legend.box.margin = margin(0, 0, 0, 12))
+  std_hwi_fdiv_analysis_pred_plot + theme(legend.box.margin = margin(0, 0, 0, 12))
 )
 geo_legend <- get_legend(
   # create some space to the left of the legend
-  norm_mass_fdiv_analysis_geo_plot + theme(legend.box.margin = margin(0, 0, 0, 12))
+  std_mass_fdiv_analysis_geo_plot + theme(legend.box.margin = margin(0, 0, 0, 12))
 )
 
 plot_grid(
   plot_grid(
-    norm_mntd_analysis_geo_plot + theme(legend.position="none"), 
-    norm_mntd_analysis_pred_plot + theme(legend.position="none"), 
+    std_mntd_analysis_geo_plot + theme(legend.position="none"), 
+    std_mntd_analysis_pred_plot + theme(legend.position="none"), 
     nrow = 1
   ) + draw_label("MNTD", size = 16, angle = 90, x = 0.01, y = 0.5),
   plot_grid(
-    norm_gape_fdiv_analysis_geo_plot + theme(legend.position="none"), 
-    norm_gape_fdiv_analysis_pred_plot + theme(legend.position="none"), 
+    std_gape_fdiv_analysis_geo_plot + theme(legend.position="none"), 
+    std_gape_fdiv_analysis_pred_plot + theme(legend.position="none"), 
     nrow = 1
   ) + draw_label("Gape", size = 16, angle = 90, x = 0.01, y = 0.5),
   plot_grid(
-    norm_hwi_fdiv_analysis_geo_plot + theme(legend.position="none"), 
-    norm_hwi_fdiv_analysis_pred_plot + theme(legend.position="none"), 
+    std_hwi_fdiv_analysis_geo_plot + theme(legend.position="none"), 
+    std_hwi_fdiv_analysis_pred_plot + theme(legend.position="none"), 
     nrow = 1
   ) + draw_label("HWI", size = 16, angle = 90, x = 0.01, y = 0.5),
   plot_grid(
-    norm_mass_fdiv_analysis_geo_plot + theme(legend.position="none"), 
-    norm_mass_fdiv_analysis_pred_plot + theme(legend.position="none"), 
+    std_mass_fdiv_analysis_geo_plot + theme(legend.position="none"), 
+    std_mass_fdiv_analysis_pred_plot + theme(legend.position="none"), 
     nrow = 1
   ) + draw_label("Mass", size = 16, angle = 90, x = 0.01, y = 0.5), 
   plot_grid(
@@ -608,15 +573,15 @@ ggsave(filename(FIGURES_OUTPUT_DIR, 'process_response.jpg'), width = 2500, heigh
 
 # Compare metrics against each other
 ```{r}
-ggplot(analysis_data, aes(x = gape_width_fdiv_normalised, y = mntd_normalised, colour = core_realm)) + 
+ggplot(analysis_data, aes(x = beak_width_fdiv_standard, y = mntd_standard, colour = core_realm)) + 
   geom_point() +
   ylab("MNTD") + 
-  xlab("Gape Width FDiv") +
+  xlab("Beak Width FDiv") +
   theme_bw() + labs(color = "Realm")
 ```
 
 ```{r}
-ggplot(analysis_data, aes(x = handwing_index_fdiv_normalised, y = mntd_normalised, colour = core_realm)) + 
+ggplot(analysis_data, aes(x = hwi_fdiv_standard, y = mntd_standard, colour = core_realm)) + 
   geom_point() +
   ylab("MNTD") + 
   xlab("HWI FDiv") +
@@ -624,24 +589,24 @@ ggplot(analysis_data, aes(x = handwing_index_fdiv_normalised, y = mntd_normalise
 ```
 
 ```{r}
-ggplot(analysis_data, aes(x = handwing_index_fdiv_normalised, y = gape_width_fdiv_normalised, colour = core_realm)) + 
+ggplot(analysis_data, aes(x = hwi_fdiv_standard, y = beak_width_fdiv_standard, colour = core_realm)) + 
   geom_point() +
-  ylab("Gape Width FDiv") + 
+  ylab("Beak Width FDiv") + 
   xlab("HWI FDiv") +
   theme_bw() + labs(color = "Realm")
 ```
 
 ```{r}
 mntd_fdiv_analysis = analysis_data %>% 
-  dplyr::select(city_id,  mntd_normalised, handwing_index_fdiv_normalised, gape_width_fdiv_normalised) %>%
+  dplyr::select(city_id,  mntd_standard, hwi_fdiv_standard, beak_width_fdiv_standard, mass_fdiv_standard) %>%
   left_join(community_summary) %>%
   mutate(urban_pool_perc = urban_pool_size * 100 / regional_pool_size)
 mntd_fdiv_analysis
 ```
 
 ```{r}
-ggpairs(mntd_fdiv_analysis %>% dplyr::select(mntd_normalised, handwing_index_fdiv_normalised, gape_width_fdiv_normalised, regional_pool_size, urban_pool_size, urban_pool_perc))
-ggsave(filename(FIGURES_OUTPUT_DIR, 'appendix_normalised_correlation.jpg'))
+ggpairs(mntd_fdiv_analysis %>% dplyr::select(mntd_standard, hwi_fdiv_standard, beak_width_fdiv_standard, mass_fdiv_standard, regional_pool_size, urban_pool_size, urban_pool_perc))
+ggsave(filename(FIGURES_OUTPUT_DIR, 'appendix_standarised_correlation.jpg'))
 ```
 
 

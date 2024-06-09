@@ -91,6 +91,18 @@ normalised_colours_scale = scale_colour_gradient2(
   limits = c(0, 1)
 )
 
+standardised_colours_scale = scale_colour_gradient2(
+  low = "#005AB5",
+  mid = "yellow",
+  high = "#DC3220",
+  midpoint = 0,
+  space = "Lab",
+  na.value = "grey50",
+  guide = "colourbar",
+  aesthetics = "colour",
+  limits = c(-2.5, 2.5)
+)
+
 normalised_size_scale = scale_size_continuous( 
   range = c(0, 1) 
 )
