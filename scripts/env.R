@@ -92,9 +92,9 @@ normalised_colours_scale = scale_colour_gradient2(
 )
 
 standardised_colours_scale = scale_colour_gradient2(
-  low = "#005AB5",
-  mid = "yellow",
-  high = "#DC3220",
+  low = "#058f00",
+  mid = "#00f9ff",
+  high = "#3400de",
   midpoint = 0,
   space = "Lab",
   na.value = "grey50",
