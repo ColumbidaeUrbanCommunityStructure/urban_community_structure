@@ -29,6 +29,7 @@ library(treedataverse) # BiocManager::install("YuLab-SMU/treedataverse")
 library(devtools)
 install_github("eliotmiller/clootl")
 library(clootl)
+
 sf::sf_use_s2(FALSE)
 options(scipen=99999)
 options(na.action = "na.fail") 
@@ -111,7 +112,8 @@ normalised_size_scale = scale_size_continuous(
 # Third Party Data downloaded locally
 # ------------------------------------
 downloaded_data_file = function(file) {
-  paste('/Users/james/Dropbox/PhD/', file, sep = '')
+  # paste('/Users/james/Dropbox/PhD/', file, sep = '')
+  paste('/Users/jamese.richardson/Downloads/', file, sep = '')
 }
 
 # My mapping from Birdlife V8 to Jetz, this maps down the birdlife taxonomy versions to Birdlife V3 and thus Jetz. 

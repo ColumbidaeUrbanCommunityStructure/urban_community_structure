@@ -111,9 +111,59 @@ ggsave(filename(FIGURES_OUTPUT_DIR, 'phylogeny.jpg'), width = 2000, height = 210
 
 ## Plot traits against abundance proxy
 ```{r}
-hwi_by_mass = ggplot(species_urban_response, aes(x = hwi, y = mass, colour = mean_relative_abundance_proxy)) + geom_point() + abundance_proxy_scale + theme(legend.position = 'bottom', legend.title.position = 'top', legend.key.width = unit(12, 'mm')) + labs(colour = "Mean relative abundance proxy", y = 'Mass', x = '')
-beak_width_by_mass = ggplot(species_urban_response, aes(x = beak_width, y = mass, colour = mean_relative_abundance_proxy)) + geom_point() + abundance_proxy_scale + labs(y = '', x = 'Beak width')
-hwi_by_beak_width = ggplot(species_urban_response, aes(x = hwi, y = beak_width, colour = mean_relative_abundance_proxy)) + geom_point() + abundance_proxy_scale + labs(y = 'Beak width', x = 'HWI')
+cut_off_3 = 50
+cut_off_2 = 35
+cut_off_1 = 1
+
+hwi_by_mass_urban_3 = species_urban_response %>% filter(mean_relative_abundance_proxy > cut_off_3) %>% slice(chull(hwi, mass))
+hwi_by_mass_urban_2 = species_urban_response %>% filter(mean_relative_abundance_proxy > cut_off_2) %>% slice(chull(hwi, mass))
+hwi_by_mass_urban_1 = species_urban_response %>% filter(mean_relative_abundance_proxy > cut_off_1) %>% slice(chull(hwi, mass))
+
+beak_width_by_mass_urban_3 = species_urban_response %>% filter(mean_relative_abundance_proxy > cut_off_3) %>% slice(chull(beak_width, mass))
+beak_width_by_mass_urban_2 = species_urban_response %>% filter(mean_relative_abundance_proxy > cut_off_2) %>% slice(chull(beak_width, mass))
+beak_width_by_mass_urban_1 = species_urban_response %>% filter(mean_relative_abundance_proxy > cut_off_1) %>% slice(chull(beak_width, mass))
+
+hwi_by_beak_width_urban_3 = species_urban_response %>% filter(mean_relative_abundance_proxy > cut_off_3) %>% slice(chull(hwi, beak_width))
+hwi_by_beak_width_urban_2 = species_urban_response %>% filter(mean_relative_abundance_proxy > cut_off_2) %>% slice(chull(hwi, beak_width))
+hwi_by_beak_width_urban_1 = species_urban_response %>% filter(mean_relative_abundance_proxy > cut_off_1) %>% slice(chull(hwi, beak_width))
+
+species_urban_response %>% filter(mean_relative_abundance_proxy > cut_off_3) %>% nrow()
+species_urban_response %>% filter(mean_relative_abundance_proxy > cut_off_2) %>% nrow()
+species_urban_response %>% filter(mean_relative_abundance_proxy > cut_off_1) %>% nrow()
+```
+
+```{r}
+polygon_line_type = 'dashed'
+polygon_linewidth = 0.4
+polygon_alpha = 0.05
+colour1 = '#058f00'
+colour2 = '#006a73'
+colour3 = '#3400e0'
+
+hwi_by_mass = ggplot(species_urban_response, aes(x = hwi, y = mass, colour = mean_relative_abundance_proxy)) + 
+  geom_polygon(data = hwi_by_mass_urban_1, alpha = polygon_alpha, color = colour1, fill = colour1, linewidth = polygon_linewidth, linetype = polygon_line_type) +
+  geom_polygon(data = hwi_by_mass_urban_2, alpha = polygon_alpha, color = colour2, fill = colour2, linewidth = polygon_linewidth, linetype = polygon_line_type) +
+  geom_polygon(data = hwi_by_mass_urban_3, alpha = polygon_alpha, color = colour3, fill = colour3, linewidth = polygon_linewidth, linetype = polygon_line_type) +
+  geom_point() + 
+  abundance_proxy_scale +
+  labs(colour = "Mean relative abundance proxy", y = 'Mass', x = '') + 
+  theme(legend.position = 'bottom', legend.title.position = 'top', legend.key.width = unit(12, 'mm'))
+
+beak_width_by_mass = ggplot(species_urban_response, aes(x = beak_width, y = mass, colour = mean_relative_abundance_proxy)) + 
+  geom_polygon(data = beak_width_by_mass_urban_1, alpha = polygon_alpha, color = colour1, fill = colour1, linewidth = polygon_linewidth, linetype = polygon_line_type) +
+  geom_polygon(data = beak_width_by_mass_urban_2, alpha = polygon_alpha, color = colour2, fill = colour2, linewidth = polygon_linewidth, linetype = polygon_line_type) +
+  geom_polygon(data = beak_width_by_mass_urban_3, alpha = polygon_alpha, color = colour3, fill = colour3, linewidth = polygon_linewidth, linetype = polygon_line_type) +
+  geom_point() + 
+  abundance_proxy_scale + 
+  labs(y = '', x = 'Beak width')
+
+hwi_by_beak_width = ggplot(species_urban_response, aes(x = hwi, y = beak_width, colour = mean_relative_abundance_proxy)) + 
+  geom_polygon(data = hwi_by_beak_width_urban_1, alpha = polygon_alpha, color = colour1, fill = colour1, linewidth = polygon_linewidth, linetype = polygon_line_type) +
+  geom_polygon(data = hwi_by_beak_width_urban_2, alpha = polygon_alpha, color = colour2, fill = colour2, linewidth = polygon_linewidth, linetype = polygon_line_type) +
+  geom_polygon(data = hwi_by_beak_width_urban_3, alpha = polygon_alpha, color = colour3, fill = colour3, linewidth = polygon_linewidth, linetype = polygon_line_type) +
+  geom_point() + 
+  abundance_proxy_scale + 
+  labs(y = 'Beak width', x = 'HWI')
 
 legend <- ggpubr::get_legend(
   # create some space to the left of the legend
@@ -125,7 +175,7 @@ plot_grid(
   hwi_by_mass + theme(legend.position="none"),
   beak_width_by_mass + theme(legend.position="none"),
   hwi_by_beak_width + theme(legend.position="none"),
-  legend 
+  legend
 )
 
 ggsave(filename(FIGURES_OUTPUT_DIR, 'traits.jpg'), width = 2000, height = 1800, units = 'px')
