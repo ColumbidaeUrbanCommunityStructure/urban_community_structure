@@ -98,7 +98,7 @@ col_ut_phylo_signal
 ```
 ## Plot tree
 ```{r}
-abundance_proxy_scale = scale_color_continuous(low='#058f00', high='#3400de')
+abundance_proxy_scale = scale_color_continuous(low = colour3, high = colour1)
 species_urban_response$ebird_species_name_clean = gsub("_", " ", species_urban_response$ebird_species_name)
 
 g = ggtree(tree_pruned, layout="fan", aes(color = mean_relative_abundance_proxy)) %<+% species_urban_response + abundance_proxy_scale
@@ -135,32 +135,31 @@ species_urban_response %>% filter(mean_relative_abundance_proxy > cut_off_1) %>%
 ```{r}
 polygon_line_type = 'dashed'
 polygon_linewidth = 0.4
-polygon_alpha = 0.05
-colour1 = '#058f00'
-colour2 = '#006a73'
-colour3 = '#3400e0'
+polygon_alpha1 = 0.05
+polygon_alpha2 = 0.1
+polygon_alpha3 = 0.15
 
 hwi_by_mass = ggplot(species_urban_response, aes(x = hwi, y = mass, colour = mean_relative_abundance_proxy)) + 
-  geom_polygon(data = hwi_by_mass_urban_1, alpha = polygon_alpha, color = colour1, fill = colour1, linewidth = polygon_linewidth, linetype = polygon_line_type) +
-  geom_polygon(data = hwi_by_mass_urban_2, alpha = polygon_alpha, color = colour2, fill = colour2, linewidth = polygon_linewidth, linetype = polygon_line_type) +
-  geom_polygon(data = hwi_by_mass_urban_3, alpha = polygon_alpha, color = colour3, fill = colour3, linewidth = polygon_linewidth, linetype = polygon_line_type) +
+  geom_polygon(data = hwi_by_mass_urban_1, alpha = polygon_alpha1, color = colour3_light, fill = colour1, linewidth = polygon_linewidth, linetype = polygon_line_type) +
+  geom_polygon(data = hwi_by_mass_urban_2, alpha = polygon_alpha2, color = colour3, fill = colour2, linewidth = polygon_linewidth, linetype = polygon_line_type) +
+  geom_polygon(data = hwi_by_mass_urban_3, alpha = polygon_alpha3, color = colour3_dark, fill = colour3, linewidth = polygon_linewidth, linetype = polygon_line_type) +
   geom_point() + 
   abundance_proxy_scale +
   labs(colour = "Mean relative abundance proxy", y = 'Mass', x = '') + 
   theme(legend.position = 'bottom', legend.title.position = 'top', legend.key.width = unit(12, 'mm'))
 
 beak_width_by_mass = ggplot(species_urban_response, aes(x = beak_width, y = mass, colour = mean_relative_abundance_proxy)) + 
-  geom_polygon(data = beak_width_by_mass_urban_1, alpha = polygon_alpha, color = colour1, fill = colour1, linewidth = polygon_linewidth, linetype = polygon_line_type) +
-  geom_polygon(data = beak_width_by_mass_urban_2, alpha = polygon_alpha, color = colour2, fill = colour2, linewidth = polygon_linewidth, linetype = polygon_line_type) +
-  geom_polygon(data = beak_width_by_mass_urban_3, alpha = polygon_alpha, color = colour3, fill = colour3, linewidth = polygon_linewidth, linetype = polygon_line_type) +
+  geom_polygon(data = beak_width_by_mass_urban_1, alpha = polygon_alpha1, color = colour3_light, fill = colour1, linewidth = polygon_linewidth, linetype = polygon_line_type) +
+  geom_polygon(data = beak_width_by_mass_urban_2, alpha = polygon_alpha2, color = colour3, fill = colour2, linewidth = polygon_linewidth, linetype = polygon_line_type) +
+  geom_polygon(data = beak_width_by_mass_urban_3, alpha = polygon_alpha3, color = colour3_dark, fill = colour3, linewidth = polygon_linewidth, linetype = polygon_line_type) +
   geom_point() + 
   abundance_proxy_scale + 
   labs(y = '', x = 'Beak width')
 
 hwi_by_beak_width = ggplot(species_urban_response, aes(x = hwi, y = beak_width, colour = mean_relative_abundance_proxy)) + 
-  geom_polygon(data = hwi_by_beak_width_urban_1, alpha = polygon_alpha, color = colour1, fill = colour1, linewidth = polygon_linewidth, linetype = polygon_line_type) +
-  geom_polygon(data = hwi_by_beak_width_urban_2, alpha = polygon_alpha, color = colour2, fill = colour2, linewidth = polygon_linewidth, linetype = polygon_line_type) +
-  geom_polygon(data = hwi_by_beak_width_urban_3, alpha = polygon_alpha, color = colour3, fill = colour3, linewidth = polygon_linewidth, linetype = polygon_line_type) +
+  geom_polygon(data = hwi_by_beak_width_urban_1, alpha = polygon_alpha1, color = colour3_light, fill = colour1, linewidth = polygon_linewidth, linetype = polygon_line_type) +
+  geom_polygon(data = hwi_by_beak_width_urban_2, alpha = polygon_alpha2, color = colour3, fill = colour2, linewidth = polygon_linewidth, linetype = polygon_line_type) +
+  geom_polygon(data = hwi_by_beak_width_urban_3, alpha = polygon_alpha3, color = colour3_dark, fill = colour3, linewidth = polygon_linewidth, linetype = polygon_line_type) +
   geom_point() + 
   abundance_proxy_scale + 
   labs(y = 'Beak width', x = 'HWI')

@@ -80,34 +80,26 @@ PHYLO_TREE = filename(PROVIDED_DATA, 'phylogeny__stage2_hackett_mcc_no_neg.tre')
 
 FIGURES_OUTPUT_DIR = mkdir('../../', 'figures')
 
-normalised_colours_scale = scale_colour_gradient2(
-  low = "darkgreen",
-  mid = "yellow",
-  high = "red",
-  midpoint = 0.5,
-  space = "Lab",
-  na.value = "grey50",
-  guide = "colourbar",
-  aesthetics = "colour",
-  limits = c(0, 1)
-)
+colour1 = '#eedc37'
+colour2 = '#ffff4c'
+colour3_light = '#c2c4ff'
+colour3 = '#51d6ff'
+colour3_dark = '#78eba8'
+colour4 = '#ff9bff'
+colour5 = '#de7cdf'
+colour6 = '#ebaf9c'
 
 standardised_colours_scale = scale_colour_gradient2(
-  low = "#058f00",
-  mid = "#00f9ff",
-  high = "#3400de",
+  low = colour1,
+  mid = colour3,
+  high = colour5,
   midpoint = 0,
   space = "Lab",
-  na.value = "grey50",
+  na.value = colour6,
   guide = "colourbar",
   aesthetics = "colour",
   limits = c(-2.5, 2.5)
 )
-
-normalised_size_scale = scale_size_continuous( 
-  range = c(0, 1) 
-)
-
 
 # Third Party Data downloaded locally
 # ------------------------------------
