@@ -100,11 +100,16 @@ col_ut_phylo_signal
 ```{r}
 species_urban_response$ebird_species_name_clean = gsub("_", " ", species_urban_response$ebird_species_name)
 
+normalize <- function(x) (x - min(x)) / (max(x) - min(x)) * 5 + 1  # Scale to range [1, 6]
+species_urban_response$beak_width_norm <- normalize(species_urban_response$beak_width)
+species_urban_response$hwi_norm <- normalize(species_urban_response$hwi)
+species_urban_response$mass_norm <- normalize(species_urban_response$mass)
+
 g = ggtree(tree_pruned, layout="fan") %<+% species_urban_response + abundance_proxy_scale
 g + 
-  geom_fruit(geom = geom_point, mapping = aes(size = beak_width), colour = beak_width_colour, offset = 0, show.legend = FALSE) + 
-  geom_fruit(geom = geom_point, mapping = aes(size = hwi), colour = hwi_colour, offset = 0.1, show.legend = FALSE) + 
-  geom_fruit(geom = geom_point, mapping = aes(size = mass), colour = mass_colour, offset = 0.15, show.legend = FALSE) + 
+  geom_fruit(geom = geom_point, mapping = aes(size = beak_width_norm), fill = beak_width_colour, colour = 'black', shape = 21, stroke = 0.2, offset = 0, show.legend = FALSE) + 
+  geom_fruit(geom = geom_point, mapping = aes(size = hwi_norm), fill = hwi_colour, colour = 'black', shape = 21, stroke = 0.2, offset = 0.13, show.legend = FALSE) + 
+  geom_fruit(geom = geom_point, mapping = aes(size = mass_norm), fill = mass_colour, colour = 'black', shape = 21, stroke = 0.2, offset = 0.15, show.legend = FALSE) + 
   geom_tiplab(size=2, aes(label=ebird_species_name_clean, color = mean_relative_abundance_proxy), offset = 15) +
   labs(color = "Mean relative abundance proxy") + 
   theme(legend.position = "bottom") + ggplot2::xlim(0, 80)
