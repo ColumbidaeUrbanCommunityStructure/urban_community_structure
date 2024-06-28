@@ -418,7 +418,9 @@ plot_vsurp_result = function(result_table) {
     scale_y_discrete(
       limits = rev(levels(p$explanatory)), 
       labels = explanatory_labels) +
-    scale_colour_manual(values = c(colour1, colour2, colour3, colour4, colour5, colour6), breaks = c('Realm', 'City geography', 'Regional (50km) geography', 'Regional (20km) geography', 'Spatial')) +
+    scale_colour_manual(
+      values = c(realm_colour, city_geography_colour, regional_50km_geography_colour, regional_20km_geography_colour, spatial_colour), 
+      breaks = c('Realm', 'City geography', 'Regional (50km) geography', 'Regional (20km) geography', 'Spatial')) +
     theme_bw() +
     geom_vline(xintercept=0, linetype="dotted") +
     guides(colour=guide_legend(title="Predictor type")) + xlab('Difference in response from 0\nhabitat filtering (< 0) and competitive interactions (> 0)\n± Standard Error') + ylab('Predictor') +

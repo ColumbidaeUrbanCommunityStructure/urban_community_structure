@@ -80,26 +80,48 @@ PHYLO_TREE = filename(PROVIDED_DATA, 'phylogeny__stage2_hackett_mcc_no_neg.tre')
 
 FIGURES_OUTPUT_DIR = mkdir('../../', 'figures')
 
-colour1 = '#eedc37'
-colour2 = '#ffff4c'
-colour3_light = '#c2c4ff'
-colour3 = '#51d6ff'
-colour3_dark = '#78eba8'
-colour4 = '#ff9bff'
-colour5 = '#de7cdf'
-colour6 = '#ebaf9c'
+# Accessible Vibrant Colour Scheme
+# https://personal.sron.nl/~pault/
+  
+orange = '#EE7733'
+blue = '#0077BB'
+cyan = '#33BBEE'
+magenta = '#EE3377'
+red = '#CC3311'
+teal = '#009988'
+grey = '#BBBBBB'
+
+cyan_light = '#99DDFF'
+cyan_dark = '#225555'
+
+beak_width_colour = orange
+hwi_colour = cyan
+mass_colour = teal
+
+realm_colour = orange
+city_geography_colour = blue
+regional_50km_geography_colour = magenta
+regional_20km_geography_colour = red
+spatial_colour = teal
+
+trait_polygon_light = cyan_light
+trait_polygon_med = cyan
+trait_polygon_dark = cyan_dark
 
 standardised_colours_scale = scale_colour_gradient2(
-  low = colour1,
-  mid = colour3,
-  high = colour5,
+  low = cyan,
+  mid = magenta,
+  high = teal,
   midpoint = 0,
   space = "Lab",
-  na.value = colour6,
+  na.value = grey,
   guide = "colourbar",
   aesthetics = "colour",
   limits = c(-2.5, 2.5)
 )
+
+abundance_proxy_scale = scale_color_continuous(low = cyan, high = orange)
+
 
 # Third Party Data downloaded locally
 # ------------------------------------
