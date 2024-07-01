@@ -590,3 +590,7 @@ pruned_tree = extractTree(species = ebird_birdlife_taxonomy_mapping$ebird_specie
 write.tree(pruned_tree, filename(TAXONOMY_OUTPUT_DIR, 'phylogeny.tre'))
 plot(pruned_tree)
 ```
+
+```{r}
+getCitations(pruned_tree)
+```

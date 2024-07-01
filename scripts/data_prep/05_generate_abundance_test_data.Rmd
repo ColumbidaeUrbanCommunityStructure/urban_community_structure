@@ -20,7 +20,7 @@ head(ebird_tax)
 Filter against library list, as not everything on website is availble in library
 ```{r}
 species_available = ebirdst_runs$scientific_name[ebirdst_runs$scientific_name %in% ebird_tax$species_name]
-species_available
+paste(species_available[order(species_available)], collapse=", ")
 ```
 
 # Download Status and Trends data

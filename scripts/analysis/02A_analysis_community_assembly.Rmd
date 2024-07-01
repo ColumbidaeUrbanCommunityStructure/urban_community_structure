@@ -13,6 +13,7 @@ community_data = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'community_assembly_met
 head(community_data)
 colnames(community_data)
 ```
+
 ```{r}
 min(community_data$mntd_standard)
 max(community_data$mntd_standard)
@@ -71,7 +72,7 @@ head(resolve)
 test_required_values = function(name, df) {
   cat(paste(
     test_value_wilcox(paste(name, 'MNTD'), df$mntd_standard),
-    test_value_wilcox(paste(name, 'Beak Gape FDiv'), df$beak_width_fdiv_standard),
+    test_value_wilcox(paste(name, 'Beak Width FDiv'), df$beak_width_fdiv_standard),
     test_value_wilcox(paste(name, 'HWI FDiv'), df$hwi_fdiv_standard),
     test_value_wilcox(paste(name, 'Mass FDiv'), df$mass_fdiv_standard),
     paste('N', nrow(df)),
@@ -109,6 +110,25 @@ test_required_values('Indomalayan', community_data_with_realm[community_data_wit
 
 ```{r}
 test_required_values('Australasia', community_data_with_realm[community_data_with_realm$core_realm == 'Australasia',])
+```
+# Summary metrics by invasive species
+```{r}
+cities_with_introduced_species = communities %>% filter(origin == 'Introduced') %>% select(city_id) %>% distinct()
+
+cities_with_no_introduced_species = communities %>% filter(!(city_id %in% cities_with_introduced_species$city_id)) %>% select(city_id) %>% distinct()
+
+cities_with_introduced_species$introduced_species = TRUE
+cities_with_no_introduced_species$introduced_species = FALSE
+
+community_data_with_realm_with_introduced = community_data_with_realm %>% left_join(rbind(cities_with_introduced_species, cities_with_no_introduced_species))
+community_data_with_realm_with_introduced
+```
+```{r}
+test_required_values('With Introduced', community_data_with_realm_with_introduced[community_data_with_realm_with_introduced$introduced_species,])
+```
+
+```{r}
+test_required_values('Without Introduced', community_data_with_realm_with_introduced[!community_data_with_realm_with_introduced$introduced_species,])
 ```
 
 # What families exist in which realms?
