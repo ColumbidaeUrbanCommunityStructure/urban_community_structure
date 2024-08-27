@@ -1,0 +1,52 @@
+---
+title: "Create spatial var based on community composition"
+output: html_notebook
+bibliography: ../ref.bib  
+---
+
+```{r}
+source('../env.R')
+```
+
+
+# Load communities
+```{r}
+communities = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'communities_for_analysis.csv'))
+head(communities)
+```
+
+```{r}
+communities_subset = communities[,c('city_id', 'ebird_species_name')]
+communities_subset$present_in_region = T
+communities_subset$ebird_species_name = str_replace(communities_subset$ebird_species_name, ' ', '_')
+
+communities_subset_wider = pivot_wider(communities_subset, names_from = ebird_species_name, values_from = "present_in_region", values_fill = list(present_in_region = F))
+
+regional_matrix = tibble::column_to_rownames(communities_subset_wider, var='city_id')
+regional_matrix
+```
+
+```{r}
+regional_matrix_nmds = metaMDS(regional_matrix, k = 2, try = 30)
+plot(regional_matrix_nmds, display = "site")
+```
+Would expect these to be aligned with realm, let's check
+```{r}
+cities_to_realms = read_csv(filename(CITY_DATA_OUTPUT_DIR, 'realms.csv'))
+cities_to_realms
+```
+```{r}
+city_names = distinct(communities[,c('city_id', 'city_name')])
+sites <- as.data.frame(scores(regional_matrix_nmds)$sites)
+sites$city_id = as.double(rownames(sites))
+sites = sites %>% left_join(cities_to_realms) %>% left_join(city_names)
+sites
+```
+```{r}
+ggplot(sites, aes(x = NMDS1, y = NMDS2, colour = core_realm)) + geom_label_repel(aes(label = city_name), size = 2) + geom_point() + labs(colour = "Realm", title = "Spatial Var by Realm") + scale_colour_manual(values = c(orange, blue, magenta, red, teal ,grey, cyan))
+ggsave(filename(FIGURES_OUTPUT_DIR, 'spatial_var_by_realm.jpg'))
+```
+
+```{r}
+write_csv(sites[,c('city_id', 'NMDS1', 'NMDS2')], filename(COMMUNITY_OUTPUT_DIR, 'spatial_var.csv'))
+```
