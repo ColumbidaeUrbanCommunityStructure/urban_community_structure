@@ -131,13 +131,13 @@ outside_se_data$label = paste(outside_se_data$ebird_species_name, '\nin', outsid
 
 comparison_data %>% 
   ggplot(aes(x = relative_abundance_proxy, y = max_mean_abundance)) +
-    geom_point() +
+    geom_point(colour = cyan) +
     xlab('Abundance Proxy\nCalculated from area of city covered by checklists') + 
     ylab('Mean relative abundance across cities\nfrom eBird Status & Trends') +
     labs(title = 'Abundance proxy vs eBird relative abundance estimate', subtitle='eBird Status & Trends abundance data') +
-    geom_smooth(method = 'glm', formula = y ~ poly(x, 2)) + 
-    geom_text_repel(aes(label = label), data = outside_se_data, size = 3, nudge_y = 1, color = "red") +
-    geom_point(data = outside_se_data, color = "red") +
+    geom_smooth(method = 'glm', formula = y ~ poly(x, 2), colour = magenta) + 
+    geom_text_repel(aes(label = label), data = outside_se_data, size = 3, nudge_y = 1, color = red) +
+    geom_point(data = outside_se_data, color = red) +
     theme_bw() +
     theme(legend.position = "none")
 
