@@ -66,6 +66,11 @@ Load realm geo
 resolve = read_resolve()
 head(resolve)
 ```
+Load spatial var
+```{r}
+spatial_var = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'spatial_var.csv')) %>% filter(city_id %in% community_summary$city_id)
+spatial_var
+```
 
 # Summary metrics by Realm
 ```{r}
@@ -111,6 +116,8 @@ test_required_values('Indomalayan', community_data_with_realm[community_data_wit
 ```{r}
 test_required_values('Australasia', community_data_with_realm[community_data_with_realm$core_realm == 'Australasia',])
 ```
+
+
 # Summary metrics by invasive species
 ```{r}
 cities_with_introduced_species = communities %>% filter(origin == 'Introduced') %>% select(city_id) %>% distinct()
@@ -135,7 +142,7 @@ test_required_values('Without Introduced', community_data_with_realm_with_introd
 ```{r}
 communities %>% 
   left_join(city_to_realm) %>% 
-  mutate(family = gsub( "_.*$", "", ebird_species_name)) %>%
+  mutate(family = gsub( " .*$", "", ebird_species_name)) %>%
   dplyr::select(family, core_realm) %>%
   distinct() %>%
   arrange(core_realm)
@@ -236,7 +243,8 @@ names(geography)
 analysis_data = community_data_with_realm[,c('city_id', 'mntd_standard', 'mass_fdiv_standard', 'beak_width_fdiv_standard', 'hwi_fdiv_standard', 'core_realm')] %>% 
   left_join(city_points[,c('city_id', 'latitude', 'longitude')]) %>%
   left_join(community_data_with_introductions[,c('city_id', 'has_introduced_species')]) %>%
-  left_join(geography)
+  left_join(geography) %>%
+  left_join(spatial_var)
 
 analysis_data$abs_latitude = abs(analysis_data$latitude)
 analysis_data$core_realm = factor(analysis_data$core_realm, levels = c('Palearctic', 'Nearctic', 'Neotropic', 'Afrotropic', 'Indomalayan', 'Australasia', 'Oceania'))
@@ -256,31 +264,37 @@ names(analysis_data)
 
 ```{r}
 all_explanatories = c(
-    'abs_latitude', 'latitude', 'longitude', 
-    'has_introduced_species',
-    'city_avg_ndvi', 'city_avg_elevation', 'city_avg_temp', 'city_avg_min_monthly_temp', 'city_avg_max_monthly_temp', 
-    'city_avg_monthly_temp', 'city_avg_rainfall', 'city_avg_max_monthly_rainfall', 'city_avg_min_monthly_rainfall', 
-    'city_avg_soil_moisture', 'city_max_elev', 'city_min_elev', 'city_elev_range',
-    'region_20km_avg_ndvi', 'region_20km_avg_elevation', 'region_20km_avg_soil_moisture', 'region_20km_max_elev', 
-    'region_20km_min_elev', 'region_20km_elev_range',
-    'region_50km_avg_ndvi', 'region_50km_avg_elevation', 'region_50km_avg_soil_moisture', 'region_50km_max_elev', 
-    'region_50km_min_elev', 'region_50km_elev_range',
-    'core_realmAfrotropic', 'core_realmAustralasia', 'core_realmIndomalayan', 'core_realmNearctic', 'core_realmNeotropic', 'core_realmPalearctic')
+    'city_avg_ndvi', 'city_avg_elevation', 'city_avg_temp',
+    'region_50km_avg_soil_moisture',
+    'core_realmAfrotropic', 'core_realmAustralasia', 'core_realmIndomalayan', 'core_realmNearctic', 'core_realmNeotropic', 'core_realmPalearctic',
+    'has_introduced_speciesNo introduced species'
+)
 
-type_labels = function(p) {
+all_explanatory_names = factor(
+   c(
+    'Avg. NDVI', 'Avg. Elevation', 'Avg. Temp.',
+    'Avg. Soil Moisture',
+    'Afrotropic', 'Australasia', 'Indomalayan', 'Nearctic', 'Neotropic', 'Palearctic',
+    'No introduced species'
+  ), ordered = T
+)
+
+explanatory_dictionary = data.frame(explanatory = all_explanatories, explanatory_name = all_explanatory_names)
+  
+with_explanatory_type_labels = function(p) {
+  p = p[p$explanatory != '(Intercept)',]
   explanatory_levels = all_explanatories[all_explanatories %in% p$explanatory]
   p$explanatory <- factor(p$explanatory, levels = explanatory_levels)
   
   p$type <- 'Realm'
-  p$type[p$explanatory %in% c('city_avg_ndvi', 'city_avg_elevation', 'city_avg_temp', 'city_avg_min_monthly_temp', 'city_avg_max_monthly_temp', 
-    'city_avg_monthly_temp', 'city_avg_rainfall', 'city_avg_max_monthly_rainfall', 'city_avg_min_monthly_rainfall', 
-    'city_avg_soil_moisture', 'city_max_elev', 'city_min_elev', 'city_elev_range')] <- 'City geography'
-  p$type[p$explanatory %in% c('region_50km_avg_ndvi', 'region_50km_avg_elevation', 'region_50km_avg_soil_moisture', 'region_50km_max_elev', 
-    'region_50km_min_elev', 'region_50km_elev_range')] <- 'Regional (50km) geography'
-   p$type[p$explanatory %in% c('region_20km_avg_ndvi', 'region_20km_avg_elevation', 'region_20km_avg_soil_moisture', 'region_20km_max_elev', 
-    'region_20km_min_elev', 'region_20km_elev_range')] <- 'Regional (20km) geography'
-  p$type[p$explanatory %in% c('abs_latitude', 'longitude')] <- 'Spatial'
+  p$type[p$explanatory %in% c('city_avg_ndvi', 'city_avg_elevation', 'city_avg_temp')] <- 'City geography'
+  p$type[p$explanatory %in% c('region_50km_avg_soil_moisture')] <- 'Regional (50km) geography'
+  p$type[p$explanatory %in% c('has_introduced_speciesNo introduced species')] <- 'Species present'
   p
+}
+
+with_explanatory_names = function(p) {
+  p %>% left_join(explanatory_dictionary)
 }
 ```
 
@@ -337,219 +351,195 @@ geom_map = function(map_sf, title) {
 }
 ```
 
-## Helper Dredge functions
+
+## Spatial plot helpers
 ```{r}
-# Taken from MuMIN package
-# https://rdrr.io/cran/MuMIn/src/R/averaging.R
-# https://rdrr.io/cran/MuMIn/src/R/model.avg.R
-
-.coefarr.avg <-
-  function(cfarr, weight, revised.var, full, alpha) {	
-    weight <- weight / sum(weight)
-    nCoef <- dim(cfarr)[3L]
-    if(full) {
-      nas <- is.na(cfarr[, 1L, ]) & is.na(cfarr[, 2L, ])
-      cfarr[, 1L, ][nas] <- cfarr[, 2L, ][nas] <- 0
-      #cfarr[, 1L:2L, ][is.na(cfarr[, 1L:2L, ])] <- 0
-      if(!all(is.na(cfarr[, 3L, ])))
-        cfarr[ ,3L, ][is.na(cfarr[ , 3L, ])] <- Inf
-    }
-    
-    avgcoef <- array(dim = c(nCoef, 5L),
-                     dimnames = list(dimnames(cfarr)[[3L]], c("Estimate",
-                                                              "Std. Error", "Adjusted SE", "Lower CI", "Upper CI")))
-    for(i in seq_len(nCoef))
-      avgcoef[i, ] <- par.avg(cfarr[, 1L, i], cfarr[, 2L, i], weight,
-                              df = cfarr[, 3L, i], alpha = alpha, revised.var = revised.var)
-    
-    avgcoef[is.nan(avgcoef)] <- NA
-    return(avgcoef)
-  }
-
-.makecoefmat <- function(cf) {
-  no.ase <- all(is.na(cf[, 3L]))
-  z <- abs(cf[, 1L] / cf[, if(no.ase) 2L else 3L])
-  pval <- 2 * pnorm(z, lower.tail = FALSE)
-  cbind(cf[, if(no.ase) 1L:2L else 1L:3L, drop = FALSE],
-        `z value` = z, `Pr(>|z|)` = zapsmall(pval))
+create_formula = function(response_var) {
+  as.formula(paste(response_var, '~ core_realm + city_avg_ndvi + city_avg_elevation + city_avg_temp + region_50km_avg_soil_moisture + has_introduced_species'))
 }
 
-# Generate model selections using lmer, dredge, and model.avg
-# `forumla` : a two-sided linear formula object describing both the fixed-effects and random-effects part of the model
-# `data` : the data frame containing the variables from the formula
-# `aic_delta` : the AIC delta to use for selecting models in model average
-model_average <- function(formula, data, aic_delta = 20) {
-  model <- lm(
-    formula,
-    data=data
+correlation_formula = as.formula('~ NMDS1 + NMDS2 + latitude + longitude')
+
+gls_method = "ML"
+
+spatial_model = function(formula, correlation) {
+  gls(
+    formula, 
+    data = analysis_data, 
+    correlation = correlation, 
+    method = gls_method
   )
-  dredge_result <- dredge(model)
-  summary(model.avg(dredge_result, subset = delta < aic_delta))
 }
 
-# Create a summary data frame containing the selected variables from a model
-# `model_sum` : The model summary output from `model_average`
-model_summary <- function(model_sum) {
-  .column_name <- function(postfix) {
-    postfix
-  }
-  
-  # just return the estimate and p value
-  weight <- model_sum$msTable[, 5L]
-  
-  coefmat.full <- as.data.frame(.makecoefmat(.coefarr.avg(model_sum$coefArray, weight,
-                                                          attr(model_sum, "revised.var"), TRUE, 0.05)))
-  
-  coefmat.subset <-
-    as.data.frame(.makecoefmat(.coefarr.avg(model_sum$coefArray, weight,
-                                            attr(model_sum, "revised.var"), FALSE, 0.05)))
-  
-  
-  coefmat.subset <- coefmat.subset[-c(1), c(1, 2, 5)]
-  names(coefmat.subset) <- c(.column_name("estimate"), .column_name("error"), .column_name("p"))
-  coefmat.subset <- tibble::rownames_to_column(coefmat.subset, "explanatory")
-  coefmat.subset$model = 'subset'
-  
-  coefmat.full <- coefmat.full[-c(1), c(1, 2, 5)]
-  names(coefmat.full) <- c(.column_name("estimate"), .column_name("error"), .column_name("p"))
-  coefmat.full <- tibble::rownames_to_column(coefmat.full, "explanatory")
-  coefmat.full$model = 'full'
-  
-  rbind(coefmat.full, coefmat.subset)
+find_aics_for_correlations = function(formula) {
+  data.frame(
+    f = c('corExp', 'corLin', 'corRatio', 'corGaus', 'corSpher'),
+    AIC = c(
+      AIC(spatial_model(formula, corExp(form = correlation_formula))),
+      AIC(spatial_model(formula, corLin(form = correlation_formula))),
+      AIC(spatial_model(formula, corRatio(form = correlation_formula))),
+      AIC(spatial_model(formula, corGaus(form = correlation_formula))),
+      AIC(spatial_model(formula, corSpher(form = correlation_formula)))
+    )
+  )
 }
-```
 
-```{r}
-formula_from_vsurp = function(predictors, dependent, vsurp_result) {
-  as.formula(paste(dependent, paste(names(predictors[,vsurp_result$varselect.interp]), collapse="+"), sep = "~"))
-}
-```
-
-```{r}
-plot_vsurp_result = function(result_table) {
-  p = result_table[result_table$model == 'full',]
-  p = type_labels(p)
-
-  ggplot(p, aes(y=explanatory, x=estimate, colour = type)) + 
-    geom_line() +
-    geom_point()+
-    geom_errorbar(aes(xmin=estimate-error, xmax=estimate+error), width=.2,
-                   position=position_dodge(0.05)) +
-    scale_y_discrete(
-      limits = rev(levels(p$explanatory)), 
-      labels = explanatory_labels) +
+plot_result = function(model_result) {
+  model_summary = summary(model_result)
+  result_table = as.data.frame(model_summary$tTable)
+  result_table$explanatory = rownames(result_table)
+  
+  result_table = result_table %>% with_explanatory_type_labels() %>% with_explanatory_names()
+  
+  ggplot2::ggplot(result_table, ggplot2::aes(y=factor(explanatory_name, level = all_explanatory_names), x=Value, colour = type)) + 
+    ggplot2::geom_line() +
+    ggplot2::geom_point() +
+    ggplot2::geom_errorbar(ggplot2::aes(xmin=Value-Std.Error, xmax=Value+Std.Error), width=.2,
+                   position=ggplot2::position_dodge(0.05)) +
+    ggplot2::theme_bw() +
+    ggplot2::geom_vline(xintercept=0, linetype="dotted") +
+    ggplot2::theme(legend.justification = "top") +
+    ylab('Predictor') +
+    guides(colour=guide_legend(title="Predictor type")) + xlab('Difference in response from 0\nhabitat filtering (< 0) and competitive interactions (> 0)\n± Standard Error') +
     scale_colour_manual(
-      values = c(realm_colour, city_geography_colour, regional_50km_geography_colour, regional_20km_geography_colour, spatial_colour), 
-      breaks = c('Realm', 'City geography', 'Regional (50km) geography', 'Regional (20km) geography', 'Spatial')) +
-    theme_bw() +
-    geom_vline(xintercept=0, linetype="dotted") +
-    guides(colour=guide_legend(title="Predictor type")) + xlab('Difference in response from 0\nhabitat filtering (< 0) and competitive interactions (> 0)\n± Standard Error') + ylab('Predictor') +
-    theme(legend.justification = "top")
+      values = c(realm_colour, city_geography_colour, regional_50km_geography_colour, introduced_species_colour), 
+      breaks = c('Realm', 'City geography', 'Regional (50km) geography', 'Species present'))
+}
+```
+
+## Polygons around realms in NMDS plot
+```{r}
+cities_to_realms = read_csv(filename(CITY_DATA_OUTPUT_DIR, 'realms.csv')) %>% left_join(analysis_data) %>% filter(!is.na(NMDS1))
+unique(cities_to_realms$core_realm)
+realm_neartic_polygon = cities_to_realms %>% filter(core_realm == 'Nearctic') %>% slice(chull(NMDS1, NMDS2))
+realm_neotropic_polygon = cities_to_realms %>% filter(core_realm == 'Neotropic') %>% slice(chull(NMDS1, NMDS2))
+realm_palearctic_polygon = cities_to_realms %>% filter(core_realm == 'Palearctic') %>% slice(chull(NMDS1, NMDS2))
+realm_afrotropic_polygon = cities_to_realms %>% filter(core_realm == 'Afrotropic') %>% slice(chull(NMDS1, NMDS2))
+realm_indomalayan_polygon = cities_to_realms %>% filter(core_realm == 'Indomalayan') %>% slice(chull(NMDS1, NMDS2))
+realm_australasia_polygon = cities_to_realms %>% filter(core_realm == 'Australasia') %>% slice(chull(NMDS1, NMDS2))
+
+polygon_line_type = 'dashed'
+polygon_linewidth = 0.4
+
+with_realms = function(g) {
+  g + 
+    geom_polygon(data = realm_neartic_polygon, linewidth = polygon_linewidth, linetype = polygon_line_type, alpha = 0) +
+    geom_polygon(data = realm_neotropic_polygon, linewidth = polygon_linewidth, linetype = polygon_line_type, alpha = 0) +
+    geom_polygon(data = realm_palearctic_polygon, linewidth = polygon_linewidth, linetype = polygon_line_type, alpha = 0) +
+    geom_polygon(data = realm_afrotropic_polygon, linewidth = polygon_linewidth, linetype = polygon_line_type, alpha = 0) +
+    geom_polygon(data = realm_indomalayan_polygon, linewidth = polygon_linewidth, linetype = polygon_line_type, alpha = 0) +
+    geom_polygon(data = realm_australasia_polygon, linewidth = polygon_linewidth, linetype = polygon_line_type, alpha = 0)
 }
 ```
 
 ## MNTD
+```{r}
+std_mntd_analysis_spatial_plot =  ggplot(analysis_data, aes(x = NMDS1, y = NMDS2, colour = mntd_standard)) + geom_point() + standardised_colours_scale + labs(colour = "Standardised response")
+std_mntd_analysis_spatial_plot = with_realms(std_mntd_analysis_spatial_plot)
+std_mntd_analysis_spatial_plot
+```
+
 ```{r}
 std_mntd_analysis_geo_plot = geom_map(geom_sf(data = analysis_data, aes(color = mntd_standard, geometry = geometry)), 'MNTD')
 std_mntd_analysis_geo_plot
 ```
 
 ```{r}
-std_mntd_analysis_data = model_data(analysis_data[!is.na(analysis_data$mntd_standard),], 'mntd_standard')
-std_mntd_analysis_predictors = std_mntd_analysis_data[,-1]
-std_mntd_analysis_interp = VSURF(x = std_mntd_analysis_predictors, y = std_mntd_analysis_data$mntd_standard)
-names(std_mntd_analysis_predictors[,std_mntd_analysis_interp$varselect.interp])
+mntd_formula = create_formula('mntd_standard')
+find_aics_for_correlations(mntd_formula)
 ```
 
 ```{r}
-std_mntd_analysis_formula = formula_from_vsurp(std_mntd_analysis_predictors, "mntd_standard", std_mntd_analysis_interp)
-std_mntd_analysis_result <- model_average(std_mntd_analysis_formula, std_mntd_analysis_data)
-std_mntd_analysis_result_table = model_summary(std_mntd_analysis_result)
-std_mntd_analysis_result_table
+mntd_spatial_model = spatial_model(mntd_formula, corLin(form = correlation_formula))
 ```
 
 ```{r}
-std_mntd_analysis_pred_plot = plot_vsurp_result(std_mntd_analysis_result_table)
+std_mntd_analysis_pred_plot = plot_result(mntd_spatial_model)
 std_mntd_analysis_pred_plot
 ```
 
+
 ## Gape width - FDiv
 ```{r}
-std_gape_fdiv_analysis_geo_plot = geom_map(geom_sf(data = analysis_data, aes(color = beak_width_fdiv_standard, geometry = geometry)), 'Beak Width FDiv')
-std_gape_fdiv_analysis_geo_plot
+std_beak_width_fdiv_spatial_plot = ggplot(analysis_data, aes(x = NMDS1, y = NMDS2, colour = beak_width_fdiv_standard)) + geom_point() + standardised_colours_scale + labs(colour = "Standardised response")
+std_beak_width_fdiv_spatial_plot = with_realms(std_beak_width_fdiv_spatial_plot)
+std_beak_width_fdiv_spatial_plot
 ```
 
 ```{r}
-std_gape_fdiv_analysis_data = model_data(analysis_data[!is.na(analysis_data$beak_width_fdiv_standard),], 'beak_width_fdiv_standard')
-std_gape_fdiv_analysis_predictors = std_gape_fdiv_analysis_data[,-1]
-std_gape_fdiv_analysis_interp = VSURF(x = std_gape_fdiv_analysis_predictors, y = std_gape_fdiv_analysis_data$beak_width_fdiv_standard)
-names(std_gape_fdiv_analysis_predictors[,std_gape_fdiv_analysis_interp$varselect.interp])
+std_beak_width_fdiv_analysis_geo_plot = geom_map(geom_sf(data = analysis_data, aes(color = beak_width_fdiv_standard, geometry = geometry)), 'Beak Width FDiv')
+std_beak_width_fdiv_analysis_geo_plot
 ```
 
 ```{r}
-std_gape_fdiv_analysis_formula = formula_from_vsurp(std_gape_fdiv_analysis_predictors, "beak_width_fdiv_standard", std_gape_fdiv_analysis_interp)
-std_gape_fdiv_analysis_result <- model_average(std_gape_fdiv_analysis_formula, std_gape_fdiv_analysis_data)
-std_gape_fdiv_analysis_result_table = model_summary(std_gape_fdiv_analysis_result)
-std_gape_fdiv_analysis_result_table
+beak_width_formula = create_formula('beak_width_fdiv_standard')
+find_aics_for_correlations(beak_width_formula)
 ```
 
 ```{r}
-std_gape_fdiv_analysis_pred_plot = plot_vsurp_result(std_gape_fdiv_analysis_result_table)
-std_gape_fdiv_analysis_pred_plot
+beak_width_spatial_model = spatial_model(beak_width_formula, corLin(form = correlation_formula))
+```
+
+```{r}
+std_beak_width_fdiv_analysis_pred_plot = plot_result(beak_width_spatial_model)
+std_beak_width_fdiv_analysis_pred_plot
 ```
 
 
 ## HWI - FDiv
+```{r}
+std_hwi_fdiv_spatial_plot = ggplot(analysis_data, aes(x = NMDS1, y = NMDS2, colour = hwi_fdiv_standard)) + geom_point() + standardised_colours_scale + labs(colour = "Standardised response")
+std_hwi_fdiv_spatial_plot = with_realms(std_hwi_fdiv_spatial_plot)
+std_hwi_fdiv_spatial_plot
+```
+
 ```{r}
 std_hwi_fdiv_analysis_geo_plot = geom_map(geom_sf(data = analysis_data, aes(color = hwi_fdiv_standard, geometry = geometry)), 'HWI FDiv')
 std_hwi_fdiv_analysis_geo_plot
 ```
 
 ```{r}
-std_hwi_fdiv_analysis_data = model_data(analysis_data[!is.na(analysis_data$hwi_fdiv_standard),], 'hwi_fdiv_standard')
-std_hwi_fdiv_analysis_predictors = std_hwi_fdiv_analysis_data[,-1]
-std_hwi_fdiv_analysis_interp = VSURF(x = std_hwi_fdiv_analysis_predictors, y = std_hwi_fdiv_analysis_data$hwi_fdiv_standard)
-names(std_hwi_fdiv_analysis_predictors[,std_hwi_fdiv_analysis_interp$varselect.interp])
-```
-
-
-```{r}
-std_hwi_fdiv_analysis_formula = formula_from_vsurp(std_hwi_fdiv_analysis_predictors, "hwi_fdiv_standard", std_hwi_fdiv_analysis_interp)
-std_hwi_fdiv_analysis_result <- model_average(std_hwi_fdiv_analysis_formula, std_hwi_fdiv_analysis_data)
-std_hwi_fdiv_analysis_result_table = model_summary(std_hwi_fdiv_analysis_result)
-std_hwi_fdiv_analysis_result_table
+hwi_formula = create_formula('hwi_fdiv_standard')
+find_aics_for_correlations(hwi_formula)
 ```
 
 ```{r}
-std_hwi_fdiv_analysis_pred_plot = plot_vsurp_result(std_hwi_fdiv_analysis_result_table)
+hwi_spatial_model = spatial_model(hwi_formula, corLin(form = correlation_formula))
+```
+
+```{r}
+std_hwi_fdiv_analysis_pred_plot = plot_result(hwi_spatial_model)
 std_hwi_fdiv_analysis_pred_plot
 ```
 
 
 ## Mass - FDiv
 ```{r}
+std_mass_fdiv_spatial_plot = ggplot(analysis_data, aes(x = NMDS1, y = NMDS2, colour = hwi_fdiv_standard)) + geom_point() + standardised_colours_scale + labs(colour = "Standardised response")
+std_mass_fdiv_spatial_plot = with_realms(std_mass_fdiv_spatial_plot)
+std_mass_fdiv_spatial_plot
+```
+
+```{r}
 std_mass_fdiv_analysis_geo_plot = geom_map(geom_sf(data = analysis_data, aes(color = mass_fdiv_standard, geometry = geometry)), 'Mass FDiv')
 std_mass_fdiv_analysis_geo_plot
 ```
 
 ```{r}
-std_mass_fdiv_analysis_data = model_data(analysis_data[!is.na(analysis_data$mass_fdiv_standard),], 'mass_fdiv_standard')
-std_mass_fdiv_analysis_predictors = std_mass_fdiv_analysis_data[,-1]
-std_mass_fdiv_analysis_interp = VSURF(x = std_mass_fdiv_analysis_predictors, y = std_mass_fdiv_analysis_data$mass_fdiv_standard)
-names(std_mass_fdiv_analysis_predictors[,std_mass_fdiv_analysis_interp$varselect.interp])
+mass_formula = create_formula('mass_fdiv_standard')
+find_aics_for_correlations(mass_formula)
 ```
 
 ```{r}
-std_mass_fdiv_analysis_formula = formula_from_vsurp(std_mass_fdiv_analysis_predictors, "mass_fdiv_standard", std_mass_fdiv_analysis_interp)
-std_mass_fdiv_analysis_result <- model_average(std_mass_fdiv_analysis_formula, std_mass_fdiv_analysis_data)
-std_mass_fdiv_analysis_result_table = model_summary(std_mass_fdiv_analysis_result)
-std_mass_fdiv_analysis_result_table
+mass_spatial_model = spatial_model(mass_formula, corGaus(form = correlation_formula))
 ```
 
 ```{r}
-std_mass_fdiv_analysis_pred_plot = plot_vsurp_result(std_mass_fdiv_analysis_result_table)
+std_mass_fdiv_analysis_pred_plot = plot_result(mass_spatial_model)
 std_mass_fdiv_analysis_pred_plot
 ```
+
+
 
 # Create plot of differences in process response
 ```{r}
@@ -574,28 +564,32 @@ legend
 plot_grid(
   plot_grid(
     std_mntd_analysis_geo_plot + theme(legend.position="none"), 
+    std_mntd_analysis_spatial_plot + theme(legend.position="none"), 
     std_mntd_analysis_pred_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-3, 3)) + ylab(''), 
     nrow = 1
   ) + draw_label("MNTD", size = 16, angle = 90, x = 0.01, y = 0.5),
   plot_grid(
-    std_gape_fdiv_analysis_geo_plot + theme(legend.position="none"), 
-    std_gape_fdiv_analysis_pred_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-3, 3)) + ylab(''), 
+    std_beak_width_fdiv_analysis_geo_plot + theme(legend.position="none"), 
+    std_beak_width_fdiv_spatial_plot + theme(legend.position="none"), 
+    std_beak_width_fdiv_analysis_pred_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-3, 3)) + ylab(''), 
     nrow = 1
   ) + draw_label("Beak Width", size = 16, angle = 90, x = 0.01, y = 0.5),
   plot_grid(
     std_hwi_fdiv_analysis_geo_plot + theme(legend.position="none"), 
+    std_hwi_fdiv_spatial_plot + theme(legend.position="none"), 
     std_hwi_fdiv_analysis_pred_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-3, 3)) + ylab(''), 
     nrow = 1
   ) + draw_label("HWI", size = 16, angle = 90, x = 0.01, y = 0.5),
   plot_grid(
     std_mass_fdiv_analysis_geo_plot + theme(legend.position="none"), 
+    std_mass_fdiv_spatial_plot + theme(legend.position="none"), 
     std_mass_fdiv_analysis_pred_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-3, 3)) + ylab(''), 
     nrow = 1
   ) + draw_label("Mass", size = 16, angle = 90, x = 0.01, y = 0.5), 
   legend,
   nrow = 5
 )
-ggsave(filename(FIGURES_OUTPUT_DIR, 'process_response.jpg'), width = 3000, height = 3200, units = 'px')
+ggsave(filename(FIGURES_OUTPUT_DIR, 'process_response.jpg'), width = 4200, height = 3200, units = 'px')
 ```
 
 

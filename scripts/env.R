@@ -29,6 +29,7 @@ library(treedataverse) # BiocManager::install("YuLab-SMU/treedataverse")
 library(devtools)
 install_github("eliotmiller/clootl")
 library(clootl)
+library(nlme)
 
 sf::sf_use_s2(FALSE)
 options(scipen=99999)
@@ -103,7 +104,8 @@ city_geography_colour = blue
 regional_50km_geography_colour = magenta
 regional_20km_geography_colour = red
 spatial_colour = teal
-
+introduced_species_colour = cyan
+  
 trait_polygon_light = cyan_light
 trait_polygon_med = cyan
 trait_polygon_dark = cyan_dark
