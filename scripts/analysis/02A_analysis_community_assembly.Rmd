@@ -466,7 +466,7 @@ with_explanatory_type_labels = function(p) {
 }
 
 with_explanatory_names = function(p) {
-  p %>% left_join(explanatory_dictionary)
+  p %>% left_join(explanatory_dictionary) %>% arrange(desc(explanatory_name))
 }
 
 type_labels = function(p) {
@@ -652,6 +652,45 @@ plot_dredge_result = function(result_table) {
 }
 ```
 
+## GLS Spatial Helpers
+```{r}
+correlation_formula = as.formula('~ NMDS1 + NMDS2 + latitude + longitude')
+
+gls_method = "ML"
+
+spatial_model = function(formula, correlation) {
+  gls(
+    formula, 
+    data = analysis_data, 
+    correlation = correlation, 
+    method = gls_method
+  )
+}
+
+plot_spatial_result = function(model_result) {
+  model_summary = summary(model_result)
+  result_table = as.data.frame(model_summary$tTable)
+  result_table$explanatory = rownames(result_table)
+  
+  result_table = result_table %>% with_explanatory_type_labels() %>% with_explanatory_names()
+  
+  ggplot2::ggplot(result_table, ggplot2::aes(y=factor(explanatory_name, level = all_explanatory_names, ordered = T), x=Value, colour = type)) + 
+    ggplot2::geom_line() +
+    ggplot2::geom_point() +
+    ggplot2::geom_errorbar(ggplot2::aes(xmin=Value-Std.Error, xmax=Value+Std.Error), width=.2,
+                   position=ggplot2::position_dodge(0.05)) +
+    ggplot2::theme_bw() +
+    ggplot2::geom_vline(xintercept=0, linetype="dotted") +
+    ggplot2::theme(legend.justification = "top") +
+    ylab('Predictor') +
+    guides(colour=guide_legend(title="Predictor type")) + xlab('Difference in response from 0\nhabitat filtering (< 0) and competitive interactions (> 0)\n± Standard Error') +
+    scale_colour_manual(
+      values = c(realm_colour, city_geography_colour, regional_50km_geography_colour, introduced_species_colour), 
+      breaks = c('Realm', 'City geography', 'Regional (50km) geography', 'Introduced species')) +
+    scale_y_discrete(limits = rev(all_explanatory_names[all_explanatory_names %in% result_table$explanatory_name]))
+}
+```
+
 ## MNTD
 ```{r}
 std_mntd_analysis_geo_plot = geom_map(geom_sf(data = analysis_data, aes(color = mntd_standard, geometry = geometry)), 'MNTD')
@@ -670,6 +709,15 @@ std_mntd_analysis_result_table
 ```{r}
 std_mntd_analysis_pred_plot = plot_dredge_result(std_mntd_analysis_result_table)
 std_mntd_analysis_pred_plot
+```
+
+```{r}
+mntd_spatial_model = spatial_model(std_mntd_analysis_formula, corLin(form = correlation_formula))
+```
+
+```{r}
+std_mntd_analysis_pred_spatial_plot = plot_spatial_result(mntd_spatial_model)
+std_mntd_analysis_pred_spatial_plot
 ```
 
 ## Gape width - FDiv
@@ -693,6 +741,14 @@ std_gape_fdiv_analysis_pred_plot = plot_dredge_result(std_gape_fdiv_analysis_res
 std_gape_fdiv_analysis_pred_plot
 ```
 
+```{r}
+std_gape_fdiv_spatial_model = spatial_model(std_gape_fdiv_analysis_formula, corLin(form = correlation_formula))
+```
+
+```{r}
+std_gape_fdiv_analysis_pred_spatial_plot = plot_spatial_result(std_gape_fdiv_spatial_model)
+std_gape_fdiv_analysis_pred_spatial_plot
+```
 
 ## HWI - FDiv
 ```{r}
@@ -715,6 +771,14 @@ std_hwi_fdiv_analysis_pred_plot = plot_dredge_result(std_hwi_fdiv_analysis_resul
 std_hwi_fdiv_analysis_pred_plot
 ```
 
+```{r}
+std_hwi_fdiv_spatial_model = spatial_model(std_hwi_fdiv_analysis_formula, corLin(form = correlation_formula))
+```
+
+```{r}
+std_hwi_fdiv_analysis_pred_spatial_plot = plot_spatial_result(std_hwi_fdiv_spatial_model)
+std_hwi_fdiv_analysis_pred_spatial_plot
+```
 
 ## Mass - FDiv
 ```{r}
@@ -734,6 +798,15 @@ std_mass_fdiv_analysis_result_table
 ```{r}
 std_mass_fdiv_analysis_pred_plot = plot_dredge_result(std_mass_fdiv_analysis_result_table)
 std_mass_fdiv_analysis_pred_plot
+```
+
+```{r}
+std_mass_fdiv_spatial_model = spatial_model(std_mass_fdiv_analysis_formula, corLin(form = correlation_formula))
+```
+
+```{r}
+std_mass_fdiv_analysis_pred_spatial_plot = plot_spatial_result(std_mass_fdiv_spatial_model)
+std_mass_fdiv_analysis_pred_spatial_plot
 ```
 
 # Create plot of differences in process response
@@ -782,6 +855,52 @@ plot_grid(
 )
 ggsave(filename(FIGURES_OUTPUT_DIR, 'process_response.jpg'), width = 3000, height = 3200, units = 'px')
 ```
+
+# Compare to spatial model
+
+```{r}
+plot_grid(
+  plot_grid(
+    ggdraw() + 
+    draw_label(
+      "Spatial Model",
+      fontface = 'bold',
+      x = 0,
+      hjust = 0
+    ),
+    ggdraw() + 
+    draw_label(
+      "Dredge Result",
+      fontface = 'bold',
+      x = 0,
+      hjust = 0
+    )
+  ),
+  plot_grid(
+    std_mntd_analysis_pred_spatial_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-3, 3)) + ylab(''), 
+    std_mntd_analysis_pred_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-3, 3)) + ylab(''), 
+    nrow = 1
+  ) + draw_label("MNTD", size = 16, angle = 90, x = 0.01, y = 0.5),
+  plot_grid(
+    std_gape_fdiv_analysis_pred_spatial_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-3, 3)) + ylab(''),  
+    std_gape_fdiv_analysis_pred_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-3, 3)) + ylab(''), 
+    nrow = 1
+  ) + draw_label("Beak Width", size = 16, angle = 90, x = 0.01, y = 0.5),
+  plot_grid(
+    std_hwi_fdiv_analysis_pred_spatial_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-3, 3)) + ylab(''), 
+    std_hwi_fdiv_analysis_pred_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-3, 3)) + ylab(''), 
+    nrow = 1
+  ) + draw_label("HWI", size = 16, angle = 90, x = 0.01, y = 0.5),
+  plot_grid(
+    std_mass_fdiv_analysis_pred_spatial_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-3, 3)) + ylab(''), 
+    std_mass_fdiv_analysis_pred_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-3, 3)) + ylab(''), 
+    nrow = 1
+  ) + draw_label("Mass", size = 16, angle = 90, x = 0.01, y = 0.5), 
+  nrow = 5
+)
+ggsave(filename(FIGURES_OUTPUT_DIR, 'process_response_vs_spatial.jpg'), width = 3000, height = 3200, units = 'px')
+```
+
 
 
 # Compare metrics against each other
