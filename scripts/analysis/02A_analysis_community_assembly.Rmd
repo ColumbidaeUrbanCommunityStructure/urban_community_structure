@@ -147,6 +147,24 @@ communities %>%
   distinct() %>%
   arrange(core_realm)
 ```
+## Total urban families
+```{r}
+communities %>% 
+  mutate(family = gsub( " .*$", "", ebird_species_name)) %>%
+  dplyr::select(family) %>%
+  distinct() %>%
+  arrange()
+```
+
+of which urban
+```{r}
+communities %>% 
+  filter(relative_abundance_proxy > 0) %>%
+  mutate(family = gsub( " .*$", "", ebird_species_name)) %>%
+  dplyr::select(family) %>%
+  distinct() %>%
+  arrange()
+```
 
 # Summary metrics by introduced species
 ```{r}
@@ -158,6 +176,14 @@ city_introduced_species = communities %>% group_by(city_id) %>% summarise(number
 community_data_with_introductions = left_join(community_data, city_introduced_species)
 community_data_with_introductions$has_introduced_species = community_data_with_introductions$number_of_introduced_species > 0
 community_data_with_introductions
+```
+```{r}
+communities %>% 
+  filter(origin == 'Introduced') %>%
+  dplyr::select(ebird_species_name) %>%
+  group_by(ebird_species_name) %>%
+  summarise(total_cities = n()) %>%
+  arrange(desc(total_cities))
 ```
 
 ```{r}
@@ -245,7 +271,7 @@ analysis_data = community_data_with_realm[,c('city_id', 'mntd_standard', 'mass_f
 
 analysis_data$abs_latitude = abs(analysis_data$latitude)
 analysis_data$core_realm = factor(analysis_data$core_realm, levels = c('Palearctic', 'Nearctic', 'Neotropic', 'Afrotropic', 'Indomalayan', 'Australasia', 'Oceania'))
-analysis_data$has_introduced_species = factor(analysis_data$has_introduced_species, level = c('TRUE', 'FALSE'), labels = c('Introduced species', 'No introduced species'))
+analysis_data$has_introduced_species = factor(analysis_data$has_introduced_species, level = c('FALSE', 'TRUE'), labels = c('No introduced species', 'Introduced species'))
 ```
 
 ```{r}

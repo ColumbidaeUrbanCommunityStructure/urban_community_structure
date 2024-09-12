@@ -594,3 +594,16 @@ plot(pruned_tree)
 ```{r}
 getCitations(pruned_tree)
 ```
+
+
+# Columbidae family overvide
+```{r}
+distinct(ebird_birdlife_taxonomy_mapping[,c('species_name')])
+```
+Total genera
+```{r}
+ebird_birdlife_taxonomy_mapping %>% 
+  mutate(family = gsub( " .*$", "", species_name)) %>%
+  dplyr::select(family) %>%
+  distinct()
+```
