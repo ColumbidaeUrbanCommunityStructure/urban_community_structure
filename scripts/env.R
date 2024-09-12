@@ -30,6 +30,8 @@ library(devtools)
 install_github("eliotmiller/clootl")
 library(clootl)
 library(nlme)
+library(spdep)
+library(sp)
 
 sf::sf_use_s2(FALSE)
 options(scipen=99999)
@@ -103,8 +105,7 @@ realm_colour = orange
 city_geography_colour = blue
 regional_50km_geography_colour = magenta
 regional_20km_geography_colour = red
-spatial_colour = teal
-introduced_species_colour = cyan
+introduced_species_colour = teal
   
 trait_polygon_light = cyan_light
 trait_polygon_med = cyan
