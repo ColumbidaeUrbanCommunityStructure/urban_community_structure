@@ -256,6 +256,17 @@ wilcox.test(hwi_fdiv_standard ~ has_introduced_species, community_data_with_intr
 ```
 There is a significant difference between the response of cities with introduced species (0.49±0.30) and those without (0.79±0.21) (p < 0.0001)
 
+## What proportion of cities in each realm have introduced species
+```{r}
+community_data_with_introductions %>% left_join(city_to_realm) %>%
+  group_by(core_realm) %>%
+  summarise(
+    total_cities = n(), 
+    total_cities_with_introduced = sum(has_introduced_species), 
+    total_cities_without_introduced = n() - sum(has_introduced_species)) %>%
+  arrange(core_realm)
+```
+
 # Create analysis data frame
 ```{r}
 geography = read_csv(filename(CITY_DATA_OUTPUT_DIR, 'geography.csv'))
