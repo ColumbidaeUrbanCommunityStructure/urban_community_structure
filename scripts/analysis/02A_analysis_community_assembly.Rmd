@@ -820,11 +820,13 @@ Do the residuals still contain spatial autocorrelation from a fitted lm?
 ```{r}
 std_mntd_lm = lm(std_mntd_analysis_formula, std_mntd_analysis_data)
 moran.test(std_mntd_lm$residuals, nb2listw(analysis_data_neighbours))
+moran.test(std_mntd_lm$residuals, nb2listw(analysis_data_nmds_neighbours))
 ```
 
 ```{r}
 mntd_spatial_model = spatial_model(std_mntd_analysis_formula, correlation_function_mntd())
 moran.test(mntd_spatial_model$residuals, nb2listw(analysis_data_neighbours))
+moran.test(mntd_spatial_model$residuals, nb2listw(analysis_data_nmds_neighbours))
 ```
 
 ```{r}
@@ -857,11 +859,13 @@ Do the residuals still contain spatial autocorrelation from a fitted lm?
 ```{r}
 std_gape_fdiv_lm = lm(std_gape_fdiv_analysis_formula, std_gape_fdiv_analysis_data)
 moran.test(std_gape_fdiv_lm$residuals, nb2listw(analysis_data_neighbours))
+moran.test(std_gape_fdiv_lm$residuals, nb2listw(analysis_data_nmds_neighbours))
 ```
 
 ```{r}
 std_gape_fdiv_spatial_model = spatial_model(std_gape_fdiv_analysis_formula, correlation_function_fdiv())
 moran.test(std_gape_fdiv_spatial_model$residuals, nb2listw(analysis_data_neighbours))
+moran.test(std_gape_fdiv_spatial_model$residuals, nb2listw(analysis_data_nmds_neighbours))
 ```
 
 ```{r}
@@ -893,11 +897,13 @@ std_hwi_fdiv_analysis_pred_plot
 ```{r}
 std_hwi_fdiv_lm = lm(std_hwi_fdiv_analysis_formula, std_hwi_fdiv_analysis_data)
 moran.test(std_hwi_fdiv_lm$residuals, nb2listw(analysis_data_neighbours))
+moran.test(std_hwi_fdiv_lm$residuals, nb2listw(analysis_data_nmds_neighbours))
 ```
 
 ```{r}
 std_hwi_fdiv_spatial_model = spatial_model(std_hwi_fdiv_analysis_formula, correlation_function_fdiv())
 moran.test(std_hwi_fdiv_spatial_model$residuals, nb2listw(analysis_data_neighbours))
+moran.test(std_hwi_fdiv_spatial_model$residuals, nb2listw(analysis_data_nmds_neighbours))
 ```
 
 ```{r}
@@ -928,11 +934,13 @@ std_mass_fdiv_analysis_pred_plot
 ```{r}
 std_mass_fdiv_lm = lm(std_mass_fdiv_analysis_formula, std_mass_fdiv_analysis_data)
 moran.test(std_mass_fdiv_lm$residuals, nb2listw(analysis_data_neighbours))
+moran.test(std_mass_fdiv_lm$residuals, nb2listw(analysis_data_nmds_neighbours))
 ```
 
 ```{r}
 std_mass_fdiv_spatial_model = spatial_model(std_mass_fdiv_analysis_formula, correlation_function_fdiv())
 moran.test(std_mass_fdiv_spatial_model$residuals, nb2listw(analysis_data_neighbours))
+moran.test(std_mass_fdiv_spatial_model$residuals, nb2listw(analysis_data_nmds_neighbours))
 ```
 
 ```{r}
