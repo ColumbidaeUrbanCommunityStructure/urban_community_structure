@@ -266,6 +266,31 @@ community_data_with_introductions %>% left_join(city_to_realm) %>%
     total_cities_without_introduced = n() - sum(has_introduced_species)) %>%
   arrange(core_realm)
 ```
+## Are any introduced species not also present in a city?
+```{r}
+communities %>% 
+  filter(origin == 'Introduced') %>% 
+  filter(relative_abundance_proxy < 0.1)
+```
+## What's the average relative abundance of introduced species compared to native
+```{r}
+communities %>% 
+  group_by(origin) %>% 
+  summarise(average_relative_abundance = mean(relative_abundance_proxy))
+```
+
+```{r}
+communities %>% 
+  group_by(origin) %>% 
+  filter(relative_abundance_proxy > 0) %>%
+  summarise(average_relative_abundance = mean(relative_abundance_proxy))
+```
+
+```{r}
+communities %>% 
+  group_by(origin) %>% 
+  summarise(average_relative_abundance = mean(relative_abundance_proxy))
+```
 
 # Create analysis data frame
 ```{r}
@@ -295,6 +320,7 @@ model_data(analysis_data, 'mntd_standard')
 ```{r}
 names(analysis_data)
 ```
+
 ## NMDS Spatial Helpers
 ```{r}
 analysis_data_nmds_coords = analysis_data[,c('NMDS1', 'NMDS2')]
