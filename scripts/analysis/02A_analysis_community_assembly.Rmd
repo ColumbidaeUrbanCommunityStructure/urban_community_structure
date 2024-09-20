@@ -691,8 +691,6 @@ plot_dredge_result = function(result_table) {
 
 ## GLS Spatial Helpers
 ```{r}
-correlation_formula = as.formula('~ NMDS1 + NMDS2 + latitude + longitude')
-
 gls_method = "ML"
 
 spatial_model = function(formula, correlation) {
@@ -728,6 +726,77 @@ plot_spatial_result = function(model_result) {
 }
 ```
 
+### Choose best spatial correlation function
+```{r}
+AIC(spatial_model(create_formula('mntd_standard'), corLin(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('mntd_standard'), corLin(form = ~ latitude + longitude)))
+AIC(spatial_model(create_formula('mntd_standard'), corExp(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('mntd_standard'), corExp(form = ~ latitude + longitude)))
+AIC(spatial_model(create_formula('mntd_standard'), corGaus(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('mntd_standard'), corGaus(form = ~ latitude + longitude)))
+AIC(spatial_model(create_formula('mntd_standard'), corRatio(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('mntd_standard'), corRatio(form = ~ latitude + longitude)))
+AIC(spatial_model(create_formula('mntd_standard'), corSpher(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('mntd_standard'), corSpher(form = ~ latitude + longitude)))
+```
+MNTD: corRatio with NMDS + lat/long
+
+```{r}
+AIC(spatial_model(create_formula('beak_width_fdiv_standard'), corLin(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('beak_width_fdiv_standard'), corLin(form = ~ latitude + longitude)))
+AIC(spatial_model(create_formula('beak_width_fdiv_standard'), corExp(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('beak_width_fdiv_standard'), corExp(form = ~ latitude + longitude)))
+AIC(spatial_model(create_formula('beak_width_fdiv_standard'), corGaus(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('beak_width_fdiv_standard'), corGaus(form = ~ latitude + longitude)))
+AIC(spatial_model(create_formula('beak_width_fdiv_standard'), corRatio(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('beak_width_fdiv_standard'), corRatio(form = ~ latitude + longitude)))
+AIC(spatial_model(create_formula('beak_width_fdiv_standard'), corSpher(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('beak_width_fdiv_standard'), corSpher(form = ~ latitude + longitude)))
+```
+Beak width: corExp with NMDS + lat/long
+
+```{r}
+AIC(spatial_model(create_formula('hwi_fdiv_standard'), corLin(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('hwi_fdiv_standard'), corLin(form = ~ latitude + longitude)))
+AIC(spatial_model(create_formula('hwi_fdiv_standard'), corExp(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('hwi_fdiv_standard'), corExp(form = ~ latitude + longitude)))
+AIC(spatial_model(create_formula('hwi_fdiv_standard'), corGaus(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('hwi_fdiv_standard'), corGaus(form = ~ latitude + longitude)))
+AIC(spatial_model(create_formula('hwi_fdiv_standard'), corRatio(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('hwi_fdiv_standard'), corRatio(form = ~ latitude + longitude)))
+AIC(spatial_model(create_formula('hwi_fdiv_standard'), corSpher(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('hwi_fdiv_standard'), corSpher(form = ~ latitude + longitude)))
+```
+
+HWI: corExp with NMDS + lat/long
+
+```{r}
+AIC(spatial_model(create_formula('mass_fdiv_standard'), corLin(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('mass_fdiv_standard'), corLin(form = ~ latitude + longitude)))
+AIC(spatial_model(create_formula('mass_fdiv_standard'), corExp(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('mass_fdiv_standard'), corExp(form = ~ latitude + longitude)))
+AIC(spatial_model(create_formula('mass_fdiv_standard'), corGaus(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('mass_fdiv_standard'), corGaus(form = ~ latitude + longitude)))
+AIC(spatial_model(create_formula('mass_fdiv_standard'), corRatio(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('mass_fdiv_standard'), corRatio(form = ~ latitude + longitude)))
+AIC(spatial_model(create_formula('mass_fdiv_standard'), corSpher(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('mass_fdiv_standard'), corSpher(form = ~ latitude + longitude)))
+```
+
+Mass: corExp with NMDS + lat/long
+
+```{r}
+correlation_formula = as.formula('~ NMDS1 + NMDS2 + latitude + longitude')
+
+correlation_function_fdiv = function() {
+  corExp(form = correlation_formula)
+}
+
+correlation_function_mntd = function() {
+  corRatio(form = correlation_formula)
+}
+```
+
 ## MNTD
 ```{r}
 std_mntd_analysis_geo_plot = geom_map(geom_sf(data = analysis_data, aes(color = mntd_standard, geometry = geometry)), 'MNTD')
@@ -747,9 +816,15 @@ std_mntd_analysis_result_table
 std_mntd_analysis_pred_plot = plot_dredge_result(std_mntd_analysis_result_table)
 std_mntd_analysis_pred_plot
 ```
+Do the residuals still contain spatial autocorrelation from a fitted lm?
+```{r}
+std_mntd_lm = lm(std_mntd_analysis_formula, std_mntd_analysis_data)
+moran.test(std_mntd_lm$residuals, nb2listw(analysis_data_neighbours))
+```
 
 ```{r}
-mntd_spatial_model = spatial_model(std_mntd_analysis_formula, corLin(form = correlation_formula))
+mntd_spatial_model = spatial_model(std_mntd_analysis_formula, correlation_function_mntd())
+moran.test(mntd_spatial_model$residuals, nb2listw(analysis_data_neighbours))
 ```
 
 ```{r}
@@ -778,8 +853,15 @@ std_gape_fdiv_analysis_pred_plot = plot_dredge_result(std_gape_fdiv_analysis_res
 std_gape_fdiv_analysis_pred_plot
 ```
 
+Do the residuals still contain spatial autocorrelation from a fitted lm?
 ```{r}
-std_gape_fdiv_spatial_model = spatial_model(std_gape_fdiv_analysis_formula, corLin(form = correlation_formula))
+std_gape_fdiv_lm = lm(std_gape_fdiv_analysis_formula, std_gape_fdiv_analysis_data)
+moran.test(std_gape_fdiv_lm$residuals, nb2listw(analysis_data_neighbours))
+```
+
+```{r}
+std_gape_fdiv_spatial_model = spatial_model(std_gape_fdiv_analysis_formula, correlation_function_fdiv())
+moran.test(std_gape_fdiv_spatial_model$residuals, nb2listw(analysis_data_neighbours))
 ```
 
 ```{r}
@@ -809,7 +891,13 @@ std_hwi_fdiv_analysis_pred_plot
 ```
 
 ```{r}
-std_hwi_fdiv_spatial_model = spatial_model(std_hwi_fdiv_analysis_formula, corLin(form = correlation_formula))
+std_hwi_fdiv_lm = lm(std_hwi_fdiv_analysis_formula, std_hwi_fdiv_analysis_data)
+moran.test(std_hwi_fdiv_lm$residuals, nb2listw(analysis_data_neighbours))
+```
+
+```{r}
+std_hwi_fdiv_spatial_model = spatial_model(std_hwi_fdiv_analysis_formula, correlation_function_fdiv())
+moran.test(std_hwi_fdiv_spatial_model$residuals, nb2listw(analysis_data_neighbours))
 ```
 
 ```{r}
@@ -838,7 +926,13 @@ std_mass_fdiv_analysis_pred_plot
 ```
 
 ```{r}
-std_mass_fdiv_spatial_model = spatial_model(std_mass_fdiv_analysis_formula, corLin(form = correlation_formula))
+std_mass_fdiv_lm = lm(std_mass_fdiv_analysis_formula, std_mass_fdiv_analysis_data)
+moran.test(std_mass_fdiv_lm$residuals, nb2listw(analysis_data_neighbours))
+```
+
+```{r}
+std_mass_fdiv_spatial_model = spatial_model(std_mass_fdiv_analysis_formula, correlation_function_fdiv())
+moran.test(std_mass_fdiv_spatial_model$residuals, nb2listw(analysis_data_neighbours))
 ```
 
 ```{r}
