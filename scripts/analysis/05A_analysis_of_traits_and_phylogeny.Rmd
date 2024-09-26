@@ -26,6 +26,20 @@ species_urban_response$is_urban = species_urban_response$mean_relative_abundance
 species_urban_response$ebird_species_name = str_replace(species_urban_response$ebird_species_name,' ', '_')
 species_urban_response
 ```
+
+## Most urban species
+```{r}
+species_urban_response %>% filter(mean_relative_abundance_proxy > 50)
+```
+```{r}
+species_urban_response %>% filter(mean_relative_abundance_proxy > 40)
+```
+
+```{r}
+species_urban_response %>% filter(mean_relative_abundance_proxy > 30)
+```
+
+## Difference amongst urban and non-urban
 ```{r}
 species_urban_response %>% group_by(is_urban) %>% summarise(
   mean_beak_width = mean(beak_width),
@@ -50,6 +64,7 @@ species_urban_response %>% group_by(is_urban) %>% summarise(
 ```{r}
 ggplot(species_urban_response, aes(x = is_urban, y = beak_width)) + geom_boxplot()
 ```
+
 ```{r}
 wilcox.test(beak_width ~ is_urban, species_urban_response)
 ```
@@ -96,6 +111,7 @@ Is the a phylogenetic signal for our relative abundance proxy
 col_ut_phylo_signal <- phylosig(tree_pruned, columbidae_response, method="lambda", test=TRUE)
 col_ut_phylo_signal
 ```
+
 ## Plot tree
 ```{r}
 species_urban_response$ebird_species_name_clean = gsub("_", " ", species_urban_response$ebird_species_name)
