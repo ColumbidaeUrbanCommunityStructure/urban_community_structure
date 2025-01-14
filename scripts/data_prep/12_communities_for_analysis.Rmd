@@ -120,9 +120,12 @@ comparison_data
 ```
 
 
-
 ```{r}
 plot_data = comparison_data[!is.na(comparison_data$max_mean_abundance),]
+summary(glm(formula = max_mean_abundance ~ poly(relative_abundance_proxy, 2), data = plot_data))
+```
+
+```{r}
 pred_data <- predict(glm(formula = max_mean_abundance ~ poly(relative_abundance_proxy, 2), data = plot_data), se.fit=T)
 
 number_of_degrees_out = 50

@@ -117,6 +117,25 @@ test_required_values('Indomalayan', community_data_with_realm[community_data_wit
 test_required_values('Australasia', community_data_with_realm[community_data_with_realm$core_realm == 'Australasia',])
 ```
 
+## How significant are those differences:
+```{r}
+kruskal.test(mntd_standard~core_realm, data = community_data_with_realm)
+pairwise.wilcox.test(community_data_with_realm$mntd_standard, community_data_with_realm$core_realm)
+```
+```{r}
+kruskal.test(beak_width_fdiv_standard~core_realm, data = community_data_with_realm)
+pairwise.wilcox.test(community_data_with_realm$beak_width_fdiv_standard, community_data_with_realm$core_realm)
+```
+
+```{r}
+kruskal.test(hwi_fdiv_standard~core_realm, data = community_data_with_realm)
+pairwise.wilcox.test(community_data_with_realm$hwi_fdiv_standard, community_data_with_realm$core_realm)
+```
+
+```{r}
+kruskal.test(mass_fdiv_standard~core_realm, data = community_data_with_realm)
+pairwise.wilcox.test(community_data_with_realm$mass_fdiv_standard, community_data_with_realm$core_realm)
+```
 
 # Summary metrics by invasive species
 ```{r}
@@ -138,6 +157,23 @@ test_required_values('With Introduced', community_data_with_realm_with_introduce
 test_required_values('Without Introduced', community_data_with_realm_with_introduced[!community_data_with_realm_with_introduced$introduced_species,])
 ```
 
+## How significant are those differences:
+```{r}
+wilcox.test(community_data_with_realm_with_introduced$mntd_standard~community_data_with_realm_with_introduced$introduced_species)
+```
+
+```{r}
+wilcox.test(community_data_with_realm_with_introduced$beak_width_fdiv_standard~community_data_with_realm_with_introduced$introduced_species)
+```
+
+```{r}
+wilcox.test(community_data_with_realm_with_introduced$hwi_fdiv_standard~community_data_with_realm_with_introduced$introduced_species)
+```
+
+```{r}
+wilcox.test(community_data_with_realm_with_introduced$mass_fdiv_standard~community_data_with_realm_with_introduced$introduced_species)
+```
+
 # What families exist in which realms?
 ```{r}
 communities %>% 
@@ -147,6 +183,7 @@ communities %>%
   distinct() %>%
   arrange(core_realm)
 ```
+
 ## Total urban families
 ```{r}
 communities %>% 
@@ -177,6 +214,7 @@ community_data_with_introductions = left_join(community_data, city_introduced_sp
 community_data_with_introductions$has_introduced_species = community_data_with_introductions$number_of_introduced_species > 0
 community_data_with_introductions
 ```
+
 ```{r}
 communities %>% 
   filter(origin == 'Introduced') %>%
@@ -266,12 +304,14 @@ community_data_with_introductions %>% left_join(city_to_realm) %>%
     total_cities_without_introduced = n() - sum(has_introduced_species)) %>%
   arrange(core_realm)
 ```
+
 ## Are any introduced species not also present in a city?
 ```{r}
 communities %>% 
   filter(origin == 'Introduced') %>% 
   filter(relative_abundance_proxy < 0.1)
 ```
+
 ## What's the average relative abundance of introduced species compared to native
 ```{r}
 communities %>% 
@@ -354,6 +394,7 @@ with_realms_nmds = function(g) {
     geom_polygon(data = realm_nmds_australasia_polygon, linewidth = polygon_linewidth, linetype = polygon_line_type, alpha = 0)
 }
 ```
+
 ## Lat Long Spatial Helpers
 ```{r}
 analysis_data_latlong_coords = analysis_data[,c('longitude', 'latitude')]

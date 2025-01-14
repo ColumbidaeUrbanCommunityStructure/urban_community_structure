@@ -14,6 +14,7 @@ Load community data
 communities = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'communities_for_analysis.csv'))
 communities
 ```
+
 Load trait data
 ```{r}
 traits = read_csv(filename(TAXONOMY_OUTPUT_DIR, 'traits_ebird.csv'))
@@ -31,6 +32,7 @@ species_urban_response
 ```{r}
 species_urban_response %>% filter(mean_relative_abundance_proxy > 50)
 ```
+
 ```{r}
 species_urban_response %>% filter(mean_relative_abundance_proxy > 40)
 ```
@@ -42,17 +44,14 @@ species_urban_response %>% filter(mean_relative_abundance_proxy > 30)
 ## Difference amongst urban and non-urban
 ```{r}
 species_urban_response %>% group_by(is_urban) %>% summarise(
-  mean_beak_width = mean(beak_width),
   median_beak_width = median(beak_width),
-  sd_beak_width = sd(beak_width),
+  iqr_beak_width = IQR(beak_width),
   
-  mean_hwi = mean(hwi),
   median_hwi = median(hwi),
-  sd_hwi = sd(hwi),
+  iqr_hwi = IQR(hwi),
   
-  mean_mass = mean(mass),
   median_mass = median(mass),
-  sd_mass = sd(mass),
+  iqr_mass = IQR(mass),
   
   n = n()
 )
