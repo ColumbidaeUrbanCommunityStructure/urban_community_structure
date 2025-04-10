@@ -124,6 +124,7 @@ standardised_colours_scale = scale_colour_gradient2(
 )
 
 abundance_proxy_scale = scale_color_continuous(low = cyan, high = orange)
+abundance_proxy_scale_fill = scale_fill_continuous(low = cyan, high = orange)
 
 
 # Third Party Data downloaded locally

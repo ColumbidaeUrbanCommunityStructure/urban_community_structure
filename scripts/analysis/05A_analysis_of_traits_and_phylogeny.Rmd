@@ -131,6 +131,33 @@ g +
 
 ggsave(filename(FIGURES_OUTPUT_DIR, 'phylogeny.jpg'), width = 2000, height = 2100, units = 'px')
 ```
+Format plot for nature
+```{r}
+g_fig_base = ggtree(tree_pruned, layout="fan") %<+% species_urban_response
+g_fig = g_fig_base + 
+  geom_fruit(geom = geom_point, mapping = aes(size = beak_width_norm), fill = beak_width_colour, colour = 'black', shape = 21, stroke = 0.2, offset = 0, show.legend = FALSE) + 
+  geom_fruit(geom = geom_point, mapping = aes(size = hwi_norm), fill = hwi_colour, colour = 'black', shape = 21, stroke = 0.2, offset = 0.13, show.legend = FALSE) + 
+  geom_fruit(geom = geom_point, mapping = aes(size = mass_norm), fill = mass_colour, colour = 'black', shape = 21, stroke = 0.2, offset = 0.15, show.legend = FALSE) + 
+  geom_tiplab(size=2, aes(label=ebird_species_name_clean), offset = 30)
+
+heatmap_fig_ata = data.frame(species_urban_response[, "mean_relative_abundance_proxy"])
+colnames(heatmap_fig_ata) = c('MRAP')
+rownames(heatmap_fig_ata) = species_urban_response$ebird_species_name
+
+gheatmap(g_fig, 
+         heatmap_fig_ata, 
+         offset = 14, 
+         width = 0.2,
+         colnames_angle = 0, 
+         colnames_offset_x = 0.5, 
+         font.size = 3) + 
+  abundance_proxy_scale_fill + 
+  labs(fill = "MRAP (Mean relative abundance proxy)") + 
+  theme(legend.position = "bottom") + 
+  ggplot2::xlim(0, 85)
+
+ggsave(filename(FIGURES_OUTPUT_DIR, 'figure3.jpg'), width = 180, height = 200, units = 'mm', dpi = 450)
+```
 
 ## Plot traits against abundance proxy
 ```{r}
