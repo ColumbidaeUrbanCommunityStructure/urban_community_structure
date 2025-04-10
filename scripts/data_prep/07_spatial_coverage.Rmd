@@ -277,6 +277,6 @@ ggplot(plot_data, aes(x = percentage_checklists, y = buf_500m_percentage_survey_
 # Compare different buffer sizes
 
 ```{r}
-ggpairs(pools_city_data[,c('buf_250m_percentage_survey_area_present', 'buf_500m_percentage_survey_area_present', 'buf_1km_percentage_survey_area_present')], columnLabels = c('250m buffer', '500m buffer', '1km buffer'))
+ggpairs(pools_city_data[,c('buf_250m_percentage_survey_area_present', 'buf_500m_percentage_survey_area_present', 'buf_1km_percentage_survey_area_present')], columnLabels = c('250m buffer', '500m buffer', '1km buffer'), upper = list(continuous = wrap(ggally_cor, method = "spearman")))
 ggsave(filename(FIGURES_OUTPUT_DIR, 'compare_checklist_buffer_sizes.jpg'))
 ```
