@@ -14,17 +14,15 @@ library(ggpubr)
 library(picante)
 library(fundiversity)
 library(GGally)
-library(ggtree)
+#library(ggtree)
 library(ggrepel)
 library(aplot)
 library(foreach)
-library(fundiversity)
 library(scales)
 library(MuMIn)
 library(VSURF)
 library(cowplot)
 library(ggplot2)
-library(phytools)
 library(treedataverse) # BiocManager::install("YuLab-SMU/treedataverse")
 library(devtools)
 install_github("eliotmiller/clootl")
@@ -32,6 +30,8 @@ library(clootl)
 library(nlme)
 library(spdep)
 library(sp)
+library(gridExtra)
+library(grid)
 
 sf::sf_use_s2(FALSE)
 options(scipen=99999)
@@ -129,8 +129,8 @@ abundance_proxy_scale = scale_color_continuous(low = cyan, high = orange)
 # Third Party Data downloaded locally
 # ------------------------------------
 downloaded_data_file = function(file) {
-  paste('/Users/james/Dropbox/PhD/', file, sep = '')
-  # paste('/Users/jamese.richardson/Downloads/', file, sep = '')
+  # paste('/Users/james/Dropbox/PhD/', file, sep = '')
+  paste('/Users/jamese.richardson/Downloads/', file, sep = '')
 }
 
 # My mapping from Birdlife V8 to Jetz, this maps down the birdlife taxonomy versions to Birdlife V3 and thus Jetz. 

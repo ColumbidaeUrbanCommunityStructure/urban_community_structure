@@ -60,12 +60,6 @@ Load trait data
 traits = read_csv(filename(TAXONOMY_OUTPUT_DIR, 'traits_ebird.csv'))
 head(traits)
 ```
-
-Load realm geo
-```{r}
-resolve = read_resolve()
-head(resolve)
-```
 Load spatial var
 ```{r}
 spatial_var = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'spatial_var.csv')) %>% filter(city_id %in% community_summary$city_id)
@@ -1034,6 +1028,72 @@ plot_grid(
   nrow = 5
 )
 ggsave(filename(FIGURES_OUTPUT_DIR, 'process_response.jpg'), width = 3000, height = 3200, units = 'px')
+```
+
+```{r}
+pred_fig_legend <- ggpubr::get_legend(
+  # create some space to the left of the legend
+  std_hwi_fdiv_analysis_pred_plot + theme(legend.box.margin = margin(0, 0, 0, -20)) + guides(colour=guide_legend(ncol=2)) + labs(color = "Predictor type")
+)
+geo_fig_legend <- ggpubr::get_legend(
+  # create some space to the left of the legend
+  std_mass_fdiv_analysis_geo_plot + theme(legend.box.margin = margin(0, 0, 0, 0), legend.title.position = "top", legend.key.width = unit(10, 'mm')) + labs(color = "Standardised response")
+)
+
+remove_x_scale =  scale_x_continuous(name = '', limits = c(-3, 3))
+theme_no_legend = theme(legend.position="none", panel.border = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))
+
+fig2 = grid.arrange(
+  # row 1 - titles
+  arrangeGrob(grid::textGrob('A) Standardised response by city', x = 0.1, hjust = 0, gp=gpar(fontface="bold"))),
+  arrangeGrob(grid::textGrob('B) Standardised response predictors', x = 0.1, hjust = 0, gp=gpar(fontface="bold"))),
+  # row 2
+  arrangeGrob(
+    std_mntd_analysis_geo_plot + theme_no_legend, 
+    left = "MNTD"
+  ),
+  arrangeGrob(
+    std_mntd_analysis_pred_plot + theme_no_legend + remove_x_scale + ylab('')
+  ),
+  # row 3
+  arrangeGrob(std_gape_fdiv_analysis_geo_plot + theme_no_legend, left = "Beak Width"),
+  arrangeGrob(
+    std_gape_fdiv_analysis_pred_plot + theme_no_legend + remove_x_scale + ylab('')
+  ),
+  # row 4
+  arrangeGrob(std_hwi_fdiv_analysis_geo_plot + theme_no_legend, left = "HWI"),
+  arrangeGrob(
+    std_hwi_fdiv_analysis_pred_plot + theme_no_legend + remove_x_scale + ylab('')
+  ),
+  # row 5
+  arrangeGrob(std_mass_fdiv_analysis_geo_plot + theme_no_legend, left = "Mass"),
+  arrangeGrob(
+    std_mass_fdiv_analysis_pred_plot + theme_no_legend + remove_x_scale + ylab('')
+  ),
+  # row 6 - legends
+  arrangeGrob(geo_fig_legend),
+  arrangeGrob(pred_fig_legend),
+  heights = c(0.5, 2, 2, 2, 2, 1.25),
+  nrow = 6
+  )
+```
+
+```{r}
+jpeg(filename(FIGURES_OUTPUT_DIR, 'figure2.jpg'), width = 183, height = 180, units = 'mm', res = 450)
+grid.arrange(
+  arrangeGrob(fig2),
+  ncol = 1
+  )
+dev.off()
+```
+
+```{r}
+pdf(filename(FIGURES_OUTPUT_DIR, 'figure2.pdf'), width = 12, height = 12, family = "Helvetica")
+grid.arrange(
+  arrangeGrob(fig2),
+  ncol = 1
+  )
+dev.off()
 ```
 
 # Compare to spatial model
