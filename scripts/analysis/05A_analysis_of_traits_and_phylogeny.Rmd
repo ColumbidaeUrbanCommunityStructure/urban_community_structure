@@ -133,12 +133,15 @@ ggsave(filename(FIGURES_OUTPUT_DIR, 'phylogeny.jpg'), width = 2000, height = 210
 ```
 Format plot for nature
 ```{r}
+colors = c('Beak Width' = beak_width_colour, 'HWI' = hwi_colour, 'Mass' = mass_colour)
 g_fig_base = ggtree(tree_pruned, layout="fan") %<+% species_urban_response
 g_fig = g_fig_base + 
-  geom_fruit(geom = geom_point, mapping = aes(size = beak_width_norm), fill = beak_width_colour, colour = 'black', shape = 21, stroke = 0.2, offset = 0, show.legend = FALSE) + 
-  geom_fruit(geom = geom_point, mapping = aes(size = hwi_norm), fill = hwi_colour, colour = 'black', shape = 21, stroke = 0.2, offset = 0.13, show.legend = FALSE) + 
-  geom_fruit(geom = geom_point, mapping = aes(size = mass_norm), fill = mass_colour, colour = 'black', shape = 21, stroke = 0.2, offset = 0.15, show.legend = FALSE) + 
-  geom_tiplab(size=2, aes(label=ebird_species_name_clean), offset = 30)
+  geom_fruit(geom = geom_point, mapping = aes(size = beak_width_norm, fill = 'Beak Width'), colour = 'black', shape = 21, stroke = 0.2, offset = 0, show.legend = c(size = FALSE, fill = TRUE)) + 
+  geom_fruit(geom = geom_point, mapping = aes(size = hwi_norm, fill = 'HWI'), colour = 'black', shape = 21, stroke = 0.2, offset = 0.13, show.legend = c(size = FALSE, fill = TRUE)) + 
+  geom_fruit(geom = geom_point, mapping = aes(size = mass_norm, fill = 'Mass'), colour = 'black', shape = 21, stroke = 0.2, offset = 0.15, show.legend = c(size = FALSE, fill = TRUE)) + 
+  geom_tiplab(size=2, aes(label=ebird_species_name_clean), offset = 30) +
+  scale_fill_manual(name = "Relative trait size", values = colors) + 
+  guides(fill = guide_legend(override.aes = list(size = 6))) + new_scale_fill()
 
 heatmap_fig_ata = data.frame(species_urban_response[, "mean_relative_abundance_proxy"])
 colnames(heatmap_fig_ata) = c('MRAP')
@@ -151,12 +154,12 @@ gheatmap(g_fig,
          colnames_angle = 0, 
          colnames_offset_x = 0.5, 
          font.size = 3) + 
-  abundance_proxy_scale_fill + 
-  labs(fill = "MRAP (Mean relative abundance proxy)") + 
-  theme(legend.position = "bottom") + 
+  scale_fill_continuous(low = cyan, high = orange, guide = guide_colorbar(barwidth = 11)) + 
+  labs(fill = "MRAP\n(Mean relative abundance proxy)") + 
+  theme(legend.position = "bottom", legend.direction = "horizontal", legend.box = "vertical", legend.title.position = "top", legend.justification = "centre") + 
   ggplot2::xlim(0, 85)
 
-ggsave(filename(FIGURES_OUTPUT_DIR, 'figure3.jpg'), width = 180, height = 200, units = 'mm', dpi = 450)
+ggsave(filename(FIGURES_OUTPUT_DIR, 'figure3.jpg'), width = 180, height = 220, units = 'mm', dpi = 450)
 ```
 
 ## Plot traits against abundance proxy

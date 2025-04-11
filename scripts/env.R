@@ -32,6 +32,7 @@ library(spdep)
 library(sp)
 library(gridExtra)
 library(grid)
+library(ggnewscale)
 
 sf::sf_use_s2(FALSE)
 options(scipen=99999)
