@@ -167,6 +167,112 @@ wilcox.test(community_data_with_realm_with_introduced$hwi_fdiv_standard~communit
 ```{r}
 wilcox.test(community_data_with_realm_with_introduced$mass_fdiv_standard~community_data_with_realm_with_introduced$introduced_species)
 ```
+# Invasive species per realm
+## Nearctic
+```{r}
+test_required_values('Nearctic With Introduced', community_data_with_realm_with_introduced[community_data_with_realm_with_introduced$core_realm == 'Nearctic' & community_data_with_realm_with_introduced$introduced_species,])
+```
+
+## Neotropic
+```{r}
+test_required_values('Neotropic With Introduced', community_data_with_realm_with_introduced[community_data_with_realm_with_introduced$core_realm == 'Neotropic' & community_data_with_realm_with_introduced$introduced_species,])
+```
+## Palearctic
+```{r}
+palearctic_community_data_with_realm_with_introduced = community_data_with_realm_with_introduced[community_data_with_realm_with_introduced$core_realm == 'Palearctic',]
+```
+
+```{r}
+test_required_values('Palearctic With Introduced', palearctic_community_data_with_realm_with_introduced[palearctic_community_data_with_realm_with_introduced$introduced_species,])
+```
+
+```{r}
+test_required_values('Palearctic Without Introduced', palearctic_community_data_with_realm_with_introduced[!palearctic_community_data_with_realm_with_introduced$introduced_species,])
+```
+### MNTD
+```{r}
+wilcox.test(palearctic_community_data_with_realm_with_introduced$mntd_standard~palearctic_community_data_with_realm_with_introduced$introduced_species)
+```
+### Beak width
+```{r}
+wilcox.test(palearctic_community_data_with_realm_with_introduced$beak_width_fdiv_standard~palearctic_community_data_with_realm_with_introduced$introduced_species)
+```
+### HWI
+```{r}
+wilcox.test(palearctic_community_data_with_realm_with_introduced$hwi_fdiv_standard~palearctic_community_data_with_realm_with_introduced$introduced_species)
+```
+### Mass
+```{r}
+wilcox.test(palearctic_community_data_with_realm_with_introduced$mass_fdiv_standard~palearctic_community_data_with_realm_with_introduced$introduced_species)
+```
+
+## Afrotropic
+
+```{r}
+afrotropic_community_data_with_realm_with_introduced = community_data_with_realm_with_introduced[community_data_with_realm_with_introduced$core_realm == 'Afrotropic',]
+```
+
+```{r}
+test_required_values('Afrotropic With Introduced', afrotropic_community_data_with_realm_with_introduced[afrotropic_community_data_with_realm_with_introduced$introduced_species,])
+```
+
+```{r}
+test_required_values('Afrotropic Without Introduced', afrotropic_community_data_with_realm_with_introduced[!afrotropic_community_data_with_realm_with_introduced$introduced_species,])
+```
+
+### MNTD
+```{r}
+wilcox.test(afrotropic_community_data_with_realm_with_introduced$mntd_standard~afrotropic_community_data_with_realm_with_introduced$introduced_species)
+```
+### Beak width
+```{r}
+wilcox.test(afrotropic_community_data_with_realm_with_introduced$beak_width_fdiv_standard~afrotropic_community_data_with_realm_with_introduced$introduced_species)
+```
+### HWI
+```{r}
+wilcox.test(afrotropic_community_data_with_realm_with_introduced$hwi_fdiv_standard~afrotropic_community_data_with_realm_with_introduced$introduced_species)
+```
+### Mass
+```{r}
+wilcox.test(afrotropic_community_data_with_realm_with_introduced$mass_fdiv_standard~afrotropic_community_data_with_realm_with_introduced$introduced_species)
+```
+
+## Indomalayan
+```{r}
+indomalayan_community_data_with_realm_with_introduced = community_data_with_realm_with_introduced[community_data_with_realm_with_introduced$core_realm == 'Indomalayan',]
+```
+
+```{r}
+test_required_values('Indomalayan With Introduced', indomalayan_community_data_with_realm_with_introduced[indomalayan_community_data_with_realm_with_introduced$introduced_species,])
+```
+
+```{r}
+test_required_values('Indomalayan Without Introduced', indomalayan_community_data_with_realm_with_introduced[!indomalayan_community_data_with_realm_with_introduced$introduced_species,])
+```
+
+### MNTD
+```{r}
+wilcox.test(indomalayan_community_data_with_realm_with_introduced$mntd_standard~indomalayan_community_data_with_realm_with_introduced$introduced_species)
+```
+### Beak width
+```{r}
+wilcox.test(indomalayan_community_data_with_realm_with_introduced$beak_width_fdiv_standard~indomalayan_community_data_with_realm_with_introduced$introduced_species)
+```
+### HWI
+```{r}
+wilcox.test(indomalayan_community_data_with_realm_with_introduced$hwi_fdiv_standard~indomalayan_community_data_with_realm_with_introduced$introduced_species)
+```
+### Mass
+```{r}
+wilcox.test(indomalayan_community_data_with_realm_with_introduced$mass_fdiv_standard~indomalayan_community_data_with_realm_with_introduced$introduced_species)
+```
+
+## Australasia
+
+```{r}
+test_required_values('Australasia With Introduced', community_data_with_realm_with_introduced[community_data_with_realm_with_introduced$core_realm == 'Australasia' & community_data_with_realm_with_introduced$introduced_species,])
+```
+
 
 # What families exist in which realms?
 ```{r}
@@ -532,7 +638,7 @@ with_explanatory_type_labels = function(p) {
   
   p$type <- 'Realm'
   p$type[p$explanatory %in% c('city_avg_ndvi', 'city_avg_elevation', 'city_avg_temp')] <- 'City geography'
-  p$type[p$explanatory %in% c('region_50km_avg_soil_moisture')] <- 'Regional (50km) geography'
+  p$type[p$explanatory %in% c('region_50km_avg_soil_moisture')] <- 'Regional (50 km) geography'
   p$type[p$explanatory %in% c('has_introduced_speciesNo introduced species', 'has_introduced_speciesIntroduced species')] <- 'Introduced species'
   p
 }
@@ -550,9 +656,9 @@ type_labels = function(p) {
     'city_avg_monthly_temp', 'city_avg_rainfall', 'city_avg_max_monthly_rainfall', 'city_avg_min_monthly_rainfall', 
     'city_avg_soil_moisture', 'city_max_elev', 'city_min_elev', 'city_elev_range')] <- 'City geography'
   p$type[p$explanatory %in% c('region_50km_avg_ndvi', 'region_50km_avg_elevation', 'region_50km_avg_soil_moisture', 'region_50km_max_elev', 
-    'region_50km_min_elev', 'region_50km_elev_range')] <- 'Regional (50km) geography'
+    'region_50km_min_elev', 'region_50km_elev_range')] <- 'Regional (50 km) geography'
    p$type[p$explanatory %in% c('region_20km_avg_ndvi', 'region_20km_avg_elevation', 'region_20km_avg_soil_moisture', 'region_20km_max_elev', 
-    'region_20km_min_elev', 'region_20km_elev_range')] <- 'Regional (20km) geography'
+    'region_20km_min_elev', 'region_20km_elev_range')] <- 'Regional (20 km) geography'
   p$type[p$explanatory %in% c('has_introduced_speciesNo introduced species', 'has_introduced_speciesIntroduced species')] <- 'Introduced species'
   p
 }
@@ -716,7 +822,7 @@ plot_dredge_result = function(result_table) {
       labels = explanatory_labels) +
     scale_colour_manual(
       values = c(realm_colour, city_geography_colour, regional_50km_geography_colour, regional_20km_geography_colour, introduced_species_colour), 
-      breaks = c('Realm', 'City geography', 'Regional (50km) geography', 'Regional (20km) geography', 'Introduced species')) +
+      breaks = c('Realm', 'City geography', 'Regional (50 km) geography', 'Regional (20 km) geography', 'Introduced species')) +
     theme_bw() +
     geom_vline(xintercept=0, linetype="dotted") +
     guides(colour=guide_legend(title="Predictor type")) + xlab('Difference in response from 0\nhabitat filtering (< 0) and competitive interactions (> 0)\n± Standard Error') + ylab('Predictor') +
@@ -756,7 +862,7 @@ plot_spatial_result = function(model_result) {
     guides(colour=guide_legend(title="Predictor type")) + xlab('Difference in response from 0\nhabitat filtering (< 0) and competitive interactions (> 0)\n± Standard Error') +
     scale_colour_manual(
       values = c(realm_colour, city_geography_colour, regional_50km_geography_colour, introduced_species_colour), 
-      breaks = c('Realm', 'City geography', 'Regional (50km) geography', 'Introduced species')) +
+      breaks = c('Realm', 'City geography', 'Regional (50 km) geography', 'Introduced species')) +
     scale_y_discrete(limits = rev(all_explanatory_names[all_explanatory_names %in% result_table$explanatory_name]))
 }
 ```

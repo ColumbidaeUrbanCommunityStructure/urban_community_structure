@@ -131,8 +131,8 @@ abundance_proxy_scale_fill = scale_fill_continuous(low = cyan, high = orange)
 # Third Party Data downloaded locally
 # ------------------------------------
 downloaded_data_file = function(file) {
-  # paste('/Users/james/Dropbox/PhD/', file, sep = '')
-  paste('/Users/jamese.richardson/Downloads/', file, sep = '')
+  paste('/Users/james/Dropbox/PhD/', file, sep = '')
+  # paste('/Users/jamese.richardson/Downloads/', file, sep = '')
 }
 
 # My mapping from Birdlife V8 to Jetz, this maps down the birdlife taxonomy versions to Birdlife V3 and thus Jetz. 
