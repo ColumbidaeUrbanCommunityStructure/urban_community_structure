@@ -1,0 +1,265 @@
+---
+title: "Similarity of introduced birds"
+output: html_notebook
+---
+
+```{r}
+source('../env.R')
+```
+
+# Load required data
+```{r}
+trait_data = read.csv(filename(TAXONOMY_OUTPUT_DIR, 'traits_ebird.csv')) %>% dplyr::select(ebird_species_name, beak_width, hwi, mass)
+trait_data
+```
+
+```{r}
+community_data = read.csv(filename(COMMUNITY_OUTPUT_DIR, 'communities_for_analysis.csv')) %>% 
+  dplyr::select(city_id, city_name, ebird_species_name, origin, relative_abundance_proxy) %>% 
+  left_join(trait_data, by = 'ebird_species_name')
+community_data
+```
+
+
+
+
+```{r}
+columbidae_tree = read.tree(filename(TAXONOMY_OUTPUT_DIR, 'phylogeny.tre'))
+plot(columbidae_tree)
+```
+
+# Find communities with introduced species
+```{r}
+urban_introduced_species = community_data %>% filter(origin == 'Introduced') %>% filter(relative_abundance_proxy > 0)
+urban_introduced_species
+```
+
+```{r}
+urban_native_species = community_data %>% filter(origin != 'Introduced') %>% filter(relative_abundance_proxy > 0)
+urban_native_species
+```
+
+```{r}
+regional_native_species = community_data %>% filter(origin != 'Introduced') %>% filter(relative_abundance_proxy == 0)
+regional_native_species
+```
+
+```{r}
+city_names = function(df) {
+  df %>% dplyr::select(city_id, city_name) %>% distinct()
+}
+
+cities_available_for_test = purrr::reduce(
+  list(
+    city_names(urban_introduced_species),
+    city_names(urban_native_species),
+    city_names(regional_native_species)
+  ),
+  dplyr::intersect
+)
+cities_available_for_test
+```
+
+```{r}
+test_city = cities_available_for_test$city_name[1]
+```
+
+```{r}
+native_traits = urban_native_species %>%
+  filter(city_name == test_city)
+
+introduced_traits = urban_introduced_species %>%
+  filter(city_name == test_city)
+
+regional_traits = regional_native_species %>%
+  filter(city_name == test_city)
+
+introduced_traits %>%
+  rowwise() %>%
+  mutate(
+    min_dist_beak_width = min(abs(beak_width - native_traits$beak_width)),
+    min_dist_mass       = min(abs(mass - native_traits$mass)),
+    min_dist_hwi        = min(abs(hwi - native_traits$hwi))
+  ) %>%
+  ungroup()
+
+regional_traits %>%
+  rowwise() %>%
+  mutate(
+    min_dist_beak_width = min(abs(beak_width - native_traits$beak_width)),
+    min_dist_mass       = min(abs(mass - native_traits$mass)),
+    min_dist_hwi        = min(abs(hwi - native_traits$hwi))
+  ) %>%
+  ungroup()
+```
+
+```{r}
+communities_matrix =  function(urban_community, comparison_community) {
+  urban = str_replace(urban_community$ebird_species_name, ' ', '_')
+  compare = str_replace(comparison_community$ebird_species_name, ' ', '_')
+  
+  spp = c(urban, compare)
+
+  comm = matrix(
+    0,
+    nrow = 1 + length(compare),
+    ncol = length(spp),
+    dimnames = list(c("urban", compare), spp)
+  )
+
+  comm["urban", urban] = 1
+  comm[compare, compare] = 1
+  comm
+}
+
+communities_matrix(native_traits, introduced_traits)
+communities_matrix(native_traits, regional_traits)
+```
+
+```{r}
+D = cophenetic(columbidae_tree)
+
+min_phylo_distance = function(native_traits, compare_to_traits) {
+  cdnt = picante::comdistnt(communities_matrix(native_traits, compare_to_traits), D)
+  cdnt_m = as.matrix(cdnt)
+  
+  
+  tibble(species = str_replace(compare_to_traits$ebird_species_name, ' ', '_')) %>%
+      mutate(
+        ebird_species_name = str_replace(species, '_', ' '),
+        min_phylo_dist = cdnt_m[species, "urban"]
+      ) %>% 
+    dplyr::select(-species)
+}
+
+min_phylo_distance(native_traits, introduced_traits)
+min_phylo_distance(native_traits, regional_traits)
+```
+
+
+```{r}
+min_trait_distances = function(given_city_id) {
+  native = urban_native_species %>%
+    filter(city_id == given_city_id)
+  
+  introduced = urban_introduced_species %>%
+    filter(city_id == given_city_id)
+  
+  regional = regional_native_species %>%
+    filter(city_id == given_city_id)
+  
+  rbind(
+    introduced %>%
+      rowwise() %>%
+      mutate(
+        min_dist_beak_width = min(abs(beak_width - native$beak_width)),
+        min_dist_mass       = min(abs(mass - native$mass)),
+        min_dist_hwi        = min(abs(hwi - native$hwi))
+      ) %>%
+      ungroup() %>%
+      left_join(min_phylo_distance(native, introduced)) %>%
+      mutate(type = 'Introduced')
+    ,
+    regional %>%
+      rowwise() %>%
+      mutate(
+        min_dist_beak_width = min(abs(beak_width - native$beak_width)),
+        min_dist_mass       = min(abs(mass - native$mass)),
+        min_dist_hwi        = min(abs(hwi - native$hwi))
+      ) %>%
+      ungroup() %>%
+      left_join(min_phylo_distance(native, regional)) %>%
+      mutate(type = 'Available')
+  ) %>%
+  dplyr::select(city_id, city_name, ebird_species_name, type, min_dist_beak_width, min_dist_mass, min_dist_hwi, min_phylo_dist)
+}
+
+min_trait_distances(cities_available_for_test$city_id[1])
+```
+
+```{r}
+result_df = data.frame()
+
+for (i in 1:nrow(cities_available_for_test)) {
+  test_city_id = cities_available_for_test$city_id[i]
+  result_df = rbind(result_df, min_trait_distances(test_city_id))
+}
+
+result_df %>% mutate(type = as.factor(type), city_id = factor(city_id))
+result_df
+```
+
+```{r}
+ggplot(result_df, aes(x = type, y = min_dist_beak_width)) + geom_boxplot()
+```
+```{r}
+ggplot(result_df, aes(x = type, y = min_dist_hwi)) + geom_boxplot()
+```
+```{r}
+ggplot(result_df, aes(x = type, y = min_dist_mass)) + geom_boxplot()
+```
+
+```{r}
+ggplot(result_df, aes(x = type, y = min_phylo_dist)) + geom_boxplot()
+```
+
+```{r}
+levels(factor(result_df$type))
+```
+
+```{r}
+check_distances_near_zero = result_df %>%
+  group_by(type) %>%
+  summarise(
+    n = n(),
+    bw_zeros = sum(min_dist_beak_width == 0),
+    bw_p_zero = mean(min_dist_beak_width == 0),
+    bw_median = median(min_dist_beak_width),
+    hwi_zeros = sum(min_dist_hwi == 0),
+    hwi_p_zero = mean(min_dist_hwi == 0),
+    hwi_median = median(min_dist_hwi),
+    mass_zeros = sum(min_dist_mass == 0),
+    mass_p_zero = mean(min_dist_mass == 0),
+    mass_median = median(min_dist_mass),
+    phylo_zeros = sum(min_phylo_dist == 0),
+    phylo_p_zero = mean(min_phylo_dist == 0),
+    phylo_median = median(min_phylo_dist)
+  )
+check_distances_near_zero
+```
+
+
+```{r}
+m_beak_width = lme4::lmer(log(min_dist_beak_width + 1e-6) ~ type + (1|city_id), data = result_df)
+exp(fixef(m_beak_width))
+exp(confint(m_beak_width, parm="typeIntroduced", method="profile"))
+```
+
+
+```{r}
+m_hwi = lme4::lmer(log(min_dist_hwi + 1e-6) ~ type + (1|city_id), data = result_df)
+exp(fixef(m_hwi))
+
+exp(confint(m_hwi, parm="typeIntroduced", method="profile"))
+```
+
+
+```{r}
+m_mass = lme4::lmer(log(min_dist_mass + 1e-6) ~ type + (1|city_id), data = result_df)
+exp(fixef(m_mass))
+
+exp(confint(m_mass, parm="typeIntroduced", method="profile"))
+```
+
+
+```{r}
+m_phylo = lme4::lmer(log(min_phylo_dist + 1e-6) ~ type + (1|city_id), data = result_df)
+exp(fixef(m_phylo))
+
+exp(confint(m_phylo, parm="typeIntroduced", method="profile"))
+```
+
+Across 491 species–city observations (332 available from the regional pool but absent from the city; 159 introduced present in the city), minimum trait distances to the city’s native assemblage were often near zero for the available pool (e.g., beak width: 13.3% zeros; HWI: 1.5% zeros), whereas zeros were rare or absent for introduced species (beak width: 2.5% zeros; HWI: 0%). Mixed-effects models on log-transformed minimum distances (city as a random intercept) showed that introduced species were consistently less similar to the native assemblage than available species: minimum beak-width distance was 3.03× higher (95% CI 1.49–6.19), minimum HWI distance was 4.35× higher (95% CI 3.15–6.00), minimum mass distance was 1.75× higher (95% CI 1.32–2.32), and minimum phylogenetic distance was 1.29× higher (95% CI 1.22–1.36) for introduced versus available species.
+
+
+
