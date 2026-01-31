@@ -398,7 +398,7 @@ min(result_df$min_phylo_dist)
 
 mt_phylo_dist = glmmTMB(
   min_phylo_dist ~ type + (1 | city_id),
-  family = Gamma(link = "log"),
+  family = gaussian(),
   data = result_df
 )
 
@@ -420,8 +420,8 @@ contrast(emmeans(mt_phylo_dist, ~ type, type = "response"), "pairwise")
 ```
 
 Model-based expected values:
-* Available: 35.6 (SE 1.35), 95% CI 33.0 – 38.3
-* Introduced: 47.8 (SE 1.93), 95% CI 44.2 – 51.8
+* Available: 38.7 (SE 1.35), 95% CI 35.5 – 41.8
+* Introduced: 50.4 (SE 1.93), 95% CI 47.1 – 53.8
 
 Interpretation: Available is 0.744× Introduced, i.e. about 25.6% lower.
 
