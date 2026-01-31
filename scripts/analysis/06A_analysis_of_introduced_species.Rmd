@@ -44,6 +44,7 @@ regional_native_species = community_data %>% filter(origin != 'Introduced') %>% 
 regional_native_species
 ```
 
+# Find cities we can use to compare introduced species vs regional species
 ```{r}
 city_names = function(df) {
   df %>% dplyr::select(city_id, city_name) %>% distinct()
@@ -60,10 +61,12 @@ cities_available_for_test = purrr::reduce(
 cities_available_for_test
 ```
 
+# Look at creating required metrics for a single city
 ```{r}
 test_city = cities_available_for_test$city_name[1]
 ```
 
+## Distance to nearest species across functional traits
 ```{r}
 native_traits = urban_native_species %>%
   filter(city_name == test_city)
@@ -93,6 +96,7 @@ regional_traits %>%
   ungroup()
 ```
 
+## Distance to nearest species in phylogeny
 ```{r}
 communities_matrix =  function(urban_community, comparison_community) {
   urban = str_replace(urban_community$ebird_species_name, ' ', '_')
@@ -136,7 +140,7 @@ min_phylo_distance(native_traits, introduced_traits)
 min_phylo_distance(native_traits, regional_traits)
 ```
 
-
+# Create all metrics
 ```{r}
 min_trait_distances = function(given_city_id) {
   native = urban_native_species %>%
@@ -185,16 +189,24 @@ for (i in 1:nrow(cities_available_for_test)) {
   result_df = rbind(result_df, min_trait_distances(test_city_id))
 }
 
-result_df %>% mutate(type = as.factor(type), city_id = factor(city_id))
+result_df = result_df %>% mutate(type = as.factor(type), city_id = factor(city_id))
 result_df
 ```
 
 ```{r}
+str(result_df)
+```
+
+# Analysis results
+## Plots
+```{r}
 ggplot(result_df, aes(x = type, y = min_dist_beak_width)) + geom_boxplot()
 ```
+
 ```{r}
 ggplot(result_df, aes(x = type, y = min_dist_hwi)) + geom_boxplot()
 ```
+
 ```{r}
 ggplot(result_df, aes(x = type, y = min_dist_mass)) + geom_boxplot()
 ```
@@ -202,6 +214,9 @@ ggplot(result_df, aes(x = type, y = min_dist_mass)) + geom_boxplot()
 ```{r}
 ggplot(result_df, aes(x = type, y = min_phylo_dist)) + geom_boxplot()
 ```
+
+## Models
+
 
 ```{r}
 levels(factor(result_df$type))
@@ -228,38 +243,185 @@ check_distances_near_zero = result_df %>%
 check_distances_near_zero
 ```
 
+### City random factor
+Using Tweedie GLMM (good default when zeros exist)
 
 ```{r}
-m_beak_width = lme4::lmer(log(min_dist_beak_width + 1e-6) ~ type + (1|city_id), data = result_df)
-exp(fixef(m_beak_width))
-exp(confint(m_beak_width, parm="typeIntroduced", method="profile"))
+library(glmmTMB)
+library(DHARMa)
+```
+
+#### Beak width
+```{r}
+mt_beak_width = glmmTMB(
+  min_dist_beak_width ~ type + (1 | city_id),
+  family = tweedie(link = "log"),
+  data = result_df
+)
+
+summary(mt_beak_width)
+
+# Diagnostics
+res_beak_width = simulateResiduals(mt_beak_width)
+plot(res_beak_width, form = factor(result_df$type))
+
+# Test the group effect (Wald)
+car::Anova(mt_beak_width, type = 2)
+```
+```{r}
+mt_dis_beak_width = glmmTMB(
+  min_dist_beak_width ~ type + (1 | city_id),
+  family = tweedie(link = "log"),
+  dispformula = ~ type,
+  data = result_df
+)
+
+summary(mt_dis_beak_width)
+
+# Diagnostics
+res_dis_beak_width = simulateResiduals(mt_dis_beak_width)
+plot(res_dis_beak_width, form = factor(result_df$type))
+
+# Test the group effect (Wald)
+car::Anova(mt_dis_beak_width, type = 2)
+```
+
+Is random effect needed?
+```{r}
+mt0_dis_beak_width =glmmTMB(
+  min_dist_beak_width ~ type,
+  family = tweedie(link = "log"),
+  dispformula = ~ type,
+  data = result_df
+)
+anova(mt0_dis_beak_width, mt_dis_beak_width)
+```
+
+```{r}
+testDispersion(res_dis_beak_width)
+testZeroInflation(res_dis_beak_width)
+testOutliers(res_dis_beak_width)
+```
+```{r}
+idx = which(res_dis_beak_width$scaledResiduals < 0.01 | res_dis_beak_width$scaledResiduals > 0.99)
+result_df[idx, c("min_dist_beak_width", "type", "city_id", "city_name")]
+```
+
+Effect sizes
+```{r}
+library(emmeans)
+emmeans(mt_dis_beak_width, ~ type, type = "response")     # back on original scale
+contrast(emmeans(mt_dis_beak_width, ~ type, type = "response"), "pairwise")
+```
+These are the expected values of min_dist_beak_width for each type, averaged over the random effects, and then back-transformed to the response scale:
+* Available: 0.493 (SE 0.0405), 95% CI 0.420 to 0.579
+* Introduced: 0.354 (SE 0.0280), 95% CI 0.303 to 0.413
+
+Interpretation: the model estimates that Available is ~1.39× (≈ 40%) higher than Introduced, on average, after accounting for city-level clustering.
+
+
+#### HWI
+```{r}
+mt_hwi = glmmTMB(
+  min_dist_hwi ~ type + (1 | city_id),
+  family = tweedie(link = "log"),
+  dispformula = ~ type,
+  data = result_df
+)
+
+summary(mt_hwi)
+
+# Diagnostics
+res_hwi = simulateResiduals(mt_hwi)
+plot(res_hwi, form = factor(result_df$type))
+
+# Test the group effect (Wald)
+car::Anova(mt_hwi, type = 2)
+```
+
+```{r}
+testDispersion(res_hwi)
+testZeroInflation(res_hwi)
+testOutliers(res_hwi)
+```
+
+Effect sizes
+```{r}
+library(emmeans)
+emmeans(mt_hwi, ~ type, type = "response")     # back on original scale
+contrast(emmeans(mt_hwi, ~ type, type = "response"), "pairwise")
+```
+model estimates:
+* Available: 1.45 (95% CI 1.30 – 1.62)
+* Introduced: 5.31 (95% CI 4.66 – 6.04)
+
+Interpretation: Available is only 0.274× Introduced — i.e. ~72% lower.
+
+```{r}
+mt_mass = glmmTMB(
+  min_dist_mass ~ type + (1 | city_id),
+  family = tweedie(link = "log"),
+  dispformula = ~ type,
+  data = result_df
+)
+
+summary(mt_mass)
+
+# Diagnostics
+res_mass = simulateResiduals(mt_mass)
+plot(res_mass, form = factor(result_df$type))
+
+# Test the group effect (Wald)
+car::Anova(mt_mass, type = 2)
+```
+
+```{r}
+testDispersion(res_mass)
+testZeroInflation(res_mass)
+testOutliers(res_mass)
+```
+
+Effect sizes
+```{r}
+library(emmeans)
+emmeans(mt_mass, ~ type, type = "response")     # back on original scale
+contrast(emmeans(mt_mass, ~ type, type = "response"), "pairwise")
+```
+model estimates:
+* Available: 39.7 (SE 3.08), 95% CI 34.2 – 46.2
+* Introduced: 69.9 (SE 6.36), 95% CI 58.1 – 84.2
+
+Interpretation: Available is 0.558× Introduced — i.e. about 43% lower.
+
+```{r}
+min(result_df$min_phylo_dist)
+
+mt_phylo_dist = glmmTMB(
+  min_phylo_dist ~ type + (1 | city_id),
+  family = Gamma(link = "log"),
+  data = result_df
+)
+
+summary(mt_phylo_dist)
+
+# Diagnostics
+res_phylo_dist = simulateResiduals(mt_phylo_dist)
+plot(res_phylo_dist, form = factor(result_df$type))
+
+# Test the group effect (Wald)
+car::Anova(mt_phylo_dist, type = 2)
 ```
 
 
 ```{r}
-m_hwi = lme4::lmer(log(min_dist_hwi + 1e-6) ~ type + (1|city_id), data = result_df)
-exp(fixef(m_hwi))
-
-exp(confint(m_hwi, parm="typeIntroduced", method="profile"))
+library(emmeans)
+emmeans(mt_phylo_dist, ~ type, type = "response")     # back on original scale
+contrast(emmeans(mt_phylo_dist, ~ type, type = "response"), "pairwise")
 ```
 
+Model-based expected values:
+* Available: 35.6 (SE 1.35), 95% CI 33.0 – 38.3
+* Introduced: 47.8 (SE 1.93), 95% CI 44.2 – 51.8
 
-```{r}
-m_mass = lme4::lmer(log(min_dist_mass + 1e-6) ~ type + (1|city_id), data = result_df)
-exp(fixef(m_mass))
-
-exp(confint(m_mass, parm="typeIntroduced", method="profile"))
-```
-
-
-```{r}
-m_phylo = lme4::lmer(log(min_phylo_dist + 1e-6) ~ type + (1|city_id), data = result_df)
-exp(fixef(m_phylo))
-
-exp(confint(m_phylo, parm="typeIntroduced", method="profile"))
-```
-
-Across 491 species–city observations (332 available from the regional pool but absent from the city; 159 introduced present in the city), minimum trait distances to the city’s native assemblage were often near zero for the available pool (e.g., beak width: 13.3% zeros; HWI: 1.5% zeros), whereas zeros were rare or absent for introduced species (beak width: 2.5% zeros; HWI: 0%). Mixed-effects models on log-transformed minimum distances (city as a random intercept) showed that introduced species were consistently less similar to the native assemblage than available species: minimum beak-width distance was 3.03× higher (95% CI 1.49–6.19), minimum HWI distance was 4.35× higher (95% CI 3.15–6.00), minimum mass distance was 1.75× higher (95% CI 1.32–2.32), and minimum phylogenetic distance was 1.29× higher (95% CI 1.22–1.36) for introduced versus available species.
-
-
+Interpretation: Available is 0.744× Introduced, i.e. about 25.6% lower.
 
