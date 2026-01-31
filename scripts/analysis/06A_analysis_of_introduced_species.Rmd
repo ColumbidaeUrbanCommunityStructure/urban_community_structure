@@ -28,6 +28,10 @@ columbidae_tree = read.tree(filename(TAXONOMY_OUTPUT_DIR, 'phylogeny.tre'))
 plot(columbidae_tree)
 ```
 
+```{r}
+realms = read_csv(filename(CITY_DATA_OUTPUT_DIR, 'realms.csv')) %>% mutate(city_id = factor(city_id))
+```
+
 # Find communities with introduced species
 ```{r}
 urban_introduced_species = community_data %>% filter(origin == 'Introduced') %>% filter(relative_abundance_proxy > 0)
@@ -43,6 +47,7 @@ urban_native_species
 regional_native_species = community_data %>% filter(origin != 'Introduced') %>% filter(relative_abundance_proxy == 0)
 regional_native_species
 ```
+
 
 # Find cities we can use to compare introduced species vs regional species
 ```{r}
@@ -112,7 +117,7 @@ communities_matrix =  function(urban_community, comparison_community) {
   )
 
   comm["urban", urban] = 1
-  comm[compare, compare] = 1
+  comm[cbind(compare, compare)] = 1
   comm
 }
 
@@ -189,7 +194,7 @@ for (i in 1:nrow(cities_available_for_test)) {
   result_df = rbind(result_df, min_trait_distances(test_city_id))
 }
 
-result_df = result_df %>% mutate(type = as.factor(type), city_id = factor(city_id))
+result_df = result_df %>% mutate(type = as.factor(type), city_id = factor(city_id)) %>% left_join(realms, by = 'city_id')
 result_df
 ```
 
@@ -249,6 +254,7 @@ Using Tweedie GLMM (good default when zeros exist)
 ```{r}
 library(glmmTMB)
 library(DHARMa)
+library(emmeans)
 ```
 
 #### Beak width
@@ -302,6 +308,7 @@ testDispersion(res_dis_beak_width)
 testZeroInflation(res_dis_beak_width)
 testOutliers(res_dis_beak_width)
 ```
+
 ```{r}
 idx = which(res_dis_beak_width$scaledResiduals < 0.01 | res_dis_beak_width$scaledResiduals > 0.99)
 result_df[idx, c("min_dist_beak_width", "type", "city_id", "city_name")]
@@ -309,7 +316,6 @@ result_df[idx, c("min_dist_beak_width", "type", "city_id", "city_name")]
 
 Effect sizes
 ```{r}
-library(emmeans)
 emmeans(mt_dis_beak_width, ~ type, type = "response")     # back on original scale
 contrast(emmeans(mt_dis_beak_width, ~ type, type = "response"), "pairwise")
 ```
@@ -347,7 +353,6 @@ testOutliers(res_hwi)
 
 Effect sizes
 ```{r}
-library(emmeans)
 emmeans(mt_hwi, ~ type, type = "response")     # back on original scale
 contrast(emmeans(mt_hwi, ~ type, type = "response"), "pairwise")
 ```
@@ -357,6 +362,7 @@ model estimates:
 
 Interpretation: Available is only 0.274× Introduced — i.e. ~72% lower.
 
+#### Mass
 ```{r}
 mt_mass = glmmTMB(
   min_dist_mass ~ type + (1 | city_id),
@@ -383,7 +389,6 @@ testOutliers(res_mass)
 
 Effect sizes
 ```{r}
-library(emmeans)
 emmeans(mt_mass, ~ type, type = "response")     # back on original scale
 contrast(emmeans(mt_mass, ~ type, type = "response"), "pairwise")
 ```
@@ -393,6 +398,7 @@ model estimates:
 
 Interpretation: Available is 0.558× Introduced — i.e. about 43% lower.
 
+#### Phylogeny
 ```{r}
 min(result_df$min_phylo_dist)
 
@@ -414,14 +420,9 @@ car::Anova(mt_phylo_dist, type = 2)
 
 
 ```{r}
-library(emmeans)
 emmeans(mt_phylo_dist, ~ type, type = "response")     # back on original scale
 contrast(emmeans(mt_phylo_dist, ~ type, type = "response"), "pairwise")
 ```
 
-Model-based expected values:
-* Available: 38.7 (SE 1.35), 95% CI 35.5 – 41.8
-* Introduced: 50.4 (SE 1.93), 95% CI 47.1 – 53.8
 
-Interpretation: Available is 0.744× Introduced, i.e. about 25.6% lower.
 
