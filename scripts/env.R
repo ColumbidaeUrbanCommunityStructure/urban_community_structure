@@ -51,6 +51,10 @@ standardise = function(actual_value, mean_value, sd_value) {
   (actual_value - mean_value) / sd_value
 }
 
+normalise = function(actual_value, max_value, min_value) { 
+  (actual_value - min_value) / (max_value - min_value)
+}
+
 test_value_wilcox = function(name, standarised_list) {
   wilcox_test_result = wilcox.test(standarised_list, mu = 0, na.rm = T)
   

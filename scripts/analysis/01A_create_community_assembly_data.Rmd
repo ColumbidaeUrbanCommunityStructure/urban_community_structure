@@ -385,14 +385,22 @@ test_null_model_community_metrics
 standardise(1.5, 1, 2)
 ```
 
+```{r}
+normalise(15, 20, 10)
+```
+
 Create function to test actual value against all possible null model values
 ```{r}
 compare_community_to_null_model = function(metric_name, actual_metric_value, null_model_metric_values) {
   mean_value = mean(null_model_metric_values)
   sd_value = sd(null_model_metric_values)
   
+  min_value = min(null_model_metric_values)
+  max_value = max(null_model_metric_values)
+  
   result = data.frame(
     standard = standardise(actual_metric_value, mean_value, sd_value),
+    normal = normalise(actual_metric_value, max_value, min_value),
     actual = actual_metric_value
   )
   
@@ -400,7 +408,7 @@ compare_community_to_null_model = function(metric_name, actual_metric_value, nul
       paste(metric_name, value, sep = '_')
   }
   
-  colnames(result) = c(col_name('standard'), col_name('actual'))
+  colnames(result) = c(col_name('standard'), col_name('normal'), col_name('actual'))
   result
 }
 ```
