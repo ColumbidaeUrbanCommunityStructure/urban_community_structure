@@ -874,7 +874,7 @@ MNTD: corRatio with NMDS + lat/long
 
 ```{r}
 AIC(spatial_model(create_formula('mntd_normal'), corLin(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
-AIC(spatial_model(create_formula('mntd_normal'), corLin(form = ~ latitude + longitude)))
+#AIC(spatial_model(create_formula('mntd_normal'), corLin(form = ~ latitude + longitude)))
 AIC(spatial_model(create_formula('mntd_normal'), corExp(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
 AIC(spatial_model(create_formula('mntd_normal'), corExp(form = ~ latitude + longitude)))
 AIC(spatial_model(create_formula('mntd_normal'), corGaus(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
@@ -960,7 +960,7 @@ AIC(spatial_model(create_formula('mass_fdiv_standard'), corSpher(form = ~ latitu
 Mass: corExp with NMDS + lat/long
 
 ```{r}
-AIC(spatial_model(create_formula('mass_fdiv_normal'), corLin(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+#AIC(spatial_model(create_formula('mass_fdiv_normal'), corLin(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
 #AIC(spatial_model(create_formula('mass_fdiv_normal'), corLin(form = ~ latitude + longitude)))
 AIC(spatial_model(create_formula('mass_fdiv_normal'), corExp(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
 AIC(spatial_model(create_formula('mass_fdiv_normal'), corExp(form = ~ latitude + longitude)))
