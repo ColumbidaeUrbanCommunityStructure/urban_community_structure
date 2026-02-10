@@ -25,6 +25,16 @@ min(community_data$mass_fdiv_standard)
 max(community_data$mass_fdiv_standard)
 ```
 
+```{r}
+min(community_data$mntd_normal)
+max(community_data$mntd_normal)
+min(community_data$beak_width_fdiv_normal)
+max(community_data$beak_width_fdiv_normal)
+min(community_data$hwi_fdiv_normal)
+max(community_data$hwi_fdiv_normal)
+min(community_data$mass_fdiv_normal)
+max(community_data$mass_fdiv_normal)
+```
 
 Join on realms
 ```{r}
@@ -60,6 +70,7 @@ Load trait data
 traits = read_csv(filename(TAXONOMY_OUTPUT_DIR, 'traits_ebird.csv'))
 head(traits)
 ```
+
 Load spatial var
 ```{r}
 spatial_var = read_csv(filename(COMMUNITY_OUTPUT_DIR, 'spatial_var.csv')) %>% filter(city_id %in% community_summary$city_id)
@@ -70,10 +81,15 @@ spatial_var
 ```{r}
 test_required_values = function(name, df) {
   cat(paste(
-    test_value_wilcox(paste(name, 'MNTD'), df$mntd_standard),
-    test_value_wilcox(paste(name, 'Beak Width FDiv'), df$beak_width_fdiv_standard),
-    test_value_wilcox(paste(name, 'HWI FDiv'), df$hwi_fdiv_standard),
-    test_value_wilcox(paste(name, 'Mass FDiv'), df$mass_fdiv_standard),
+    test_value_wilcox(paste(name, 'Std: MNTD'), df$mntd_standard),
+    test_value_wilcox(paste(name, 'Std: Beak Width FDiv'), df$beak_width_fdiv_standard),
+    test_value_wilcox(paste(name, 'Std: HWI FDiv'), df$hwi_fdiv_standard),
+    test_value_wilcox(paste(name, 'Std: Mass FDiv'), df$mass_fdiv_standard),
+    
+    test_value_wilcox(paste(name, 'Norm: MNTD'), df$mntd_normal, mu = 0.5),
+    test_value_wilcox(paste(name, 'Norm: Beak Width FDiv'), df$beak_width_fdiv_normal, mu = 0.5),
+    test_value_wilcox(paste(name, 'Norm: HWI FDiv'), df$hwi_fdiv_normal, mu = 0.5),
+    test_value_wilcox(paste(name, 'Norm: Mass FDiv'), df$mass_fdiv_normal, mu = 0.5),
     paste('N', nrow(df)),
     sep = "\n"))
 }
@@ -113,22 +129,39 @@ test_required_values('Australasia', community_data_with_realm[community_data_wit
 
 ## How significant are those differences:
 ```{r}
+print('Standard')
 kruskal.test(mntd_standard~core_realm, data = community_data_with_realm)
 pairwise.wilcox.test(community_data_with_realm$mntd_standard, community_data_with_realm$core_realm)
+print('Normal')
+kruskal.test(mntd_normal~core_realm, data = community_data_with_realm)
+pairwise.wilcox.test(community_data_with_realm$mntd_normal, community_data_with_realm$core_realm)
 ```
+
 ```{r}
+print('Standard')
+kruskal.test(beak_width_fdiv_standard~core_realm, data = community_data_with_realm)
+pairwise.wilcox.test(community_data_with_realm$beak_width_fdiv_standard, community_data_with_realm$core_realm)
+print('Normal')
 kruskal.test(beak_width_fdiv_standard~core_realm, data = community_data_with_realm)
 pairwise.wilcox.test(community_data_with_realm$beak_width_fdiv_standard, community_data_with_realm$core_realm)
 ```
 
 ```{r}
+print('Standard')
 kruskal.test(hwi_fdiv_standard~core_realm, data = community_data_with_realm)
 pairwise.wilcox.test(community_data_with_realm$hwi_fdiv_standard, community_data_with_realm$core_realm)
+print('Normal')
+kruskal.test(hwi_fdiv_normal~core_realm, data = community_data_with_realm)
+pairwise.wilcox.test(community_data_with_realm$hwi_fdiv_normal, community_data_with_realm$core_realm)
 ```
 
 ```{r}
+print('Standard')
 kruskal.test(mass_fdiv_standard~core_realm, data = community_data_with_realm)
 pairwise.wilcox.test(community_data_with_realm$mass_fdiv_standard, community_data_with_realm$core_realm)
+print('Normal')
+kruskal.test(mass_fdiv_normal~core_realm, data = community_data_with_realm)
+pairwise.wilcox.test(community_data_with_realm$mass_fdiv_normal, community_data_with_realm$core_realm)
 ```
 
 # Summary metrics by invasive species
