@@ -1409,42 +1409,65 @@ plot_grid(
   plot_grid(
     ggdraw() + 
     draw_label(
-      "Spatial Model",
+      "Spatial Model (standardised)",
       fontface = 'bold',
       x = 0,
       hjust = 0
     ),
     ggdraw() + 
     draw_label(
-      "Dredge Result",
+      "Spatial Model (normalised)",
       fontface = 'bold',
       x = 0,
       hjust = 0
-    )
+    ),
+    ggdraw() + 
+    draw_label(
+      "Dredge Result (standardised)",
+      fontface = 'bold',
+      x = 0,
+      hjust = 0
+    ),
+    ggdraw() + 
+    draw_label(
+      "Dredge Result (normalised)",
+      fontface = 'bold',
+      x = 0,
+      hjust = 0
+    ),
+    nrow = 1
   ),
   plot_grid(
     std_mntd_analysis_pred_spatial_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-3, 3)) + ylab(''), 
+    nrm_mntd_analysis_pred_spatial_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-1, 1)) + ylab(''), 
     std_mntd_analysis_pred_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-3, 3)) + ylab(''), 
+    nrm_mntd_analysis_pred_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-1, 1)) + ylab(''), 
     nrow = 1
   ) + draw_label("MNTD", size = 16, angle = 90, x = 0.01, y = 0.5),
   plot_grid(
-    std_gape_fdiv_analysis_pred_spatial_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-3, 3)) + ylab(''),  
-    std_gape_fdiv_analysis_pred_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-3, 3)) + ylab(''), 
+    std_gape_fdiv_analysis_pred_spatial_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-3, 3)) + ylab(''), 
+    nrm_gape_fdiv_analysis_pred_spatial_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-1, 1)) + ylab(''), 
+    std_gape_fdiv_analysis_pred_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-3, 3)) + ylab(''),  
+    nrm_gape_fdiv_analysis_pred_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-1, 1)) + ylab(''), 
     nrow = 1
   ) + draw_label("Beak Width", size = 16, angle = 90, x = 0.01, y = 0.5),
   plot_grid(
     std_hwi_fdiv_analysis_pred_spatial_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-3, 3)) + ylab(''), 
-    std_hwi_fdiv_analysis_pred_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-3, 3)) + ylab(''), 
+    nrm_hwi_fdiv_analysis_pred_spatial_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-1, 1)) + ylab(''), 
+    std_hwi_fdiv_analysis_pred_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-3, 3)) + ylab(''),  
+    nrm_hwi_fdiv_analysis_pred_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-1, 1)) + ylab(''), 
     nrow = 1
   ) + draw_label("HWI", size = 16, angle = 90, x = 0.01, y = 0.5),
   plot_grid(
     std_mass_fdiv_analysis_pred_spatial_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-3, 3)) + ylab(''), 
-    std_mass_fdiv_analysis_pred_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-3, 3)) + ylab(''), 
+    nrm_mass_fdiv_analysis_pred_spatial_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-1, 1)) + ylab(''), 
+    std_mass_fdiv_analysis_pred_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-3, 3)) + ylab(''),  
+    nrm_mass_fdiv_analysis_pred_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-1, 1)) + ylab(''), 
     nrow = 1
   ) + draw_label("Mass", size = 16, angle = 90, x = 0.01, y = 0.5), 
-  nrow = 5
+  nrow = 5, rel_heights = c(1, 4, 4, 4, 4)
 )
-ggsave(filename(FIGURES_OUTPUT_DIR, 'process_response_vs_spatial.jpg'), width = 3000, height = 3200, units = 'px')
+ggsave(filename(FIGURES_OUTPUT_DIR, 'process_response_vs_spatial.jpg'), width = 4000, height = 3200, units = 'px')
 ```
 
 
