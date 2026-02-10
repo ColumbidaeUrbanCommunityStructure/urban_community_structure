@@ -128,6 +128,18 @@ standardised_colours_scale = scale_colour_gradient2(
   limits = c(-2.5, 2.5)
 )
 
+normalised_colours_scale = scale_colour_gradient2(
+  low = cyan,
+  mid = magenta,
+  high = teal,
+  midpoint = 0.5,
+  space = "Lab",
+  na.value = grey,
+  guide = "colourbar",
+  aesthetics = "colour",
+  limits = c(0, 1)
+)
+
 abundance_proxy_scale = scale_color_continuous(low = cyan, high = orange)
 abundance_proxy_scale_fill = scale_fill_continuous(low = cyan, high = orange)
 

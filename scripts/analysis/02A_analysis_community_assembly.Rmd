@@ -163,150 +163,6 @@ print('Normal')
 kruskal.test(mass_fdiv_normal~core_realm, data = community_data_with_realm)
 pairwise.wilcox.test(community_data_with_realm$mass_fdiv_normal, community_data_with_realm$core_realm)
 ```
-
-# Summary metrics by invasive species
-```{r}
-cities_with_introduced_species = communities %>% filter(origin == 'Introduced') %>% select(city_id) %>% distinct()
-
-cities_with_no_introduced_species = communities %>% filter(!(city_id %in% cities_with_introduced_species$city_id)) %>% select(city_id) %>% distinct()
-
-cities_with_introduced_species$introduced_species = TRUE
-cities_with_no_introduced_species$introduced_species = FALSE
-
-community_data_with_realm_with_introduced = community_data_with_realm %>% left_join(rbind(cities_with_introduced_species, cities_with_no_introduced_species))
-community_data_with_realm_with_introduced
-```
-```{r}
-test_required_values('With Introduced', community_data_with_realm_with_introduced[community_data_with_realm_with_introduced$introduced_species,])
-```
-
-```{r}
-test_required_values('Without Introduced', community_data_with_realm_with_introduced[!community_data_with_realm_with_introduced$introduced_species,])
-```
-
-## How significant are those differences:
-```{r}
-wilcox.test(community_data_with_realm_with_introduced$mntd_standard~community_data_with_realm_with_introduced$introduced_species)
-```
-
-```{r}
-wilcox.test(community_data_with_realm_with_introduced$beak_width_fdiv_standard~community_data_with_realm_with_introduced$introduced_species)
-```
-
-```{r}
-wilcox.test(community_data_with_realm_with_introduced$hwi_fdiv_standard~community_data_with_realm_with_introduced$introduced_species)
-```
-
-```{r}
-wilcox.test(community_data_with_realm_with_introduced$mass_fdiv_standard~community_data_with_realm_with_introduced$introduced_species)
-```
-# Invasive species per realm
-## Nearctic
-```{r}
-test_required_values('Nearctic With Introduced', community_data_with_realm_with_introduced[community_data_with_realm_with_introduced$core_realm == 'Nearctic' & community_data_with_realm_with_introduced$introduced_species,])
-```
-
-## Neotropic
-```{r}
-test_required_values('Neotropic With Introduced', community_data_with_realm_with_introduced[community_data_with_realm_with_introduced$core_realm == 'Neotropic' & community_data_with_realm_with_introduced$introduced_species,])
-```
-## Palearctic
-```{r}
-palearctic_community_data_with_realm_with_introduced = community_data_with_realm_with_introduced[community_data_with_realm_with_introduced$core_realm == 'Palearctic',]
-```
-
-```{r}
-test_required_values('Palearctic With Introduced', palearctic_community_data_with_realm_with_introduced[palearctic_community_data_with_realm_with_introduced$introduced_species,])
-```
-
-```{r}
-test_required_values('Palearctic Without Introduced', palearctic_community_data_with_realm_with_introduced[!palearctic_community_data_with_realm_with_introduced$introduced_species,])
-```
-### MNTD
-```{r}
-wilcox.test(palearctic_community_data_with_realm_with_introduced$mntd_standard~palearctic_community_data_with_realm_with_introduced$introduced_species)
-```
-### Beak width
-```{r}
-wilcox.test(palearctic_community_data_with_realm_with_introduced$beak_width_fdiv_standard~palearctic_community_data_with_realm_with_introduced$introduced_species)
-```
-### HWI
-```{r}
-wilcox.test(palearctic_community_data_with_realm_with_introduced$hwi_fdiv_standard~palearctic_community_data_with_realm_with_introduced$introduced_species)
-```
-### Mass
-```{r}
-wilcox.test(palearctic_community_data_with_realm_with_introduced$mass_fdiv_standard~palearctic_community_data_with_realm_with_introduced$introduced_species)
-```
-
-## Afrotropic
-
-```{r}
-afrotropic_community_data_with_realm_with_introduced = community_data_with_realm_with_introduced[community_data_with_realm_with_introduced$core_realm == 'Afrotropic',]
-```
-
-```{r}
-test_required_values('Afrotropic With Introduced', afrotropic_community_data_with_realm_with_introduced[afrotropic_community_data_with_realm_with_introduced$introduced_species,])
-```
-
-```{r}
-test_required_values('Afrotropic Without Introduced', afrotropic_community_data_with_realm_with_introduced[!afrotropic_community_data_with_realm_with_introduced$introduced_species,])
-```
-
-### MNTD
-```{r}
-wilcox.test(afrotropic_community_data_with_realm_with_introduced$mntd_standard~afrotropic_community_data_with_realm_with_introduced$introduced_species)
-```
-### Beak width
-```{r}
-wilcox.test(afrotropic_community_data_with_realm_with_introduced$beak_width_fdiv_standard~afrotropic_community_data_with_realm_with_introduced$introduced_species)
-```
-### HWI
-```{r}
-wilcox.test(afrotropic_community_data_with_realm_with_introduced$hwi_fdiv_standard~afrotropic_community_data_with_realm_with_introduced$introduced_species)
-```
-### Mass
-```{r}
-wilcox.test(afrotropic_community_data_with_realm_with_introduced$mass_fdiv_standard~afrotropic_community_data_with_realm_with_introduced$introduced_species)
-```
-
-## Indomalayan
-```{r}
-indomalayan_community_data_with_realm_with_introduced = community_data_with_realm_with_introduced[community_data_with_realm_with_introduced$core_realm == 'Indomalayan',]
-```
-
-```{r}
-test_required_values('Indomalayan With Introduced', indomalayan_community_data_with_realm_with_introduced[indomalayan_community_data_with_realm_with_introduced$introduced_species,])
-```
-
-```{r}
-test_required_values('Indomalayan Without Introduced', indomalayan_community_data_with_realm_with_introduced[!indomalayan_community_data_with_realm_with_introduced$introduced_species,])
-```
-
-### MNTD
-```{r}
-wilcox.test(indomalayan_community_data_with_realm_with_introduced$mntd_standard~indomalayan_community_data_with_realm_with_introduced$introduced_species)
-```
-### Beak width
-```{r}
-wilcox.test(indomalayan_community_data_with_realm_with_introduced$beak_width_fdiv_standard~indomalayan_community_data_with_realm_with_introduced$introduced_species)
-```
-### HWI
-```{r}
-wilcox.test(indomalayan_community_data_with_realm_with_introduced$hwi_fdiv_standard~indomalayan_community_data_with_realm_with_introduced$introduced_species)
-```
-### Mass
-```{r}
-wilcox.test(indomalayan_community_data_with_realm_with_introduced$mass_fdiv_standard~indomalayan_community_data_with_realm_with_introduced$introduced_species)
-```
-
-## Australasia
-
-```{r}
-test_required_values('Australasia With Introduced', community_data_with_realm_with_introduced[community_data_with_realm_with_introduced$core_realm == 'Australasia' & community_data_with_realm_with_introduced$introduced_species,])
-```
-
-
 # What families exist in which realms?
 ```{r}
 communities %>% 
@@ -387,6 +243,9 @@ community_data_with_introductions %>% group_by(has_introduced_species) %>% summa
 ```{r}
 ggplot(community_data_with_introductions, aes(x = has_introduced_species, y = mntd_standard)) + geom_boxplot()
 ```
+```{r}
+ggplot(community_data_with_introductions, aes(x = has_introduced_species, y = mntd_normal)) + geom_boxplot()
+```
 
 ```{r}
 wilcox.test(mntd_standard ~ has_introduced_species, community_data_with_introductions, na.action = 'na.omit')
@@ -395,16 +254,26 @@ wilcox.test(mntd_standard ~ has_introduced_species, community_data_with_introduc
 There is a significant difference between the response of cities with introduced species (0.53±0.27) and those without (0.47±0.19) (p-value = 0.02).
 
 
+```{r}
+wilcox.test(mntd_normal ~ has_introduced_species, community_data_with_introductions, na.action = 'na.omit')
+```
+
 ## Mass FDiv
 ```{r}
 ggplot(community_data_with_introductions, aes(x = has_introduced_species, y = mass_fdiv_standard)) + geom_boxplot()
 ```
 
 ```{r}
+ggplot(community_data_with_introductions, aes(x = has_introduced_species, y = mass_fdiv_normal)) + geom_boxplot()
+```
+```{r}
 wilcox.test(mass_fdiv_standard ~ has_introduced_species, community_data_with_introductions, na.action = 'na.omit')
 ```
 There is a significant difference between the response of cities with introduced species (0.57±0.27) and those without (0.73±0.24) (p < 0.0001)
 
+```{r}
+wilcox.test(mass_fdiv_normal ~ has_introduced_species, community_data_with_introductions, na.action = 'na.omit')
+```
 
 ## Beak Gape FDiv
 ```{r}
@@ -412,10 +281,16 @@ ggplot(community_data_with_introductions, aes(x = has_introduced_species, y = be
 ```
 
 ```{r}
+ggplot(community_data_with_introductions, aes(x = has_introduced_species, y = beak_width_fdiv_normal)) + geom_boxplot()
+```
+```{r}
 wilcox.test(beak_width_fdiv_standard ~ has_introduced_species, community_data_with_introductions, na.action = 'na.omit')
 ```
 There is NOT a significant difference between the response of cities with introduced species (0.61±0.30) and those without (0.56±0.27)
 
+```{r}
+wilcox.test(beak_width_fdiv_normal ~ has_introduced_species, community_data_with_introductions, na.action = 'na.omit')
+```
 
 ## HWI FDiv
 ```{r}
@@ -423,9 +298,17 @@ ggplot(community_data_with_introductions, aes(x = has_introduced_species, y = hw
 ```
 
 ```{r}
+ggplot(community_data_with_introductions, aes(x = has_introduced_species, y = hwi_fdiv_normal)) + geom_boxplot()
+```
+
+```{r}
 wilcox.test(hwi_fdiv_standard ~ has_introduced_species, community_data_with_introductions, na.action = 'na.omit')
 ```
 There is a significant difference between the response of cities with introduced species (0.49±0.30) and those without (0.79±0.21) (p < 0.0001)
+
+```{r}
+wilcox.test(hwi_fdiv_normal ~ has_introduced_species, community_data_with_introductions, na.action = 'na.omit')
+```
 
 ## What proportion of cities in each realm have introduced species
 ```{r}
@@ -472,7 +355,10 @@ names(geography)
 ```
 
 ```{r}
-analysis_data = community_data_with_realm[,c('city_id', 'mntd_standard', 'mass_fdiv_standard', 'beak_width_fdiv_standard', 'hwi_fdiv_standard', 'core_realm')] %>% 
+analysis_data = community_data_with_realm[,c('city_id', 
+       'mntd_standard', 'mass_fdiv_standard', 'beak_width_fdiv_standard', 'hwi_fdiv_standard',
+       'mntd_normal', 'mass_fdiv_normal', 'beak_width_fdiv_normal', 'hwi_fdiv_normal',
+       'core_realm')] %>% 
   left_join(city_points[,c('city_id', 'latitude', 'longitude')]) %>%
   left_join(community_data_with_introductions[,c('city_id', 'has_introduced_species')]) %>%
   left_join(geography) %>%
@@ -488,6 +374,7 @@ model_data = function(df, dependant_var) {
   df[,c(dependant_var, 'core_realm', 'abs_latitude', 'longitude', 'has_introduced_species', 'city_avg_ndvi', 'city_avg_elevation', 'city_avg_temp', 'city_avg_min_monthly_temp', 'city_avg_max_monthly_temp', 'city_avg_monthly_temp', 'city_avg_rainfall', 'city_avg_max_monthly_rainfall', 'city_avg_min_monthly_rainfall', 'city_avg_soil_moisture', 'city_max_elev', 'city_min_elev', 'city_elev_range', 'region_20km_avg_ndvi', 'region_20km_avg_elevation', 'region_20km_avg_soil_moisture', 'region_20km_max_elev', 'region_20km_min_elev', 'region_20km_elev_range', 'region_50km_avg_ndvi', 'region_50km_avg_elevation', 'region_50km_avg_soil_moisture', 'region_50km_max_elev', 'region_50km_min_elev', 'region_50km_elev_range')]
 }
 model_data(analysis_data, 'mntd_standard')
+model_data(analysis_data, 'mntd_normal')
 ```
 
 ```{r}
@@ -571,6 +458,13 @@ with_realms_latlong(ggplot(analysis_data, aes(x = latitude, y = longitude, colou
 ```{r}
 moran.test(analysis_data$mntd_standard, nb2listw(analysis_data_neighbours))
 ```
+```{r}
+with_realms_latlong(ggplot(analysis_data, aes(x = latitude, y = longitude, colour = mntd_normal)) + geom_point() + normalised_colours_scale + labs(colour = "Normalised response"))
+```
+
+```{r}
+moran.test(analysis_data$mntd_normal, nb2listw(analysis_data_neighbours))
+```
 
 ### NMDS
 ```{r}
@@ -579,6 +473,14 @@ with_realms_nmds(ggplot(analysis_data, aes(x = NMDS1, y = NMDS2, colour = mntd_s
 
 ```{r}
 moran.test(analysis_data$mntd_standard, nb2listw(analysis_data_nmds_neighbours))
+```
+
+```{r}
+with_realms_nmds(ggplot(analysis_data, aes(x = NMDS1, y = NMDS2, colour = mntd_normal)) + geom_point() + standardised_colours_scale + labs(colour = "Normalised response"))
+```
+
+```{r}
+moran.test(analysis_data$mntd_normal, nb2listw(analysis_data_nmds_neighbours))
 ```
 
 ## FDiv Beak Width
@@ -592,6 +494,14 @@ with_realms_latlong(ggplot(analysis_data, aes(x = latitude, y = longitude, colou
 moran.test(analysis_data$beak_width_fdiv_standard, nb2listw(analysis_data_neighbours))
 ```
 
+```{r}
+with_realms_latlong(ggplot(analysis_data, aes(x = latitude, y = longitude, colour = beak_width_fdiv_normal)) + geom_point() + standardised_colours_scale + labs(colour = "Normalised response"))
+```
+
+```{r}
+moran.test(analysis_data$beak_width_fdiv_normal, nb2listw(analysis_data_neighbours))
+```
+
 ### NMDS
 ```{r}
 with_realms_nmds(ggplot(analysis_data, aes(x = NMDS1, y = NMDS2, colour = beak_width_fdiv_standard)) + geom_point() + standardised_colours_scale + labs(colour = "Standardised response"))
@@ -601,6 +511,13 @@ with_realms_nmds(ggplot(analysis_data, aes(x = NMDS1, y = NMDS2, colour = beak_w
 moran.test(analysis_data$beak_width_fdiv_standard, nb2listw(analysis_data_nmds_neighbours))
 ```
 
+```{r}
+with_realms_nmds(ggplot(analysis_data, aes(x = NMDS1, y = NMDS2, colour = beak_width_fdiv_normal)) + geom_point() + standardised_colours_scale + labs(colour = "Normalised response"))
+```
+
+```{r}
+moran.test(analysis_data$beak_width_fdiv_normal, nb2listw(analysis_data_nmds_neighbours))
+```
 
 ## FDiv HWI
 
@@ -613,6 +530,14 @@ with_realms_latlong(ggplot(analysis_data, aes(x = latitude, y = longitude, colou
 moran.test(analysis_data$hwi_fdiv_standard, nb2listw(analysis_data_neighbours))
 ```
 
+```{r}
+with_realms_latlong(ggplot(analysis_data, aes(x = latitude, y = longitude, colour = hwi_fdiv_normal)) + geom_point() + standardised_colours_scale + labs(colour = "Normalised response"))
+```
+
+```{r}
+moran.test(analysis_data$hwi_fdiv_normal, nb2listw(analysis_data_neighbours))
+```
+
 ### NMDS
 ```{r}
 with_realms_nmds(ggplot(analysis_data, aes(x = NMDS1, y = NMDS2, colour = hwi_fdiv_standard)) + geom_point() + standardised_colours_scale + labs(colour = "Standardised response"))
@@ -622,6 +547,13 @@ with_realms_nmds(ggplot(analysis_data, aes(x = NMDS1, y = NMDS2, colour = hwi_fd
 moran.test(analysis_data$hwi_fdiv_standard, nb2listw(analysis_data_nmds_neighbours))
 ```
 
+```{r}
+with_realms_nmds(ggplot(analysis_data, aes(x = NMDS1, y = NMDS2, colour = hwi_fdiv_normal)) + geom_point() + standardised_colours_scale + labs(colour = "Normalised response"))
+```
+
+```{r}
+moran.test(analysis_data$hwi_fdiv_normal, nb2listw(analysis_data_nmds_neighbours))
+```
 
 ## FDiv Mass
 
@@ -634,6 +566,13 @@ with_realms_latlong(ggplot(analysis_data, aes(x = latitude, y = longitude, colou
 moran.test(analysis_data$mass_fdiv_standard, nb2listw(analysis_data_neighbours))
 ```
 
+```{r}
+with_realms_latlong(ggplot(analysis_data, aes(x = latitude, y = longitude, colour = mass_fdiv_normal)) + geom_point() + standardised_colours_scale + labs(colour = "Normalised response"))
+```
+
+```{r}
+moran.test(analysis_data$mass_fdiv_normal, nb2listw(analysis_data_neighbours))
+```
 ### NMDS
 ```{r}
 with_realms_nmds(ggplot(analysis_data, aes(x = NMDS1, y = NMDS2, colour = mass_fdiv_standard)) + geom_point() + standardised_colours_scale + labs(colour = "Standardised response"))
@@ -641,6 +580,14 @@ with_realms_nmds(ggplot(analysis_data, aes(x = NMDS1, y = NMDS2, colour = mass_f
 
 ```{r}
 moran.test(analysis_data$mass_fdiv_standard, nb2listw(analysis_data_nmds_neighbours))
+```
+
+```{r}
+with_realms_nmds(ggplot(analysis_data, aes(x = NMDS1, y = NMDS2, colour = mass_fdiv_normal)) + geom_point() + standardised_colours_scale + labs(colour = "Normalised response"))
+```
+
+```{r}
+moran.test(analysis_data$mass_fdiv_normal, nb2listw(analysis_data_nmds_neighbours))
 ```
 
 
@@ -747,14 +694,22 @@ create_formula = function(response_var) {
 
 ## Helper plot functions
 ```{r}
-geom_map = function(map_sf, title) {
+geom_map = function(map_sf, title, scale = standardised_colours_scale, colour_label = 'Standardised\nResponse') {
   norm_mntd_analysis_geo = ggplot() + 
     geom_sf(data = world_map, aes(geometry = geometry)) +
     map_sf +
-    standardised_colours_scale +
-    labs(colour = 'Standardised\nResponse') +
+    scale +
+    labs(colour = colour_label) +
     theme_bw() +
     theme(legend.position="bottom")
+}
+
+geom_map_std = function(map_sf, title) {
+  geom_map(map_sf, title)
+}
+
+geom_map_nrm = function(map_sf, title) {
+  geom_map(map_sf, title, normalised_colours_scale, 'Normalised\nResponse')
 }
 ```
 
@@ -841,7 +796,7 @@ model_summary <- function(model_sum) {
 ```
 
 ```{r}
-plot_dredge_result = function(result_table) {
+plot_dredge_result = function(result_table, mu = 0) {
   p = result_table[result_table$model == 'full',]
   p = type_labels(p)
 
@@ -857,7 +812,7 @@ plot_dredge_result = function(result_table) {
       values = c(realm_colour, city_geography_colour, regional_50km_geography_colour, regional_20km_geography_colour, introduced_species_colour), 
       breaks = c('Realm', 'City geography', 'Regional (50 km) geography', 'Regional (20 km) geography', 'Introduced species')) +
     theme_bw() +
-    geom_vline(xintercept=0, linetype="dotted") +
+    geom_vline(xintercept=mu, linetype="dotted") +
     guides(colour=guide_legend(title="Predictor type")) + xlab('Difference in response from 0\nhabitat filtering (< 0) and competitive interactions (> 0)\n± Standard Error') + ylab('Predictor') +
     theme(legend.justification = "top")
 }
@@ -901,6 +856,8 @@ plot_spatial_result = function(model_result) {
 ```
 
 ### Choose best spatial correlation function
+
+#### MNTD
 ```{r}
 AIC(spatial_model(create_formula('mntd_standard'), corLin(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
 AIC(spatial_model(create_formula('mntd_standard'), corLin(form = ~ latitude + longitude)))
@@ -916,8 +873,23 @@ AIC(spatial_model(create_formula('mntd_standard'), corSpher(form = ~ latitude + 
 MNTD: corRatio with NMDS + lat/long
 
 ```{r}
+AIC(spatial_model(create_formula('mntd_normal'), corLin(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('mntd_normal'), corLin(form = ~ latitude + longitude)))
+AIC(spatial_model(create_formula('mntd_normal'), corExp(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('mntd_normal'), corExp(form = ~ latitude + longitude)))
+AIC(spatial_model(create_formula('mntd_normal'), corGaus(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('mntd_normal'), corGaus(form = ~ latitude + longitude)))
+AIC(spatial_model(create_formula('mntd_normal'), corRatio(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('mntd_normal'), corRatio(form = ~ latitude + longitude)))
+AIC(spatial_model(create_formula('mntd_normal'), corSpher(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('mntd_normal'), corSpher(form = ~ latitude + longitude)))
+```
+
+#### Beak Width
+
+```{r}
 AIC(spatial_model(create_formula('beak_width_fdiv_standard'), corLin(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
-AIC(spatial_model(create_formula('beak_width_fdiv_standard'), corLin(form = ~ latitude + longitude)))
+#AIC(spatial_model(create_formula('beak_width_fdiv_standard'), corLin(form = ~ latitude + longitude)))
 AIC(spatial_model(create_formula('beak_width_fdiv_standard'), corExp(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
 AIC(spatial_model(create_formula('beak_width_fdiv_standard'), corExp(form = ~ latitude + longitude)))
 AIC(spatial_model(create_formula('beak_width_fdiv_standard'), corGaus(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
@@ -929,6 +901,20 @@ AIC(spatial_model(create_formula('beak_width_fdiv_standard'), corSpher(form = ~ 
 ```
 Beak width: corExp with NMDS + lat/long
 
+```{r}
+AIC(spatial_model(create_formula('beak_width_fdiv_normal'), corLin(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('beak_width_fdiv_normal'), corLin(form = ~ latitude + longitude)))
+AIC(spatial_model(create_formula('beak_width_fdiv_normal'), corExp(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('beak_width_fdiv_normal'), corExp(form = ~ latitude + longitude)))
+AIC(spatial_model(create_formula('beak_width_fdiv_normal'), corGaus(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('beak_width_fdiv_normal'), corGaus(form = ~ latitude + longitude)))
+AIC(spatial_model(create_formula('beak_width_fdiv_normal'), corRatio(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('beak_width_fdiv_normal'), corRatio(form = ~ latitude + longitude)))
+AIC(spatial_model(create_formula('beak_width_fdiv_normal'), corSpher(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('beak_width_fdiv_normal'), corSpher(form = ~ latitude + longitude)))
+```
+
+#### HWI
 ```{r}
 AIC(spatial_model(create_formula('hwi_fdiv_standard'), corLin(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
 AIC(spatial_model(create_formula('hwi_fdiv_standard'), corLin(form = ~ latitude + longitude)))
@@ -945,8 +931,22 @@ AIC(spatial_model(create_formula('hwi_fdiv_standard'), corSpher(form = ~ latitud
 HWI: corExp with NMDS + lat/long
 
 ```{r}
+#AIC(spatial_model(create_formula('hwi_fdiv_normal'), corLin(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+#AIC(spatial_model(create_formula('hwi_fdiv_normal'), corLin(form = ~ latitude + longitude)))
+AIC(spatial_model(create_formula('hwi_fdiv_normal'), corExp(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('hwi_fdiv_normal'), corExp(form = ~ latitude + longitude)))
+AIC(spatial_model(create_formula('hwi_fdiv_normal'), corGaus(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('hwi_fdiv_normal'), corGaus(form = ~ latitude + longitude)))
+AIC(spatial_model(create_formula('hwi_fdiv_normal'), corRatio(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('hwi_fdiv_normal'), corRatio(form = ~ latitude + longitude)))
+AIC(spatial_model(create_formula('hwi_fdiv_normal'), corSpher(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('hwi_fdiv_normal'), corSpher(form = ~ latitude + longitude)))
+```
+
+#### Mass
+```{r}
 AIC(spatial_model(create_formula('mass_fdiv_standard'), corLin(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
-AIC(spatial_model(create_formula('mass_fdiv_standard'), corLin(form = ~ latitude + longitude)))
+#AIC(spatial_model(create_formula('mass_fdiv_standard'), corLin(form = ~ latitude + longitude)))
 AIC(spatial_model(create_formula('mass_fdiv_standard'), corExp(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
 AIC(spatial_model(create_formula('mass_fdiv_standard'), corExp(form = ~ latitude + longitude)))
 AIC(spatial_model(create_formula('mass_fdiv_standard'), corGaus(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
@@ -958,6 +958,19 @@ AIC(spatial_model(create_formula('mass_fdiv_standard'), corSpher(form = ~ latitu
 ```
 
 Mass: corExp with NMDS + lat/long
+
+```{r}
+AIC(spatial_model(create_formula('mass_fdiv_normal'), corLin(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+#AIC(spatial_model(create_formula('mass_fdiv_normal'), corLin(form = ~ latitude + longitude)))
+AIC(spatial_model(create_formula('mass_fdiv_normal'), corExp(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('mass_fdiv_normal'), corExp(form = ~ latitude + longitude)))
+AIC(spatial_model(create_formula('mass_fdiv_normal'), corGaus(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('mass_fdiv_normal'), corGaus(form = ~ latitude + longitude)))
+AIC(spatial_model(create_formula('mass_fdiv_normal'), corRatio(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('mass_fdiv_normal'), corRatio(form = ~ latitude + longitude)))
+AIC(spatial_model(create_formula('mass_fdiv_normal'), corSpher(form = ~ NMDS1 + NMDS2 + latitude + longitude)))
+AIC(spatial_model(create_formula('mass_fdiv_normal'), corSpher(form = ~ latitude + longitude)))
+```
 
 ```{r}
 correlation_formula = as.formula('~ NMDS1 + NMDS2 + latitude + longitude')
@@ -972,16 +985,17 @@ correlation_function_mntd = function() {
 ```
 
 ## MNTD
+
+### Standardised
 ```{r}
-std_mntd_analysis_geo_plot = geom_map(geom_sf(data = analysis_data, aes(color = mntd_standard, geometry = geometry)), 'MNTD')
+std_mntd_analysis_geo_plot = geom_map_std(geom_sf(data = analysis_data, aes(color = mntd_standard, geometry = geometry)), 'MNTD')
 std_mntd_analysis_geo_plot
 ```
-
 
 ```{r}
 std_mntd_analysis_data = model_data(analysis_data[!is.na(analysis_data$mntd_standard),], 'mntd_standard')
 std_mntd_analysis_formula = create_formula('mntd_standard')
-std_mntd_analysis_result <- model_average(std_mntd_analysis_formula, std_mntd_analysis_data)
+std_mntd_analysis_result = model_average(std_mntd_analysis_formula, std_mntd_analysis_data)
 std_mntd_analysis_result_table = model_summary(std_mntd_analysis_result)
 std_mntd_analysis_result_table
 ```
@@ -990,6 +1004,7 @@ std_mntd_analysis_result_table
 std_mntd_analysis_pred_plot = plot_dredge_result(std_mntd_analysis_result_table)
 std_mntd_analysis_pred_plot
 ```
+
 Do the residuals still contain spatial autocorrelation from a fitted lm?
 ```{r}
 std_mntd_lm = lm(std_mntd_analysis_formula, std_mntd_analysis_data)
@@ -998,28 +1013,65 @@ moran.test(std_mntd_lm$residuals, nb2listw(analysis_data_nmds_neighbours))
 ```
 
 ```{r}
-mntd_spatial_model = spatial_model(std_mntd_analysis_formula, correlation_function_mntd())
-moran.test(mntd_spatial_model$residuals, nb2listw(analysis_data_neighbours))
-moran.test(mntd_spatial_model$residuals, nb2listw(analysis_data_nmds_neighbours))
+std_mntd_spatial_model = spatial_model(std_mntd_analysis_formula, correlation_function_mntd())
+moran.test(std_mntd_spatial_model$residuals, nb2listw(analysis_data_neighbours))
+moran.test(std_mntd_spatial_model$residuals, nb2listw(analysis_data_nmds_neighbours))
 ```
 
 ```{r}
-std_mntd_analysis_pred_spatial_plot = plot_spatial_result(mntd_spatial_model)
+std_mntd_analysis_pred_spatial_plot = plot_spatial_result(std_mntd_spatial_model)
 std_mntd_analysis_pred_spatial_plot
 ```
 
-## Gape width - FDiv
+### Normalised
 ```{r}
-std_gape_fdiv_analysis_geo_plot = geom_map(geom_sf(data = analysis_data, aes(color = beak_width_fdiv_standard, geometry = geometry)), 'Beak Width FDiv')
-std_gape_fdiv_analysis_geo_plot
+nrm_mntd_analysis_geo_plot = geom_map_nrm(geom_sf(data = analysis_data, aes(color = mntd_normal, geometry = geometry)), 'MNTD')
+nrm_mntd_analysis_geo_plot
 ```
 
+```{r}
+nrm_mntd_analysis_data = model_data(analysis_data[!is.na(analysis_data$mntd_normal),], 'mntd_normal')
+nrm_mntd_analysis_formula = create_formula('mntd_normal')
+nrm_mntd_analysis_result = model_average(nrm_mntd_analysis_formula, nrm_mntd_analysis_data)
+nrm_mntd_analysis_result_table = model_summary(nrm_mntd_analysis_result)
+nrm_mntd_analysis_result_table
+```
+
+```{r}
+nrm_mntd_analysis_pred_plot = plot_dredge_result(nrm_mntd_analysis_result_table)
+nrm_mntd_analysis_pred_plot
+```
+
+Do the residuals still contain spatial autocorrelation from a fitted lm?
+```{r}
+nrm_mntd_lm = lm(nrm_mntd_analysis_formula, nrm_mntd_analysis_data)
+moran.test(nrm_mntd_lm$residuals, nb2listw(analysis_data_neighbours))
+moran.test(nrm_mntd_lm$residuals, nb2listw(analysis_data_nmds_neighbours))
+```
+
+```{r}
+nrm_mntd_spatial_model = spatial_model(nrm_mntd_analysis_formula, correlation_function_mntd())
+moran.test(nrm_mntd_spatial_model$residuals, nb2listw(analysis_data_neighbours))
+moran.test(nrm_mntd_spatial_model$residuals, nb2listw(analysis_data_nmds_neighbours))
+```
+
+```{r}
+nrm_mntd_analysis_pred_spatial_plot = plot_spatial_result(nrm_mntd_spatial_model)
+nrm_mntd_analysis_pred_spatial_plot
+```
+
+## Gape width - FDiv
+### Standardised
+```{r}
+std_gape_fdiv_analysis_geo_plot = geom_map_std(geom_sf(data = analysis_data, aes(color = beak_width_fdiv_standard, geometry = geometry)), 'Beak Width FDiv')
+std_gape_fdiv_analysis_geo_plot
+```
 
 
 ```{r}
 std_gape_fdiv_analysis_data = model_data(analysis_data[!is.na(analysis_data$beak_width_fdiv_standard),], 'beak_width_fdiv_standard')
 std_gape_fdiv_analysis_formula = create_formula('beak_width_fdiv_standard')
-std_gape_fdiv_analysis_result <- model_average(std_gape_fdiv_analysis_formula, std_gape_fdiv_analysis_data)
+std_gape_fdiv_analysis_result = model_average(std_gape_fdiv_analysis_formula, std_gape_fdiv_analysis_data)
 std_gape_fdiv_analysis_result_table = model_summary(std_gape_fdiv_analysis_result)
 std_gape_fdiv_analysis_result_table
 ```
@@ -1047,9 +1099,48 @@ std_gape_fdiv_analysis_pred_spatial_plot = plot_spatial_result(std_gape_fdiv_spa
 std_gape_fdiv_analysis_pred_spatial_plot
 ```
 
-## HWI - FDiv
+### Normalised
 ```{r}
-std_hwi_fdiv_analysis_geo_plot = geom_map(geom_sf(data = analysis_data, aes(color = hwi_fdiv_standard, geometry = geometry)), 'HWI FDiv')
+nrm_gape_fdiv_analysis_geo_plot = geom_map_nrm(geom_sf(data = analysis_data, aes(color = beak_width_fdiv_normal, geometry = geometry)), 'Beak Width FDiv')
+nrm_gape_fdiv_analysis_geo_plot
+```
+
+
+```{r}
+nrm_gape_fdiv_analysis_data = model_data(analysis_data[!is.na(analysis_data$beak_width_fdiv_normal),], 'beak_width_fdiv_normal')
+nrm_gape_fdiv_analysis_formula = create_formula('beak_width_fdiv_normal')
+nrm_gape_fdiv_analysis_result = model_average(nrm_gape_fdiv_analysis_formula, nrm_gape_fdiv_analysis_data)
+nrm_gape_fdiv_analysis_result_table = model_summary(nrm_gape_fdiv_analysis_result)
+nrm_gape_fdiv_analysis_result_table
+```
+
+```{r}
+nrm_gape_fdiv_analysis_pred_plot = plot_dredge_result(nrm_gape_fdiv_analysis_result_table)
+nrm_gape_fdiv_analysis_pred_plot
+```
+
+Do the residuals still contain spatial autocorrelation from a fitted lm?
+```{r}
+nrm_gape_fdiv_lm = lm(nrm_gape_fdiv_analysis_formula, nrm_gape_fdiv_analysis_data)
+moran.test(nrm_gape_fdiv_lm$residuals, nb2listw(analysis_data_neighbours))
+moran.test(nrm_gape_fdiv_lm$residuals, nb2listw(analysis_data_nmds_neighbours))
+```
+
+```{r}
+nrm_gape_fdiv_spatial_model = spatial_model(nrm_gape_fdiv_analysis_formula, correlation_function_fdiv())
+moran.test(nrm_gape_fdiv_spatial_model$residuals, nb2listw(analysis_data_neighbours))
+moran.test(nrm_gape_fdiv_spatial_model$residuals, nb2listw(analysis_data_nmds_neighbours))
+```
+
+```{r}
+nrm_gape_fdiv_analysis_pred_spatial_plot = plot_spatial_result(nrm_gape_fdiv_spatial_model)
+nrm_gape_fdiv_analysis_pred_spatial_plot
+```
+
+## HWI - FDiv
+### Standardised
+```{r}
+std_hwi_fdiv_analysis_geo_plot = geom_map_std(geom_sf(data = analysis_data, aes(color = hwi_fdiv_standard, geometry = geometry)), 'HWI FDiv')
 std_hwi_fdiv_analysis_geo_plot
 ```
 
@@ -1058,7 +1149,7 @@ std_hwi_fdiv_analysis_geo_plot
 ```{r}
 std_hwi_fdiv_analysis_data = model_data(analysis_data[!is.na(analysis_data$hwi_fdiv_standard),], 'hwi_fdiv_standard')
 std_hwi_fdiv_analysis_formula = create_formula('hwi_fdiv_standard')
-std_hwi_fdiv_analysis_result <- model_average(std_hwi_fdiv_analysis_formula, std_hwi_fdiv_analysis_data)
+std_hwi_fdiv_analysis_result = model_average(std_hwi_fdiv_analysis_formula, std_hwi_fdiv_analysis_data)
 std_hwi_fdiv_analysis_result_table = model_summary(std_hwi_fdiv_analysis_result)
 std_hwi_fdiv_analysis_result_table
 ```
@@ -1085,9 +1176,47 @@ std_hwi_fdiv_analysis_pred_spatial_plot = plot_spatial_result(std_hwi_fdiv_spati
 std_hwi_fdiv_analysis_pred_spatial_plot
 ```
 
-## Mass - FDiv
+### Normalised
 ```{r}
-std_mass_fdiv_analysis_geo_plot = geom_map(geom_sf(data = analysis_data, aes(color = mass_fdiv_standard, geometry = geometry)), 'Mass FDiv')
+nrm_hwi_fdiv_analysis_geo_plot = geom_map_nrm(geom_sf(data = analysis_data, aes(color = hwi_fdiv_normal, geometry = geometry)), 'HWI FDiv')
+nrm_hwi_fdiv_analysis_geo_plot
+```
+
+
+```{r}
+nrm_hwi_fdiv_analysis_data = model_data(analysis_data[!is.na(analysis_data$hwi_fdiv_normal),], 'hwi_fdiv_normal')
+nrm_hwi_fdiv_analysis_formula = create_formula('hwi_fdiv_normal')
+nrm_hwi_fdiv_analysis_result = model_average(nrm_hwi_fdiv_analysis_formula, nrm_hwi_fdiv_analysis_data)
+nrm_hwi_fdiv_analysis_result_table = model_summary(nrm_hwi_fdiv_analysis_result)
+nrm_hwi_fdiv_analysis_result_table
+```
+
+```{r}
+nrm_hwi_fdiv_analysis_pred_plot = plot_dredge_result(nrm_hwi_fdiv_analysis_result_table)
+nrm_hwi_fdiv_analysis_pred_plot
+```
+
+```{r}
+nrm_hwi_fdiv_lm = lm(nrm_hwi_fdiv_analysis_formula, nrm_hwi_fdiv_analysis_data)
+moran.test(nrm_hwi_fdiv_lm$residuals, nb2listw(analysis_data_neighbours))
+moran.test(nrm_hwi_fdiv_lm$residuals, nb2listw(analysis_data_nmds_neighbours))
+```
+
+```{r}
+nrm_hwi_fdiv_spatial_model = spatial_model(nrm_hwi_fdiv_analysis_formula, correlation_function_fdiv())
+moran.test(nrm_hwi_fdiv_spatial_model$residuals, nb2listw(analysis_data_neighbours))
+moran.test(nrm_hwi_fdiv_spatial_model$residuals, nb2listw(analysis_data_nmds_neighbours))
+```
+
+```{r}
+nrm_hwi_fdiv_analysis_pred_spatial_plot = plot_spatial_result(nrm_hwi_fdiv_spatial_model)
+nrm_hwi_fdiv_analysis_pred_spatial_plot
+```
+
+## Mass - FDiv
+### Standardised
+```{r}
+std_mass_fdiv_analysis_geo_plot = geom_map_std(geom_sf(data = analysis_data, aes(color = mass_fdiv_standard, geometry = geometry)), 'Mass FDiv')
 std_mass_fdiv_analysis_geo_plot
 ```
 
@@ -1120,6 +1249,44 @@ moran.test(std_mass_fdiv_spatial_model$residuals, nb2listw(analysis_data_nmds_ne
 ```{r}
 std_mass_fdiv_analysis_pred_spatial_plot = plot_spatial_result(std_mass_fdiv_spatial_model)
 std_mass_fdiv_analysis_pred_spatial_plot
+```
+
+
+### Normalised
+```{r}
+nrm_mass_fdiv_analysis_geo_plot = geom_map_nrm(geom_sf(data = analysis_data, aes(color = mass_fdiv_normal, geometry = geometry)), 'Mass FDiv')
+nrm_mass_fdiv_analysis_geo_plot
+```
+
+
+```{r}
+nrm_mass_fdiv_analysis_data = model_data(analysis_data[!is.na(analysis_data$mass_fdiv_normal),], 'mass_fdiv_normal')
+nrm_mass_fdiv_analysis_formula = create_formula('mass_fdiv_normal')
+nrm_mass_fdiv_analysis_result = model_average(nrm_mass_fdiv_analysis_formula, nrm_mass_fdiv_analysis_data)
+nrm_mass_fdiv_analysis_result_table = model_summary(nrm_mass_fdiv_analysis_result)
+nrm_mass_fdiv_analysis_result_table
+```
+
+```{r}
+nrm_mass_fdiv_analysis_pred_plot = plot_dredge_result(nrm_mass_fdiv_analysis_result_table)
+nrm_mass_fdiv_analysis_pred_plot
+```
+
+```{r}
+nrm_mass_fdiv_lm = lm(nrm_mass_fdiv_analysis_formula, nrm_mass_fdiv_analysis_data)
+moran.test(nrm_mass_fdiv_lm$residuals, nb2listw(analysis_data_neighbours))
+moran.test(nrm_mass_fdiv_lm$residuals, nb2listw(analysis_data_nmds_neighbours))
+```
+
+```{r}
+nrm_mass_fdiv_spatial_model = spatial_model(nrm_mass_fdiv_analysis_formula, correlation_function_fdiv())
+moran.test(nrm_mass_fdiv_spatial_model$residuals, nb2listw(analysis_data_neighbours))
+moran.test(nrm_mass_fdiv_spatial_model$residuals, nb2listw(analysis_data_nmds_neighbours))
+```
+
+```{r}
+nrm_mass_fdiv_analysis_pred_spatial_plot = plot_spatial_result(nrm_mass_fdiv_spatial_model)
+nrm_mass_fdiv_analysis_pred_spatial_plot
 ```
 
 # Create plot of differences in process response
