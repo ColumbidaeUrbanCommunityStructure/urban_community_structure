@@ -348,7 +348,7 @@ communities %>%
   summarise(average_relative_abundance = mean(relative_abundance_proxy))
 ```
 
-# Create analysis data frame
+# Create analysis data frame for modelling
 ```{r}
 geography = read_csv(filename(CITY_DATA_OUTPUT_DIR, 'geography.csv'))
 names(geography)
@@ -1290,113 +1290,99 @@ nrm_mass_fdiv_analysis_pred_spatial_plot
 ```
 
 # Create plot of differences in process response
-```{r}
-pred_legend <- ggpubr::get_legend(
-  # create some space to the left of the legend
-  std_hwi_fdiv_analysis_pred_plot + theme(legend.box.margin = margin(0, 0, 0, 0)) + guides(colour=guide_legend(ncol=2)) + labs(color = "Predictor type")
-)
-geo_legend <- ggpubr::get_legend(
-  # create some space to the left of the legend
-  std_mass_fdiv_analysis_geo_plot + theme(legend.box.margin = margin(-80, 0, 0, 12), legend.title.position = "top", legend.key.width = unit(10, 'mm')) + labs(color = "Standardised response")
-)
 
-legend = plot_grid(
-  geo_legend,
-  pred_legend, 
-  nrow = 1
-)
-legend
-```
 
 ```{r}
-plot_grid(
-  plot_grid(
-    std_mntd_analysis_geo_plot + theme(legend.position="none"), 
-    std_mntd_analysis_pred_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-3, 3)) + ylab(''), 
-    nrow = 1
-  ) + draw_label("MNTD", size = 16, angle = 90, x = 0.01, y = 0.5),
-  plot_grid(
-    std_gape_fdiv_analysis_geo_plot + theme(legend.position="none"), 
-    std_gape_fdiv_analysis_pred_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-3, 3)) + ylab(''), 
-    nrow = 1
-  ) + draw_label("Beak Width", size = 16, angle = 90, x = 0.01, y = 0.5),
-  plot_grid(
-    std_hwi_fdiv_analysis_geo_plot + theme(legend.position="none"), 
-    std_hwi_fdiv_analysis_pred_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-3, 3)) + ylab(''), 
-    nrow = 1
-  ) + draw_label("HWI", size = 16, angle = 90, x = 0.01, y = 0.5),
-  plot_grid(
-    std_mass_fdiv_analysis_geo_plot + theme(legend.position="none"), 
-    std_mass_fdiv_analysis_pred_plot + theme(legend.position="none") + scale_x_continuous(name = '', limits = c(-3, 3)) + ylab(''), 
-    nrow = 1
-  ) + draw_label("Mass", size = 16, angle = 90, x = 0.01, y = 0.5), 
-  legend,
-  nrow = 5
-)
-ggsave(filename(FIGURES_OUTPUT_DIR, 'process_response.jpg'), width = 3000, height = 3200, units = 'px')
-```
-
-```{r}
-pred_fig_legend <- ggpubr::get_legend(
-  # create some space to the left of the legend
-  std_hwi_fdiv_analysis_pred_plot + theme(legend.box.margin = margin(0, 0, 0, -20)) + guides(colour=guide_legend(ncol=2)) + labs(color = "Predictor type")
-)
-geo_fig_legend <- ggpubr::get_legend(
-  # create some space to the left of the legend
-  std_mass_fdiv_analysis_geo_plot + theme(legend.box.margin = margin(0, 0, 0, 0), legend.title.position = "top", legend.key.width = unit(10, 'mm')) + labs(color = "Standardised response")
-)
-
-remove_x_scale =  scale_x_continuous(name = '', limits = c(-3, 3))
-theme_no_legend = theme(legend.position="none", panel.border = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))
-
-fig2 = grid.arrange(
-  # row 1 - titles
-  arrangeGrob(grid::textGrob('A) Standardised response by city', x = 0.1, hjust = 0, gp=gpar(fontface="bold"))),
-  arrangeGrob(grid::textGrob('B) Standardised response predictors', x = 0.1, hjust = 0, gp=gpar(fontface="bold"))),
-  # row 2
-  arrangeGrob(
-    std_mntd_analysis_geo_plot + theme_no_legend, 
-    left = "MNTD"
-  ),
-  arrangeGrob(
-    std_mntd_analysis_pred_plot + theme_no_legend + remove_x_scale + ylab('')
-  ),
-  # row 3
-  arrangeGrob(std_gape_fdiv_analysis_geo_plot + theme_no_legend, left = "Beak Width"),
-  arrangeGrob(
-    std_gape_fdiv_analysis_pred_plot + theme_no_legend + remove_x_scale + ylab('')
-  ),
-  # row 4
-  arrangeGrob(std_hwi_fdiv_analysis_geo_plot + theme_no_legend, left = "HWI"),
-  arrangeGrob(
-    std_hwi_fdiv_analysis_pred_plot + theme_no_legend + remove_x_scale + ylab('')
-  ),
-  # row 5
-  arrangeGrob(std_mass_fdiv_analysis_geo_plot + theme_no_legend, left = "Mass"),
-  arrangeGrob(
-    std_mass_fdiv_analysis_pred_plot + theme_no_legend + remove_x_scale + ylab('')
-  ),
-  # row 6 - legends
-  arrangeGrob(geo_fig_legend),
-  arrangeGrob(pred_fig_legend),
-  heights = c(0.5, 2, 2, 2, 2, 1.25),
-  nrow = 6
+fig = function(trait_name, response_type, geo_plot, predictor_plot) {
+  grid.arrange(
+    arrangeGrob(grid::textGrob(trait_name, x = 0.02, hjust = 0, gp=gpar(fontface="bold"))),
+    arrangeGrob(grid::textGrob(paste('A)', response_type,'response by city'), x = 0.02, hjust = 0, gp=gpar(fontface="bold"))),
+    geo_plot,
+    arrangeGrob(grid::textGrob(paste('B)', response_type, 'response predictors'), x = 0.02, hjust = 0, gp=gpar(fontface="bold"))),
+    predictor_plot + theme(legend.position = 'bottom') + guides(colour = guide_legend(nrow=2, byrow=TRUE)),
+    heights = c(0.25, 0.25, 4, 0.25, 3),
+    nrow = 5
   )
-```
+}
 
+
+fig('MNTD', 'Standardised', std_mntd_analysis_geo_plot, std_mntd_analysis_pred_plot)
+```
+## MNTD
 ```{r}
-jpeg(filename(FIGURES_OUTPUT_DIR, 'figure2.jpg'), width = 183, height = 180, units = 'mm', res = 450)
+jpeg(filename(FIGURES_OUTPUT_DIR, 'figure2_std_mntd.jpg'), width = 200, height = 220, units = 'mm', res = 300)
 grid.arrange(
-  arrangeGrob(fig2),
+  arrangeGrob(fig('MNTD', 'Standardised', std_mntd_analysis_geo_plot, std_mntd_analysis_pred_plot)),
   ncol = 1
   )
 dev.off()
 ```
 
+
 ```{r}
-pdf(filename(FIGURES_OUTPUT_DIR, 'figure2.pdf'), width = 12, height = 12, family = "Helvetica")
+jpeg(filename(FIGURES_OUTPUT_DIR, 'figure2_nrm_mntd.jpg'), width = 200, height = 220, units = 'mm', res = 300)
 grid.arrange(
-  arrangeGrob(fig2),
+  arrangeGrob(fig('MNTD', 'Normalised', nrm_mntd_analysis_geo_plot, nrm_mntd_analysis_pred_plot)),
+  ncol = 1
+  )
+dev.off()
+```
+
+## Beak Width
+```{r}
+jpeg(filename(FIGURES_OUTPUT_DIR, 'figure2_std_beak_width.jpg'), width = 200, height = 220, units = 'mm', res = 300)
+grid.arrange(
+  arrangeGrob(fig('Beak Width', 'Standardised', std_gape_fdiv_analysis_geo_plot, std_gape_fdiv_analysis_pred_plot)),
+  ncol = 1
+  )
+dev.off()
+```
+
+
+```{r}
+jpeg(filename(FIGURES_OUTPUT_DIR, 'figure2_nrm_beak_width.jpg'), width = 200, height = 220, units = 'mm', res = 300)
+grid.arrange(
+  arrangeGrob(fig('Beak Width', 'Normalised', nrm_gape_fdiv_analysis_geo_plot, nrm_gape_fdiv_analysis_pred_plot)),
+  ncol = 1
+  )
+dev.off()
+```
+
+## HWI
+```{r}
+jpeg(filename(FIGURES_OUTPUT_DIR, 'figure2_std_hwi.jpg'), width = 200, height = 220, units = 'mm', res = 300)
+grid.arrange(
+  arrangeGrob(fig('HWI (Hand-wing Index)', 'Standardised', std_hwi_fdiv_analysis_geo_plot, std_hwi_fdiv_analysis_pred_plot)),
+  ncol = 1
+  )
+dev.off()
+```
+
+
+```{r}
+jpeg(filename(FIGURES_OUTPUT_DIR, 'figure2_nrm_hwi.jpg'), width = 200, height = 220, units = 'mm', res = 300)
+grid.arrange(
+  arrangeGrob(fig('HWI (Hand-wing Index)', 'Normalised', nrm_hwi_fdiv_analysis_geo_plot, nrm_hwi_fdiv_analysis_pred_plot)),
+  ncol = 1
+  )
+dev.off()
+```
+
+## Mass
+```{r}
+jpeg(filename(FIGURES_OUTPUT_DIR, 'figure2_std_mass.jpg'), width = 200, height = 220, units = 'mm', res = 300)
+grid.arrange(
+  arrangeGrob(fig('Mass', 'Standardised', std_mass_fdiv_analysis_geo_plot, std_mass_fdiv_analysis_pred_plot)),
+  ncol = 1
+  )
+dev.off()
+```
+
+
+```{r}
+jpeg(filename(FIGURES_OUTPUT_DIR, 'figure2_nrm_mass.jpg'), width = 200, height = 220, units = 'mm', res = 300)
+grid.arrange(
+  arrangeGrob(fig('Mass', 'Normalised', nrm_mass_fdiv_analysis_geo_plot, nrm_mass_fdiv_analysis_pred_plot)),
   ncol = 1
   )
 dev.off()
@@ -1510,4 +1496,8 @@ ggpairs(mntd_fdiv_analysis %>% dplyr::select(mntd_standard, hwi_fdiv_standard, b
 ggsave(filename(FIGURES_OUTPUT_DIR, 'appendix_standarised_correlation.jpg'))
 ```
 
+# Intraction term between introduced species and realm
+
+```{r}
+```
 
