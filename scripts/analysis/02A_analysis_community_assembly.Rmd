@@ -597,7 +597,14 @@ all_explanatories = c(
     'city_avg_ndvi', 'city_avg_elevation', 'city_avg_temp',
     'region_50km_avg_soil_moisture',
     'core_realmAfrotropic', 'core_realmAustralasia', 'core_realmIndomalayan', 'core_realmNearctic', 'core_realmNeotropic', 'core_realmPalearctic',
-    'has_introduced_speciesNo introduced species', 'has_introduced_speciesIntroduced species'
+    'has_introduced_speciesNo introduced species', 'has_introduced_speciesIntroduced species',
+    'core_realmAfrotropic:has_introduced_speciesIntroduced species',
+    'core_realmAustralasia:has_introduced_speciesIntroduced species',
+    'core_realmIndomalayan:has_introduced_speciesIntroduced species',
+    'core_realmNearctic:has_introduced_speciesIntroduced species',
+    'core_realmNeotropic:has_introduced_speciesIntroduced species',
+    'core_realmPalearctic:has_introduced_speciesIntroduced species',
+    'core_realmOceania:has_introduced_speciesIntroduced species'
 )
 
 all_explanatory_names = factor(
@@ -605,7 +612,14 @@ all_explanatory_names = factor(
     'Avg. NDVI', 'Avg. Elevation', 'Avg. Temp.',
     'Avg. Soil Moisture',
     'Afrotropic', 'Australasia', 'Indomalayan', 'Nearctic', 'Neotropic', 'Palearctic',
-    'Introduced Absent', 'Introduced Present'
+    'Introduced Absent', 'Introduced Present',
+    'Afrotropical * Introduced present',
+    'Austaliasian * Introduced present',
+    'Indomalayan * Introduced present',
+    'Nearctic * Introduced present',
+    'Neotropical * Introduced present',
+    'Palearctic * Introduced present',
+    'Oceanical * Introduced present'
   ), ordered = T
 )
 
@@ -683,7 +697,15 @@ explanatory_labels = c(
   'core_realmNearctic' = 'Nearctic', 
   'core_realmNeotropic' = 'Neotropical',
   'core_realmPalearctic' = 'Palearctic',
-  'core_realmOceania' = 'Oceanical')
+  'core_realmOceania' = 'Oceanical',
+  'core_realmAfrotropic:has_introduced_speciesIntroduced species' = 'Afrotropical * Introduced present',
+  'core_realmAustralasia:has_introduced_speciesIntroduced species' = 'Austaliasian * Introduced present',
+  'core_realmIndomalayan:has_introduced_speciesIntroduced species' = 'Indomalayan * Introduced present',
+  'core_realmNearctic:has_introduced_speciesIntroduced species' = 'Nearctic * Introduced present',
+  'core_realmNeotropic:has_introduced_speciesIntroduced species' = 'Neotropical * Introduced present',
+  'core_realmPalearctic:has_introduced_speciesIntroduced species' = 'Palearctic * Introduced present',
+  'core_realmOceania:has_introduced_speciesIntroduced species' = 'Oceanical * Introduced present'
+)
 ```
 
 ```{r}
@@ -1499,5 +1521,170 @@ ggsave(filename(FIGURES_OUTPUT_DIR, 'appendix_standarised_correlation.jpg'))
 # Intraction term between introduced species and realm
 
 ```{r}
+create_interaction_formula = function(response_var) {
+  as.formula(paste(response_var, '~ core_realm * has_introduced_species'))
+}
 ```
+
+```{r}
+interaction_type_labels = function(p) {
+  explanatory_levels = all_explanatories[all_explanatories %in% p$explanatory]
+  p$explanatory <- factor(p$explanatory, levels = explanatory_levels)
+  
+  p$type <- 'Interaction'
+  p$type[p$explanatory %in% c('core_realmNearctic', 'core_realmNeotropic', 'core_realmAfrotropic', 'core_realmIndomalayan', 'core_realmAustralasia')] <- 'Realm'
+  p$type[p$explanatory %in% c('has_introduced_speciesNo introduced species', 'has_introduced_speciesIntroduced species')] <- 'Introduced species'
+  p
+}
+```
+
+```{r}
+plot_dredge_interaction_result = function(result_table, mu = 0) {
+  p = result_table[result_table$model == 'full',]
+  p = interaction_type_labels(p)
+
+  ggplot(p, aes(y = explanatory, x = estimate, colour = type)) + 
+    geom_line() +
+    geom_point() +
+    geom_errorbar(aes(xmin=estimate-error, xmax=estimate+error), width=.2,
+                   position=position_dodge(0.05)) +
+    scale_y_discrete(
+      limits = rev(levels(p$explanatory)), 
+      labels = explanatory_labels) +
+    scale_colour_manual(
+      values = c(realm_colour, interaction_colour, introduced_species_colour), 
+      breaks = c('Realm', 'Interaction', 'Introduced species')) +
+    theme_bw() +
+    geom_vline(xintercept=mu, linetype="dotted") +
+    guides(colour=guide_legend(title="Predictor type")) + xlab('Difference in response from 0\nhabitat filtering (< 0) and competitive interactions (> 0)\n± Standard Error') + ylab('Predictor') +
+    theme(legend.justification = "top")
+}
+```
+
+## MNTD
+
+### Standardised
+```{r}
+std_mntd_interaction_formula = create_interaction_formula('mntd_standard')
+std_mntd_interaction_result = model_average(std_mntd_interaction_formula, std_mntd_analysis_data)
+std_mntd_interaction_result_table = model_summary(std_mntd_interaction_result)
+std_mntd_interaction_result_table
+```
+
+```{r}
+std_mntd_interaction_pred_plot = plot_dredge_interaction_result(std_mntd_interaction_result_table)
+std_mntd_interaction_pred_plot
+ggsave(filename(FIGURES_OUTPUT_DIR, 'figure4_std_mntd_interaction.jpg'))
+```
+
+### Normalised
+```{r}
+nrm_mntd_interaction_formula = create_interaction_formula('mntd_normal')
+nrm_mntd_interaction_result = model_average(nrm_mntd_interaction_formula, nrm_mntd_analysis_data)
+nrm_mntd_interaction_result_table = model_summary(nrm_mntd_interaction_result)
+nrm_mntd_interaction_result_table
+```
+
+```{r}
+nrm_mntd_interaction_pred_plot = plot_dredge_interaction_result(nrm_mntd_interaction_result_table)
+nrm_mntd_interaction_pred_plot
+ggsave(filename(FIGURES_OUTPUT_DIR, 'figure4_nrm_mntd_interaction.jpg'))
+```
+
+
+## Beak Width
+
+### Standardised
+```{r}
+std_gape_interaction_formula = create_interaction_formula('beak_width_fdiv_standard')
+std_gape_interaction_result = model_average(std_gape_interaction_formula, std_gape_fdiv_analysis_data)
+std_gape_interaction_result_table = model_summary(std_gape_interaction_result)
+std_mntd_interaction_result_table
+```
+
+```{r}
+std_gape_interaction_pred_plot = plot_dredge_interaction_result(std_gape_interaction_result_table)
+std_gape_interaction_pred_plot
+ggsave(filename(FIGURES_OUTPUT_DIR, 'figure4_std_beak_width_interaction.jpg'))
+```
+
+### Normalised
+```{r}
+nrm_gape_interaction_formula = create_interaction_formula('beak_width_fdiv_normal')
+nrm_gape_interaction_result = model_average(nrm_gape_interaction_formula, nrm_gape_fdiv_analysis_data)
+nrm_gape_interaction_result_table = model_summary(nrm_gape_interaction_result)
+nrm_gape_interaction_result_table
+```
+
+```{r}
+nrm_gape_interaction_pred_plot = plot_dredge_interaction_result(nrm_gape_interaction_result_table)
+nrm_gape_interaction_pred_plot
+ggsave(filename(FIGURES_OUTPUT_DIR, 'figure4_nrm_beak_width_interaction.jpg'))
+```
+
+## HWI
+
+### Standardised
+```{r}
+std_hwi_interaction_formula = create_interaction_formula('hwi_fdiv_standard')
+std_hwi_interaction_result = model_average(std_hwi_interaction_formula, std_hwi_fdiv_analysis_data)
+std_hwi_interaction_result_table = model_summary(std_hwi_interaction_result)
+std_hwi_interaction_result_table
+```
+
+```{r}
+std_hwi_interaction_pred_plot = plot_dredge_interaction_result(std_hwi_interaction_result_table)
+std_hwi_interaction_pred_plot
+ggsave(filename(FIGURES_OUTPUT_DIR, 'figure4_std_hwi_interaction.jpg'))
+```
+
+### Normalised
+```{r}
+nrm_hwi_interaction_formula = create_interaction_formula('hwi_fdiv_normal')
+nrm_hwi_interaction_result = model_average(nrm_hwi_interaction_formula, nrm_hwi_fdiv_analysis_data)
+nrm_hwi_interaction_result_table = model_summary(nrm_hwi_interaction_result)
+nrm_hwi_interaction_result_table
+```
+
+```{r}
+nrm_hwi_interaction_pred_plot = plot_dredge_interaction_result(nrm_hwi_interaction_result_table)
+nrm_hwi_interaction_pred_plot
+ggsave(filename(FIGURES_OUTPUT_DIR, 'figure4_nrm_hwi_interaction.jpg'))
+```
+
+
+## Mass
+
+### Standardised
+```{r}
+std_mass_interaction_formula = create_interaction_formula('mass_fdiv_standard')
+std_mass_interaction_result = model_average(std_mass_interaction_formula, std_mass_fdiv_analysis_data)
+std_mass_interaction_result_table = model_summary(std_mass_interaction_result)
+std_mass_interaction_result_table
+```
+
+```{r}
+std_mass_interaction_pred_plot = plot_dredge_interaction_result(std_mass_interaction_result_table)
+std_mass_interaction_pred_plot
+ggsave(filename(FIGURES_OUTPUT_DIR, 'figure4_std_mass_interaction.jpg'))
+```
+
+### Normalised
+```{r}
+nrm_mass_interaction_formula = create_interaction_formula('mass_fdiv_normal')
+nrm_mass_interaction_result = model_average(nrm_mass_interaction_formula, nrm_mass_fdiv_analysis_data)
+nrm_mass_interaction_result_table = model_summary(nrm_mass_interaction_result)
+nrm_mass_interaction_result_table
+```
+
+```{r}
+nrm_mass_interaction_pred_plot = plot_dredge_interaction_result(nrm_mass_interaction_result_table)
+nrm_mass_interaction_pred_plot
+ggsave(filename(FIGURES_OUTPUT_DIR, 'figure4_nrm_mass_interaction.jpg'))
+```
+
+
+
+
+
 

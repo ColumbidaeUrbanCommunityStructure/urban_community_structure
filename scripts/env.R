@@ -111,7 +111,8 @@ city_geography_colour = blue
 regional_50km_geography_colour = magenta
 regional_20km_geography_colour = red
 introduced_species_colour = teal
-  
+interaction_colour = cyan
+
 trait_polygon_light = cyan_light
 trait_polygon_med = cyan
 trait_polygon_dark = cyan_dark
