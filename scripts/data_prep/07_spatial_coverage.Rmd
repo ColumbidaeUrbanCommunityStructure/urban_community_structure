@@ -41,13 +41,14 @@ urban_checklists = read_csv(filename(EBIRD_WORKING_OUTPUT_DIR, 'urban_checklists
 head(urban_checklists)
 ```
 
+
 ```{r, warning=FALSE}
 city_total_areas$surveyed_area_250m = NA
 city_total_areas$surveyed_area_500m = NA
 city_total_areas$surveyed_area_1km = NA
 
 # find total area of city surveyed given checklist buffer size
-surveyed_area = function(buffer_size) {
+surveyed_area = function(checklists_sf, city_polygon, buffer_size) {
   checklists_sf %>%
       st_transform(METRE_BASED_CRS) %>%
       st_buffer(buffer_size) %>%
@@ -71,9 +72,9 @@ for (selected_city_id in city_total_areas$city_id) {
     st_crs(checklists_sf) = 4326
     
     # calculate total area surveyed per buffer size
-    city_total_areas$surveyed_area_250m[city_total_areas$city_id == selected_city_id] = surveyed_area(RADIUS_FROM_CHECKLIST_CENTRE_FOR_SPATIAL_COVERAGE_250M)
-    city_total_areas$surveyed_area_500m[city_total_areas$city_id == selected_city_id] = surveyed_area(RADIUS_FROM_CHECKLIST_CENTRE_FOR_SPATIAL_COVERAGE_500M)
-    city_total_areas$surveyed_area_1km[city_total_areas$city_id == selected_city_id] = surveyed_area(RADIUS_FROM_CHECKLIST_CENTRE_FOR_SPATIAL_COVERAGE_1KM)
+    city_total_areas$surveyed_area_250m[city_total_areas$city_id == selected_city_id] = surveyed_area(checklists_sf, city_polygon, RADIUS_FROM_CHECKLIST_CENTRE_FOR_SPATIAL_COVERAGE_250M)
+    city_total_areas$surveyed_area_500m[city_total_areas$city_id == selected_city_id] = surveyed_area(checklists_sf, city_polygon, RADIUS_FROM_CHECKLIST_CENTRE_FOR_SPATIAL_COVERAGE_500M)
+    city_total_areas$surveyed_area_1km[city_total_areas$city_id == selected_city_id] = surveyed_area(checklists_sf, city_polygon, RADIUS_FROM_CHECKLIST_CENTRE_FOR_SPATIAL_COVERAGE_1KM)
     
   } else {
     # we have no checklists in the city, an so no area has been surveyed
@@ -91,6 +92,19 @@ city_total_areas$percentaged_surveyed_1km = city_total_areas$surveyed_area_1km *
 city_total_areas
 ```
 
+Create shape file of all buffered urban checklists
+```{r}
+urban_checklists_sf = urban_checklists %>%
+    st_as_sf(coords = c("long", "lat"))
+
+st_crs(urban_checklists_sf) = 4326
+
+urban_checklists_sf %>%
+    st_transform(METRE_BASED_CRS) %>%
+    st_buffer(RADIUS_FROM_CHECKLIST_CENTRE_FOR_SPATIAL_COVERAGE_500M) %>%
+    st_union() %>%
+    st_write(filename(filename(GEO_WORKING_OUTPUT_DIR, 'ebird'), 'urban_checklists.shp'))
+```
 
 ## Calculate area each each city each pigeon is found
 ```{r}
