@@ -1,0 +1,140 @@
+---
+title: "Verify whether checklists are independent of greenspace cover"
+output: html_notebook
+bibliography: ../ref.bib 
+---
+
+```{r}
+source('../env.R')
+TARGET_CRS = 27700
+```
+
+# Load polygons
+```{r}
+urban_checklist_cover = st_read(filename(filename(GEO_WORKING_OUTPUT_DIR, 'ebird'), 'urban_checklists.shp'))
+urban_checklist_cover
+```
+
+```{r}
+cities = st_read(filename(CITY_DATA_OUTPUT_DIR, 'city_selection.shp'))
+cities
+```
+
+```{r}
+all_cities = st_union(cities)
+all_cities
+```
+# Create two areas of interest
+```{r}
+clean_sf = function(p) {
+  p |>
+    st_collection_extract("POLYGON") |>
+    st_transform(TARGET_CRS) |>              # any suitable projected CRS for your area
+    st_buffer(0) |>                     # optional clean-up
+    st_collection_extract("POLYGON")
+}
+```
+
+```{r}
+urban_checklists_sf = clean_sf(urban_checklist_cover)
+all_cities_sf = clean_sf(all_cities)
+```
+
+```{r}
+in_checklist_sf = st_intersection(all_cities_sf, urban_checklists_sf) %>% clean_sf()
+out_checklist_sf = st_difference(all_cities_sf, urban_checklists_sf) %>% clean_sf()
+```
+
+# Look at NDVI raster
+```{r}
+RASTER_DIRECTORY = '/Users/james/PhDData/Copernicus/NDVI'
+ndvi = list.files(RASTER_DIRECTORY, pattern = ".*.tiff$")
+ndvi
+```
+
+```{r}
+ndvi_r = raster::raster(filename(RASTER_DIRECTORY, ndvi[1]))
+st_crs(ndvi_r)
+```
+# 10K points inside and outside checklists within cities
+```{r}
+SAMPLE_SIZE = 10000;
+
+points_in = st_sample(in_checklist_sf, SAMPLE_SIZE)
+points_in_sf = st_as_sf(data.frame(id = 1), geometry = points_in, crs = TARGET_CRS) %>% st_transform(st_crs(ndvi_r))
+```
+
+```{r}
+points_out = st_sample(out_checklist_sf, SAMPLE_SIZE)
+points_out_sf = st_as_sf(data.frame(id = 1), geometry = points_out, crs = TARGET_CRS) %>% st_transform(st_crs(ndvi_r))
+points_out_sf
+```
+
+## Read NDVI at pointns
+```{r}
+result = rbind(
+  data.frame(ndvi = raster::extract(ndvi_r, points_in_sf), type = 'in_checklist_area'),
+  data.frame(ndvi = raster::extract(ndvi_r, points_out_sf), type = 'out_checklist_area')
+)
+result
+```
+
+```{r}
+ggplot(result, aes(x = type, y = ndvi)) + geom_boxplot()
+```
+```{r}
+ggplot(result, aes(x = type, y = ndvi)) +
+  geom_violin(trim = TRUE) +
+  geom_boxplot(width = 0.15, outlier.shape = NA)
+```
+
+```{r}
+result$type = as.factor(result$type)
+wilcox.test(ndvi ~ type, data = result[!is.na(result$ndvi),])
+```
+
+
+
+```{r}
+tapply(result$ndvi, result$type, median, na.rm = TRUE)
+tapply(result$ndvi, result$type, mean, na.rm = TRUE)
+tapply(result$ndvi, result$type, sd, na.rm = TRUE)
+```
+
+
+# RESULTS STATEMENT: 
+# ------------------
+# There is a significant difference in NDVI
+# within checklist areas (mean±SD, 0.42±0.14) and outside checklist areas (0.43±0.18) (p-value < 0.001).
+
+
+```{r}
+library(rstatix)
+wilcox_effsize(result, ndvi ~ type)
+```
+
+That output is saying:
+
+Effect size (rank-biserial / Wilcoxon effect size) = 0.0265
+
+Sample sizes: n1 = 9564, n2 = 9316
+
+Magnitude: small
+
+So: yes, there’s a real difference statistically, but it’s tiny in practical terms.
+
+A useful way to interpret an effect size of ~0.026 (rank-biserial) is:
+
+it’s only slightly more likely that a randomly chosen out point has higher NDVI than a randomly chosen in point.
+
+probability-of-superiority is roughly 
+(effsize+1)/2
+(effsize+1)/2 ≈ 0.513 — about 51.3% vs 48.7%, i.e., barely above a coin flip.
+
+That also matches your mean/median shifts (~0.01 NDVI).
+
+If you want a punchy sentence for write-up:
+
+   NDVI was slightly higher outside checklist polygons than inside them (median 0.428 vs 0.416; Wilcoxon rank-sum p = 2.7×10⁻⁴), but the effect size was very small (rank-biserial r = 0.026).
+
+If you want to make the inference more robust to spatial dependence, the next step would be to aggregate per A polygon (or per raster cell) and do a paired / mixed model comparison, rather than treating all points as independent.
