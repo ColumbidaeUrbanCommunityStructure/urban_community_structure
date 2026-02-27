@@ -163,6 +163,7 @@ print('Normal')
 kruskal.test(mass_fdiv_normal~core_realm, data = community_data_with_realm)
 pairwise.wilcox.test(community_data_with_realm$mass_fdiv_normal, community_data_with_realm$core_realm)
 ```
+
 # What families exist in which realms?
 ```{r}
 communities %>% 
@@ -239,10 +240,32 @@ community_data_with_introductions %>% group_by(has_introduced_species) %>% summa
 )
 ```
 
+```{r}
+community_data_with_introductions %>% group_by(has_introduced_species) %>% summarise(
+  total_cities = n(), 
+  
+  median_mntd_nrm = median(mntd_normal, na.rm = T),
+  median_mass_fdiv_nrm = median(mass_fdiv_normal, na.rm = T),
+  median_gape_width_fdiv_nrm = median(beak_width_fdiv_normal, na.rm = T),
+  median_handwing_index_fdiv_nrm = median(hwi_fdiv_normal, na.rm = T)
+)
+```
+
+```{r}
+test_required_values('Has introduced', community_data_with_introductions[community_data_with_introductions$has_introduced_species == T,])
+```
+
+
+```{r}
+test_required_values('Does not have introduced', community_data_with_introductions[community_data_with_introductions$has_introduced_species == F,])
+```
+
+
 ## MNTD
 ```{r}
 ggplot(community_data_with_introductions, aes(x = has_introduced_species, y = mntd_standard)) + geom_boxplot()
 ```
+
 ```{r}
 ggplot(community_data_with_introductions, aes(x = has_introduced_species, y = mntd_normal)) + geom_boxplot()
 ```
@@ -266,6 +289,7 @@ ggplot(community_data_with_introductions, aes(x = has_introduced_species, y = ma
 ```{r}
 ggplot(community_data_with_introductions, aes(x = has_introduced_species, y = mass_fdiv_normal)) + geom_boxplot()
 ```
+
 ```{r}
 wilcox.test(mass_fdiv_standard ~ has_introduced_species, community_data_with_introductions, na.action = 'na.omit')
 ```
@@ -283,6 +307,7 @@ ggplot(community_data_with_introductions, aes(x = has_introduced_species, y = be
 ```{r}
 ggplot(community_data_with_introductions, aes(x = has_introduced_species, y = beak_width_fdiv_normal)) + geom_boxplot()
 ```
+
 ```{r}
 wilcox.test(beak_width_fdiv_standard ~ has_introduced_species, community_data_with_introductions, na.action = 'na.omit')
 ```
