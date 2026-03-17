@@ -1599,7 +1599,6 @@ std_mntd_interaction_result_table
 ```{r}
 std_mntd_interaction_pred_plot = plot_dredge_interaction_result(std_mntd_interaction_result_table)
 std_mntd_interaction_pred_plot
-ggsave(filename(FIGURES_OUTPUT_DIR, 'figure4_std_mntd_interaction.jpg'))
 ```
 
 ### Normalised
@@ -1613,7 +1612,6 @@ nrm_mntd_interaction_result_table
 ```{r}
 nrm_mntd_interaction_pred_plot = plot_dredge_interaction_result(nrm_mntd_interaction_result_table)
 nrm_mntd_interaction_pred_plot
-ggsave(filename(FIGURES_OUTPUT_DIR, 'figure4_nrm_mntd_interaction.jpg'))
 ```
 
 
@@ -1630,7 +1628,6 @@ std_mntd_interaction_result_table
 ```{r}
 std_gape_interaction_pred_plot = plot_dredge_interaction_result(std_gape_interaction_result_table)
 std_gape_interaction_pred_plot
-ggsave(filename(FIGURES_OUTPUT_DIR, 'figure4_std_beak_width_interaction.jpg'))
 ```
 
 ### Normalised
@@ -1644,7 +1641,6 @@ nrm_gape_interaction_result_table
 ```{r}
 nrm_gape_interaction_pred_plot = plot_dredge_interaction_result(nrm_gape_interaction_result_table)
 nrm_gape_interaction_pred_plot
-ggsave(filename(FIGURES_OUTPUT_DIR, 'figure4_nrm_beak_width_interaction.jpg'))
 ```
 
 ## HWI
@@ -1660,7 +1656,6 @@ std_hwi_interaction_result_table
 ```{r}
 std_hwi_interaction_pred_plot = plot_dredge_interaction_result(std_hwi_interaction_result_table)
 std_hwi_interaction_pred_plot
-ggsave(filename(FIGURES_OUTPUT_DIR, 'figure4_std_hwi_interaction.jpg'))
 ```
 
 ### Normalised
@@ -1674,7 +1669,6 @@ nrm_hwi_interaction_result_table
 ```{r}
 nrm_hwi_interaction_pred_plot = plot_dredge_interaction_result(nrm_hwi_interaction_result_table)
 nrm_hwi_interaction_pred_plot
-ggsave(filename(FIGURES_OUTPUT_DIR, 'figure4_nrm_hwi_interaction.jpg'))
 ```
 
 
@@ -1691,7 +1685,6 @@ std_mass_interaction_result_table
 ```{r}
 std_mass_interaction_pred_plot = plot_dredge_interaction_result(std_mass_interaction_result_table)
 std_mass_interaction_pred_plot
-ggsave(filename(FIGURES_OUTPUT_DIR, 'figure4_std_mass_interaction.jpg'))
 ```
 
 ### Normalised
@@ -1705,11 +1698,40 @@ nrm_mass_interaction_result_table
 ```{r}
 nrm_mass_interaction_pred_plot = plot_dredge_interaction_result(nrm_mass_interaction_result_table)
 nrm_mass_interaction_pred_plot
-ggsave(filename(FIGURES_OUTPUT_DIR, 'figure4_nrm_mass_interaction.jpg'))
 ```
 
 
+```{r}
+# Remove legends from plots 2, 3, and 4theme(legend.position = "none")
+plot1 = nrm_mntd_interaction_pred_plot + theme(legend.position = "none") + ggtitle('MNTD') + xlab('')
+plot2 = nrm_gape_interaction_pred_plot + theme(legend.position = "none") + ggtitle('Beak Width') + xlab('')
+plot3 = nrm_hwi_interaction_pred_plot + theme(legend.position = "none") + ggtitle('HWI (Hand-wing Index)') + xlab('')
+plot4 = nrm_mass_interaction_pred_plot + theme(legend.position = "bottom") + ggtitle('Mass')
+
+# Combine plots into a single column layout with labels
+combined_plot = (plot1 + plot2 + plot3 + plot4) +
+  plot_layout(ncol = 1) +
+  plot_annotation(tag_levels = 'A')  # Labels plots as (A), (B), etc.
+
+# Display the combined plot
+combined_plot
+ggsave(filename(FIGURES_OUTPUT_DIR, 'figure4_nrm.jpg'), width = 2000, height = 3000, units = 'px')
+```
 
 
+```{r}
+# Remove legends from plots 2, 3, and 4theme(legend.position = "none")
+plot1 = std_mntd_interaction_pred_plot + theme(legend.position = "none") + ggtitle('MNTD') + xlab('')
+plot2 = std_gape_interaction_pred_plot + theme(legend.position = "none") + ggtitle('Beak Width') + xlab('')
+plot3 = std_hwi_interaction_pred_plot + theme(legend.position = "none") + ggtitle('HWI (Hand-wing Index)') + xlab('')
+plot4 = std_mass_interaction_pred_plot + theme(legend.position = "bottom") + ggtitle('Mass')
 
+# Combine plots into a single column layout with labels
+combined_plot_std = (plot1 + plot2 + plot3 + plot4) +
+  plot_layout(ncol = 1) +
+  plot_annotation(tag_levels = 'A')  # Labels plots as (A), (B), etc.
 
+# Display the combined plot
+combined_plot_std
+ggsave(filename(FIGURES_OUTPUT_DIR, 'figure4_std.jpg'), width = 2000, height = 3000, units = 'px')
+```
