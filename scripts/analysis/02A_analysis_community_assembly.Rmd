@@ -637,14 +637,14 @@ all_explanatory_names = factor(
     'Avg. NDVI', 'Avg. Elevation', 'Avg. Temp.',
     'Avg. Soil Moisture',
     'Afrotropic', 'Australasia', 'Indomalayan', 'Nearctic', 'Neotropic', 'Palearctic',
-    'Introduced Absent', 'Introduced Present',
-    'Afrotropical * Introduced present',
-    'Austaliasian * Introduced present',
-    'Indomalayan * Introduced present',
-    'Nearctic * Introduced present',
-    'Neotropical * Introduced present',
-    'Palearctic * Introduced present',
-    'Oceanical * Introduced present'
+    'Introduced Absent', 'Non-native Present',
+    'Afrotropical * Non-native present',
+    'Austaliasian * Non-native present',
+    'Indomalayan * Non-native present',
+    'Nearctic * Non-native present',
+    'Neotropical * Non-native present',
+    'Palearctic * Non-native present',
+    'Oceanical * Non-native present'
   ), ordered = T
 )
 
@@ -685,9 +685,9 @@ type_labels = function(p) {
 
 ```{r}
 explanatory_labels = c(
-  'has_introduced_species'='Introduced species', 
+  'has_introduced_species'='Non-native species', 
   'has_introduced_speciesNo introduced species'='Introduced absent', 
-  'has_introduced_speciesIntroduced species'='Introduced present',
+  'has_introduced_speciesIntroduced species'='Non-native present',
   'city_avg_ndvi'='Average NDVI', 
   'city_avg_elevation'='Average elevation', 
   'city_avg_temp'='Average temperature', 
@@ -723,13 +723,13 @@ explanatory_labels = c(
   'core_realmNeotropic' = 'Neotropical',
   'core_realmPalearctic' = 'Palearctic',
   'core_realmOceania' = 'Oceanical',
-  'core_realmAfrotropic:has_introduced_speciesIntroduced species' = 'Afrotropical * Introduced present',
-  'core_realmAustralasia:has_introduced_speciesIntroduced species' = 'Austaliasian * Introduced present',
-  'core_realmIndomalayan:has_introduced_speciesIntroduced species' = 'Indomalayan * Introduced present',
-  'core_realmNearctic:has_introduced_speciesIntroduced species' = 'Nearctic * Introduced present',
-  'core_realmNeotropic:has_introduced_speciesIntroduced species' = 'Neotropical * Introduced present',
-  'core_realmPalearctic:has_introduced_speciesIntroduced species' = 'Palearctic * Introduced present',
-  'core_realmOceania:has_introduced_speciesIntroduced species' = 'Oceanical * Introduced present'
+  'core_realmAfrotropic:has_introduced_speciesIntroduced species' = 'Afrotropical * Non-native present',
+  'core_realmAustralasia:has_introduced_speciesIntroduced species' = 'Austaliasian * Non-native present',
+  'core_realmIndomalayan:has_introduced_speciesIntroduced species' = 'Indomalayan * Non-native present',
+  'core_realmNearctic:has_introduced_speciesIntroduced species' = 'Nearctic * Non-native present',
+  'core_realmNeotropic:has_introduced_speciesIntroduced species' = 'Neotropical * Non-native present',
+  'core_realmPalearctic:has_introduced_speciesIntroduced species' = 'Palearctic * Non-native present',
+  'core_realmOceania:has_introduced_speciesIntroduced species' = 'Oceanical * Non-native present'
 )
 ```
 
@@ -861,6 +861,7 @@ plot_dredge_result = function(result_table, mu = 0) {
       limits = rev(levels(p$explanatory)), 
       labels = explanatory_labels) +
     scale_colour_manual(
+      labels = c('Realm', 'City geography', 'Regional (50 km) geography', 'Regional (20 km) geography', 'Non-native species'),
       values = c(realm_colour, city_geography_colour, regional_50km_geography_colour, regional_20km_geography_colour, introduced_species_colour), 
       breaks = c('Realm', 'City geography', 'Regional (50 km) geography', 'Regional (20 km) geography', 'Introduced species')) +
     theme_bw() +
@@ -901,6 +902,7 @@ plot_spatial_result = function(model_result) {
     ylab('Predictor') +
     guides(colour=guide_legend(title="Predictor type")) + xlab('Difference in response from 0\nhabitat filtering (< 0) and competitive interactions (> 0)\n± Standard Error') +
     scale_colour_manual(
+      labels = c('Realm', 'City geography', 'Regional (50 km) geography', 'Non-native species'),
       values = c(realm_colour, city_geography_colour, regional_50km_geography_colour, introduced_species_colour), 
       breaks = c('Realm', 'City geography', 'Regional (50 km) geography', 'Introduced species')) +
     scale_y_discrete(limits = rev(all_explanatory_names[all_explanatory_names %in% result_table$explanatory_name]))
@@ -1614,6 +1616,7 @@ plot_dredge_interaction_result = function(result_table, mu = 0) {
       limits = rev(levels(p$explanatory)), 
       labels = explanatory_labels) +
     scale_colour_manual(
+      labels = c('Realm', 'Interaction', 'Non-native species'),
       values = c(realm_colour, interaction_colour, introduced_species_colour), 
       breaks = c('Realm', 'Interaction', 'Introduced species')) +
     theme_bw() +
