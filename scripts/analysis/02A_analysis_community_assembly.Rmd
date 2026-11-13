@@ -1406,6 +1406,10 @@ grid.arrange(
 dev.off()
 ```
 
+```{r}
+ggsave(filename(FIGURES_OUTPUT_DIR, 'figure2_std.pdf'), plot = fig2_std, width = 210, height = 297, units = 'mm')
+```
+
 ## Normalised result
 ```{r}
 pred_fig_legend_nrm <- ggpubr::get_legend(
@@ -1463,10 +1467,14 @@ grid.arrange(
 dev.off()
 ```
 
+```{r}
+ggsave(filename(FIGURES_OUTPUT_DIR, 'figure2_std.pdf'), plot = fig2_nrm, width = 210, height = 297, units = 'mm')
+```
+
 # Compare to spatial model
 
 ```{r}
-plot_grid(
+process_response_vs_spatial_p = plot_grid(
   plot_grid(
     ggdraw() + 
     draw_label(
@@ -1528,7 +1536,8 @@ plot_grid(
   ) + draw_label("Mass", size = 16, angle = 90, x = 0.01, y = 0.5), 
   nrow = 5, rel_heights = c(1, 4, 4, 4, 4)
 )
-ggsave(filename(FIGURES_OUTPUT_DIR, 'process_response_vs_spatial.jpg'), width = 4000, height = 3200, units = 'px')
+ggsave(filename(FIGURES_OUTPUT_DIR, 'process_response_vs_spatial.jpg'), width = 4000, height = 3200, units = 'px', plot = process_response_vs_spatial_p)
+ggsave(filename(FIGURES_OUTPUT_DIR, 'process_response_vs_spatial.pdf'), width = 4000, height = 3200, units = 'px', plot = process_response_vs_spatial_p)
 ```
 
 
@@ -1567,8 +1576,9 @@ mntd_fdiv_analysis
 ```
 
 ```{r}
-ggpairs(mntd_fdiv_analysis %>% dplyr::select(mntd_standard, hwi_fdiv_standard, beak_width_fdiv_standard, mass_fdiv_standard, regional_pool_size, urban_pool_size, urban_pool_perc), columnLabels = c('MNTD', 'HWI FD', 'Bk FD', 'Mss FD', 'Region Rich.', 'Urban Rich.', '% Urban'))
-ggsave(filename(FIGURES_OUTPUT_DIR, 'appendix_standarised_correlation.jpg'))
+appendix_standarised_correlation_p = ggpairs(mntd_fdiv_analysis %>% dplyr::select(mntd_standard, hwi_fdiv_standard, beak_width_fdiv_standard, mass_fdiv_standard, regional_pool_size, urban_pool_size, urban_pool_perc), columnLabels = c('MNTD', 'HWI FD', 'Bk FD', 'Mss FD', 'Region Rich.', 'Urban Rich.', '% Urban'))
+ggsave(filename(FIGURES_OUTPUT_DIR, 'appendix_standarised_correlation.jpg'), plot = appendix_standarised_correlation_p)
+ggsave(filename(FIGURES_OUTPUT_DIR, 'appendix_standarised_correlation.pdf'), plot = appendix_standarised_correlation_p)
 ```
 
 ```{r}
@@ -1578,8 +1588,9 @@ mntd_fdiv_analysis_norm = analysis_data %>%
   mutate(urban_pool_perc = urban_pool_size * 100 / regional_pool_size)
 mntd_fdiv_analysis
 
-ggpairs(mntd_fdiv_analysis_norm %>% dplyr::select(mntd_normal, hwi_fdiv_normal, beak_width_fdiv_normal, mass_fdiv_normal, regional_pool_size, urban_pool_size, urban_pool_perc), columnLabels = c('MNTD', 'HWI FD', 'Bk FD', 'Mss FD', 'Region Rich.', 'Urban Rich.', '% Urban'))
-ggsave(filename(FIGURES_OUTPUT_DIR, 'appendix_normalised_correlation.jpg'))
+appendix_normalised_correlation_p = ggpairs(mntd_fdiv_analysis_norm %>% dplyr::select(mntd_normal, hwi_fdiv_normal, beak_width_fdiv_normal, mass_fdiv_normal, regional_pool_size, urban_pool_size, urban_pool_perc), columnLabels = c('MNTD', 'HWI FD', 'Bk FD', 'Mss FD', 'Region Rich.', 'Urban Rich.', '% Urban'))
+ggsave(filename(FIGURES_OUTPUT_DIR, 'appendix_normalised_correlation.jpg'), plot = appendix_normalised_correlation_p)
+ggsave(filename(FIGURES_OUTPUT_DIR, 'appendix_normalised_correlation.pdf'), plot = appendix_normalised_correlation_p)
 ```
 
 # Intraction term between introduced species and realm
@@ -1756,6 +1767,13 @@ combined_plot = (plot1 + plot2 + plot3 + plot4) +
 # Display the combined plot
 combined_plot
 ggsave(filename(FIGURES_OUTPUT_DIR, 'figure4_nrm.jpg'), width = 2000, height = 3000, units = 'px')
+ggsave(filename = file.path(FIGURES_OUTPUT_DIR, 'figure4_nrm.pdf'),
+  plot = combined_plot,              
+  width = 18,  
+  height = 18 * 3000 / 2000,
+  units = "cm",
+  device = "pdf"
+)
 ```
 
 
@@ -1774,4 +1792,11 @@ combined_plot_std = (plot1 + plot2 + plot3 + plot4) +
 # Display the combined plot
 combined_plot_std
 ggsave(filename(FIGURES_OUTPUT_DIR, 'figure4_std.jpg'), width = 2000, height = 3000, units = 'px')
+ggsave(filename = file.path(FIGURES_OUTPUT_DIR, 'figure4_std.pdf'),
+  plot = combined_plot,              
+  width = 18,  
+  height = 18 * 3000 / 2000,
+  units = "cm",
+  device = "pdf"
+)
 ```
