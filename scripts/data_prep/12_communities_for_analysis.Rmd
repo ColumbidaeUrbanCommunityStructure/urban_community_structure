@@ -145,4 +145,5 @@ comparison_data %>%
     theme(legend.position = "none")
 
 ggsave(filename(FIGURES_OUTPUT_DIR, 'abundance_proxy_to_ebird_trends_and_status_abundance_data.jpg'))
+ggsave(filename(FIGURES_OUTPUT_DIR, 'abundance_proxy_to_ebird_trends_and_status_abundance_data.pdf'))
 ```
